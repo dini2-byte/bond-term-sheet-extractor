@@ -12,8 +12,9 @@ import streamlit.components.v1 as components
 from dotenv import load_dotenv
 
 from extract import extract_terms
-from structure import structure_filing_extractions, export_comps_to_excel
+from structure import structure_filing_extractions, export_comps_to_excel, grounding_summary
 from validate import validate_comps_table
+
 
 load_dotenv()
 
@@ -144,6 +145,11 @@ if selected_file and selected_file.exists():
         total_principal = validated_df["Principal ($M)"].sum()
         avg_yield = validated_df["Yield (%)"].mean()
         passed_count = (validated_df["Validation Status"] == "PASSED").sum()
+        g_summary = grounding_summary(audit_records)
+        g_pct = g_summary["pct"]
+        g_color = "#16A34A" if g_pct == 100.0 else "#D97706"
+        g_grounded = g_summary["grounded"]
+        g_total = g_summary["total"]
 
         m1, m2, m3, m4 = st.columns(4)
         with m1:
@@ -153,7 +159,8 @@ if selected_file and selected_file.exists():
         with m3:
             st.markdown(f'<div class="metric-card"><div class="metric-val">{avg_yield:.3f}%</div><div class="metric-label">Average Yield</div></div>', unsafe_allow_html=True)
         with m4:
-            st.markdown(f'<div class="metric-card"><div class="metric-val" style="color: #16A34A;">100%</div><div class="metric-label">Source Grounding</div></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="metric-card"><div class="metric-val" style="color: {g_color};">{g_pct:.1f}%</div><div class="metric-label">Exact Grounding</div><div style="font-size: 0.75rem; color: #64748B;">{g_grounded}/{g_total} fields exact</div></div>', unsafe_allow_html=True)
+
 
         st.markdown("### 📋 Debt Capital Markets (DCM) Comps Table")
         

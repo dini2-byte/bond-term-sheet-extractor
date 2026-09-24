@@ -6,10 +6,12 @@ import pandas as pd
 import pytest
 
 from evaluate import (
+    compute_summary_metrics,
     normalize_text,
     matches_value,
     evaluate_deal,
 )
+
 
 
 class TestEvaluateHelpers:
@@ -110,4 +112,35 @@ class TestEvaluateDeal:
         from evaluate import run_evaluation
         # Ensure full benchmark evaluation pipeline executes and creates report
         run_evaluation()
+
+
+class TestComputeSummaryMetrics:
+    def test_compute_summary_metrics(self):
+        eval_df = pd.DataFrame([
+            {"Correct": True, "Grounded": True, "Extracted": "4.0%", "In Source": True},
+            {"Correct": True, "Grounded": True, "Extracted": "1000", "In Source": True},
+            {"Correct": True, "Grounded": False, "Extracted": "99.8", "In Source": False},
+            {"Correct": False, "Grounded": False, "Extracted": None, "In Source": None},
+        ])
+        metrics = compute_summary_metrics(eval_df)
+        assert metrics["total"] == 4
+        assert metrics["correct"] == 3
+        assert metrics["accuracy_pct"] == 75.0
+        assert metrics["grounded"] == 2
+        assert metrics["grounding_pct"] == 50.0
+        assert metrics["extracted"] == 3
+        assert metrics["not_in_source"] == 1
+        assert metrics["not_in_source_pct"] == pytest.approx(33.333333333333336)
+
+    def test_compute_summary_metrics_no_extractions(self):
+        eval_df = pd.DataFrame([
+            {"Correct": False, "Grounded": False, "Extracted": None, "In Source": None},
+            {"Correct": False, "Grounded": False, "Extracted": None, "In Source": None},
+        ])
+        metrics = compute_summary_metrics(eval_df)
+        assert metrics["total"] == 2
+        assert metrics["extracted"] == 0
+        assert metrics["not_in_source"] == 0
+        assert metrics["not_in_source_pct"] == 0.0
+
 

@@ -14,8 +14,10 @@ from structure import (
     clean_issue_price,
     clean_yield,
     clean_spread,
+    grounding_summary,
     structure_filing_extractions,
 )
+
 
 
 class TestCleaners:
@@ -95,6 +97,7 @@ class TestAssessGrounding:
         assert res["grounded"] is False
         assert res["grounding_quality"] == "span_mismatch"
         assert res["span_text"] == "4.200%"
+        assert res["found_in_source"] is False
 
     def test_assess_grounding_no_interval(self):
         item = {
@@ -116,6 +119,64 @@ class TestAssessGrounding:
         res = assess_grounding(item, "")
         assert res["grounded"] is False
         assert res["grounding_quality"] == "no_source_text"
+        assert res["found_in_source"] is False
+
+    def test_assess_grounding_found_in_source_true(self):
+        item = {
+            "extraction_text": "Aaa\n   AA+",
+            "char_interval": {"start_pos": 0, "end_pos": 7},
+            "alignment_status": "match_fuzzy",
+        }
+        doc_text = "Aaa AA+ ratings assigned"
+        res = assess_grounding(item, doc_text)
+        assert res["found_in_source"] is True
+
+    def test_assess_grounding_found_in_source_false(self):
+        item = {
+            "extraction_text": "BBB-",
+            "char_interval": {"start_pos": 0, "end_pos": 4},
+            "alignment_status": "match_fuzzy",
+        }
+        doc_text = "Aaa AA+ ratings assigned"
+        res = assess_grounding(item, doc_text)
+        assert res["found_in_source"] is False
+
+    def test_assess_grounding_found_in_source_no_doc(self):
+        item = {
+            "extraction_text": "Apple Inc.",
+            "char_interval": {"start_pos": 0, "end_pos": 10},
+            "alignment_status": "match_exact",
+        }
+        res = assess_grounding(item, "")
+        assert res["found_in_source"] is False
+
+
+class TestGroundingSummary:
+    def test_grounding_summary(self):
+        audit_records = [
+            {
+                "tranche": "Tranche 1",
+                "fields": {
+                    "coupon": {"grounded": True},
+                    "price": {"grounded": True},
+                },
+            },
+            {
+                "tranche": "Tranche 2",
+                "fields": {
+                    "coupon": {"grounded": False},
+                },
+            },
+        ]
+        res = grounding_summary(audit_records)
+        assert res["grounded"] == 2
+        assert res["total"] == 3
+        assert res["pct"] == pytest.approx(66.66666666666667)
+
+    def test_grounding_summary_empty(self):
+        res = grounding_summary([])
+        assert res == {"grounded": 0, "total": 0, "pct": 0.0}
+
 
 
 class TestStructuring:

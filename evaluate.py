@@ -97,6 +97,7 @@ def evaluate_deal(deal_key: str, extracted_df: pd.DataFrame, audit_records: list
             }
             raw_meta = audit_entry.get(field_class_map.get(field, ""), {})
             is_grounded = raw_meta.get("grounded", False) if actual_val is not None else False
+            in_source = raw_meta.get("found_in_source", False) if actual_val is not None else None
 
             is_correct = matches_value(actual_val, expected_val, field)
 
@@ -106,11 +107,38 @@ def evaluate_deal(deal_key: str, extracted_df: pd.DataFrame, audit_records: list
                 "Expected": expected_val,
                 "Extracted": actual_val,
                 "Grounded": is_grounded,
+                "In Source": in_source,
                 "Correct": is_correct
             })
 
     res_df = pd.DataFrame(results)
     return res_df
+
+def compute_summary_metrics(eval_df: pd.DataFrame) -> dict[str, Any]:
+    total = len(eval_df)
+    correct = int(eval_df["Correct"].sum()) if total > 0 else 0
+    accuracy_pct = (correct / total * 100.0) if total > 0 else 0.0
+    grounded = int(eval_df["Grounded"].sum()) if total > 0 else 0
+    grounding_pct = (grounded / total * 100.0) if total > 0 else 0.0
+
+    extracted_mask = eval_df["Extracted"].notna()
+    extracted = int(extracted_mask.sum())
+
+    not_in_source_mask = eval_df["In Source"] == False
+    not_in_source = int(not_in_source_mask.sum())
+
+    not_in_source_pct = (not_in_source / extracted * 100.0) if extracted > 0 else 0.0
+
+    return {
+        "total": total,
+        "correct": correct,
+        "accuracy_pct": accuracy_pct,
+        "grounded": grounded,
+        "grounding_pct": grounding_pct,
+        "extracted": extracted,
+        "not_in_source": not_in_source,
+        "not_in_source_pct": not_in_source_pct,
+    }
 
 def run_evaluation():
     if not ANSWER_KEY_PATH.exists():
@@ -131,20 +159,18 @@ def run_evaluation():
     ground_truth = answer_keys.get(deal_key, [])
     eval_df = evaluate_deal(deal_key, validated_df, audit, ground_truth)
 
-    total_checks = len(eval_df)
-    total_correct = eval_df["Correct"].sum()
-    accuracy_pct = (total_correct / total_checks) * 100
-    grounding_pct = (eval_df["Grounded"].sum() / total_checks) * 100
+    metrics = compute_summary_metrics(eval_df)
 
     print("=" * 65)
     print(f"       AINA SCHOLARSHIP ACCURACY BENCHMARK SCORECARD       ")
     print("=" * 65)
     print(f"Deal Evaluated:        {deal_key}")
     print(f"Tranches Tested:       {len(ground_truth)}")
-    print(f"Total Fields Scored:   {total_checks}")
-    print(f"Fields Correct:        {total_correct} / {total_checks}")
-    print(f"Field Accuracy:        {accuracy_pct:.1f}%")
-    print(f"Source Grounding:      {grounding_pct:.1f}%")
+    print(f"Total Fields Scored:   {metrics['total']}")
+    print(f"Fields Correct:        {metrics['correct']} / {metrics['total']}")
+    print(f"Field Accuracy:        {metrics['accuracy_pct']:.1f}%")
+    print(f"Source Grounding:      {metrics['grounding_pct']:.1f}%")
+    print(f"Not-in-Source (Hallucination) Rate: {metrics['not_in_source_pct']:.1f}% ({metrics['not_in_source']}/{metrics['extracted']} extracted values not found verbatim in filing)")
     print("=" * 65)
 
     # Breakdown by field
@@ -163,9 +189,10 @@ def run_evaluation():
     with open(report_path, "w", encoding="utf-8") as f:
         f.write(f"# AINA Scholarship Evaluation Benchmark Report\n\n")
         f.write(f"- **Deal Tested**: `{deal_key}`\n")
-        f.write(f"- **Overall Field Accuracy**: **{accuracy_pct:.1f}%** ({total_correct}/{total_checks})\n")
-        f.write(f"- **Source Grounding Fidelity**: **{grounding_pct:.1f}%**\n")
-        f.write(f"- **False Positive / Hallucination Rate**: **0.0%**\n\n")
+        f.write(f"- **Overall Field Accuracy**: **{metrics['accuracy_pct']:.1f}%** ({metrics['correct']}/{metrics['total']})\n")
+        f.write(f"- **Source Grounding Fidelity**: **{metrics['grounding_pct']:.1f}%**\n")
+        f.write(f"- **Not-in-Source (Hallucination) Rate**: **{metrics['not_in_source_pct']:.1f}%** ({metrics['not_in_source']}/{metrics['extracted']} extracted values not found verbatim in filing)\n\n")
+
         f.write(f"### Field Breakdown\n\n")
         f.write(field_summary.to_markdown())
         f.write(f"\n\n### Discrepancy Log\n\n")

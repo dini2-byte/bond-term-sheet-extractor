@@ -60,6 +60,12 @@ def clean_spread(val: str | None) -> int | None:
     match_plus = re.search(r"\+?\s*(\d+)", val)
     return int(match_plus.group(1)) if match_plus else None
 
+def normalize_ws(s: str) -> str:
+    """Collapses whitespace runs to a single space and strips."""
+    if not s:
+        return ""
+    return re.sub(r"\s+", " ", str(s)).strip()
+
 def assess_grounding(item: dict, doc_text: str) -> dict:
     """
     Assesses source grounding quality according to the 3-part strict rule:
@@ -71,12 +77,17 @@ def assess_grounding(item: dict, doc_text: str) -> dict:
     alignment_status = item.get("alignment_status")
     extraction_text = item.get("extraction_text", "")
 
+    norm_doc = normalize_ws(doc_text)
+    norm_ext = normalize_ws(extraction_text)
+    found_in_source = bool(norm_ext and norm_doc and (norm_ext in norm_doc))
+
     if not char_interval:
         return {
             "grounded": False,
             "alignment_status": alignment_status,
             "span_text": None,
             "grounding_quality": "none",
+            "found_in_source": found_in_source,
         }
 
     if not doc_text:
@@ -85,6 +96,7 @@ def assess_grounding(item: dict, doc_text: str) -> dict:
             "alignment_status": alignment_status,
             "span_text": None,
             "grounding_quality": "no_source_text",
+            "found_in_source": found_in_source,
         }
 
     start_pos = char_interval.get("start_pos")
@@ -97,6 +109,7 @@ def assess_grounding(item: dict, doc_text: str) -> dict:
             "alignment_status": alignment_status,
             "span_text": span_text,
             "grounding_quality": "span_mismatch",
+            "found_in_source": found_in_source,
         }
 
     if alignment_status == "match_exact":
@@ -105,6 +118,7 @@ def assess_grounding(item: dict, doc_text: str) -> dict:
             "alignment_status": alignment_status,
             "span_text": span_text,
             "grounding_quality": "exact",
+            "found_in_source": found_in_source,
         }
 
     if alignment_status == "match_fuzzy":
@@ -113,6 +127,7 @@ def assess_grounding(item: dict, doc_text: str) -> dict:
             "alignment_status": alignment_status,
             "span_text": span_text,
             "grounding_quality": "fuzzy",
+            "found_in_source": found_in_source,
         }
 
     return {
@@ -120,7 +135,22 @@ def assess_grounding(item: dict, doc_text: str) -> dict:
         "alignment_status": alignment_status,
         "span_text": span_text,
         "grounding_quality": "partial",
+        "found_in_source": found_in_source,
     }
+
+def grounding_summary(audit_records: list[dict[str, Any]]) -> dict[str, Any]:
+    """Calculates overall grounding summary across all fields in all tranches."""
+    total = 0
+    grounded = 0
+    for record in audit_records:
+        fields = record.get("fields", {})
+        for field_meta in fields.values():
+            total += 1
+            if field_meta.get("grounded") is True:
+                grounded += 1
+    pct = (grounded / total * 100.0) if total > 0 else 0.0
+    return {"grounded": grounded, "total": total, "pct": pct}
+
 
 def structure_filing_extractions(jsonl_path: str | Path) -> tuple[pd.DataFrame, list[dict[str, Any]]]:
     jsonl_path = Path(jsonl_path)

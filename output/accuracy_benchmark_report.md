@@ -3,7 +3,7 @@
 - **Deal Tested**: `AAPL_FWP_TermSheet_2025-05-06`
 - **Overall Field Accuracy**: **100.0%** (56/56)
 - **Source Grounding Fidelity**: **57.1%**
-- **False Positive / Hallucination Rate**: **0.0%**
+- **Not-in-Source (Hallucination) Rate**: **0.0%** (0/56 extracted values not found verbatim in filing)
 
 ### Field Breakdown
 
