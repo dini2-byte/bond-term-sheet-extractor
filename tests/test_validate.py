@@ -58,6 +58,27 @@ class TestTrancheValidation:
         flags = validate_tranche(valid_tranche_row, valid_audit_fields)
         assert any("UNGROUNDED: coupon" in f for f in flags)
 
+    def test_weak_grounding_flag(self, valid_tranche_row, valid_audit_fields):
+        valid_audit_fields["coupon"]["grounded"] = False
+        valid_audit_fields["coupon"]["grounding_quality"] = "span_mismatch"
+        valid_audit_fields["coupon"]["span_text"] = "4."
+        flags = validate_tranche(valid_tranche_row, valid_audit_fields)
+        assert any(f.startswith("WEAK_GROUNDING: coupon") for f in flags)
+
+    def test_no_interval_ungrounded_flag(self, valid_tranche_row, valid_audit_fields):
+        valid_audit_fields["coupon"]["grounded"] = False
+        valid_audit_fields["coupon"]["grounding_quality"] = "none"
+        flags = validate_tranche(valid_tranche_row, valid_audit_fields)
+        assert any("UNGROUNDED: coupon" in f for f in flags)
+
+    def test_fully_exact_tranche_passes(self, valid_tranche_row, valid_audit_fields):
+        for f in valid_audit_fields.values():
+            f["grounded"] = True
+            f["grounding_quality"] = "exact"
+        flags = validate_tranche(valid_tranche_row, valid_audit_fields)
+        assert not any("GROUNDING" in f or "UNGROUNDED" in f for f in flags)
+
+
     def test_coupon_bounds_check(self, valid_tranche_row, valid_audit_fields):
         valid_tranche_row["Coupon (%)"] = 25.0
         flags = validate_tranche(valid_tranche_row, valid_audit_fields)

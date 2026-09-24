@@ -47,21 +47,30 @@ def extract_terms(
     print(f"\n[3/4] Extraction complete. Total entities captured: {len(extractions)}")
 
     # Grounding & Trustworthiness Audit
-    grounded_count = 0
-    ungrounded_count = 0
+    exact_count = 0
+    fuzzy_count = 0
+    lesser_count = 0
+    none_count = 0
     tranches_found = set()
 
     for item in extractions:
         tranche = item.attributes.get("tranche", "unassigned") if item.attributes else "unassigned"
         tranches_found.add(tranche)
-        if item.char_interval is not None:
-            grounded_count += 1
+        status = getattr(item, "alignment_status", None)
+        if isinstance(item, dict):
+            status = item.get("alignment_status")
+        if status == "match_exact":
+            exact_count += 1
+        elif status == "match_fuzzy":
+            fuzzy_count += 1
+        elif status == "match_lesser":
+            lesser_count += 1
         else:
-            ungrounded_count += 1
+            none_count += 1
 
-    print(f"      Grounded (exact source offsets): {grounded_count}")
-    print(f"      Ungrounded (flagged / hallucinated): {ungrounded_count}")
+    print(f"      Alignment: exact={exact_count}, fuzzy={fuzzy_count}, lesser={lesser_count}, none={none_count}")
     print(f"      Tranches identified: {sorted(list(tranches_found))}")
+
 
     # Save structured JSONL
     base_name = filing_path.stem

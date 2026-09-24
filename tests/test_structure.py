@@ -8,6 +8,7 @@ import pytest
 import pandas as pd
 
 from structure import (
+    assess_grounding,
     clean_coupon,
     clean_principal,
     clean_issue_price,
@@ -56,38 +57,106 @@ class TestCleaners:
         assert clean_spread("") is None
 
 
+class TestAssessGrounding:
+    def test_assess_grounding_exact(self):
+        item = {
+            "extraction_text": "4.000%",
+            "char_interval": {"start_pos": 10, "end_pos": 16},
+            "alignment_status": "match_exact",
+        }
+        doc_text = "01234567894.000%extra"
+        res = assess_grounding(item, doc_text)
+        assert res["grounded"] is True
+        assert res["grounding_quality"] == "exact"
+        assert res["span_text"] == "4.000%"
+        assert res["alignment_status"] == "match_exact"
+
+    def test_assess_grounding_fuzzy_not_grounded(self):
+        item = {
+            "extraction_text": "4.000%",
+            "char_interval": {"start_pos": 10, "end_pos": 16},
+            "alignment_status": "match_fuzzy",
+        }
+        doc_text = "01234567894.000%extra"
+        res = assess_grounding(item, doc_text)
+        assert res["grounded"] is False
+        assert res["grounding_quality"] == "fuzzy"
+        assert res["span_text"] == "4.000%"
+        assert res["alignment_status"] == "match_fuzzy"
+
+    def test_assess_grounding_span_mismatch(self):
+        item = {
+            "extraction_text": "4.000%",
+            "char_interval": {"start_pos": 10, "end_pos": 16},
+            "alignment_status": "match_exact",
+        }
+        doc_text = "01234567894.200%extra"
+        res = assess_grounding(item, doc_text)
+        assert res["grounded"] is False
+        assert res["grounding_quality"] == "span_mismatch"
+        assert res["span_text"] == "4.200%"
+
+    def test_assess_grounding_no_interval(self):
+        item = {
+            "extraction_text": "4.000%",
+            "char_interval": None,
+            "alignment_status": None,
+        }
+        res = assess_grounding(item, "some text")
+        assert res["grounded"] is False
+        assert res["grounding_quality"] == "none"
+        assert res["span_text"] is None
+
+    def test_assess_grounding_no_doc_text(self):
+        item = {
+            "extraction_text": "4.000%",
+            "char_interval": {"start_pos": 0, "end_pos": 6},
+            "alignment_status": "match_exact",
+        }
+        res = assess_grounding(item, "")
+        assert res["grounded"] is False
+        assert res["grounding_quality"] == "no_source_text"
+
+
 class TestStructuring:
     def test_mock_filing_structuring(self, tmp_path):
+        mock_text = "ACME CORP January 15, 2026    3.500% Notes due 2031 3.500%  $750,000,000"
         mock_data = {
+            "text": mock_text,
             "extractions": [
                 {
                     "extraction_class": "issuer",
                     "extraction_text": "ACME CORP",
                     "char_interval": {"start_pos": 0, "end_pos": 9},
+                    "alignment_status": "match_exact",
                     "attributes": {"tranche": "all"},
                 },
                 {
                     "extraction_class": "trade_date",
                     "extraction_text": "January 15, 2026",
                     "char_interval": {"start_pos": 10, "end_pos": 26},
+                    "alignment_status": "match_exact",
                     "attributes": {"tranche": "deal"},
                 },
                 {
                     "extraction_class": "tranche_name",
                     "extraction_text": "3.500% Notes due 2031",
                     "char_interval": {"start_pos": 30, "end_pos": 51},
+                    "alignment_status": "match_exact",
                     "attributes": {"tranche": "2031 Notes"},
                 },
                 {
                     "extraction_class": "coupon",
                     "extraction_text": "3.500%",
                     "char_interval": {"start_pos": 52, "end_pos": 58},
+                    "alignment_status": "match_exact",
                     "attributes": {"tranche": "2031 Notes"},
                 },
                 {
                     "extraction_class": "principal_amount",
                     "extraction_text": "$750,000,000",
                     "char_interval": {"start_pos": 60, "end_pos": 72},
+                    "alignment_status": "match_exact",
                     "attributes": {"tranche": "2031 Notes"},
                 },
             ]
@@ -122,3 +191,10 @@ class TestStructuring:
         assert set(df["Coupon (%)"].tolist()) == {4.0, 4.2, 4.5, 4.75}
         assert set(df["Spread (bps)"].tolist()) == {25, 30, 40, 50}
         assert len(audit) == 4
+
+        # 2028 tranche coupon has span mismatch in cached AAPL FWP
+        t2028 = [a for a in audit if a["tranche"] == "2028 Notes"][0]
+        coupon_meta = t2028["fields"]["coupon"]
+        assert coupon_meta["grounded"] is False
+        assert coupon_meta["grounding_quality"] == "span_mismatch"
+

@@ -26,7 +26,14 @@ def validate_tranche(row: dict[str, Any], audit_fields: dict[str, Any]) -> list[
     # 1. Source Grounding Gate
     for field_name, field_meta in audit_fields.items():
         if not field_meta.get("grounded", False):
-            flags.append(f"UNGROUNDED: {field_name} not anchored to source text")
+            quality = field_meta.get("grounding_quality", "none")
+            if quality in ("none", "no_source_text"):
+                flags.append(f"UNGROUNDED: {field_name} not anchored to source text")
+            else:
+                span_text = str(field_meta.get("span_text") if field_meta.get("span_text") is not None else "")[:40]
+                raw_text = str(field_meta.get("raw") if field_meta.get("raw") is not None else "")[:40]
+                flags.append(f"WEAK_GROUNDING: {field_name} ({quality}, span '{span_text}' vs '{raw_text}')")
+
 
     # 2. Coupon Sanity Check (0.0% to 15.0%)
     coupon = row.get("Coupon (%)")

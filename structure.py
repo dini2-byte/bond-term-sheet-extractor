@@ -60,6 +60,68 @@ def clean_spread(val: str | None) -> int | None:
     match_plus = re.search(r"\+?\s*(\d+)", val)
     return int(match_plus.group(1)) if match_plus else None
 
+def assess_grounding(item: dict, doc_text: str) -> dict:
+    """
+    Assesses source grounding quality according to the 3-part strict rule:
+    1. char_interval is not None
+    2. alignment_status == 'match_exact'
+    3. doc_text[start:end].strip() == extraction_text.strip()
+    """
+    char_interval = item.get("char_interval")
+    alignment_status = item.get("alignment_status")
+    extraction_text = item.get("extraction_text", "")
+
+    if not char_interval:
+        return {
+            "grounded": False,
+            "alignment_status": alignment_status,
+            "span_text": None,
+            "grounding_quality": "none",
+        }
+
+    if not doc_text:
+        return {
+            "grounded": False,
+            "alignment_status": alignment_status,
+            "span_text": None,
+            "grounding_quality": "no_source_text",
+        }
+
+    start_pos = char_interval.get("start_pos")
+    end_pos = char_interval.get("end_pos")
+    span_text = doc_text[start_pos:end_pos]
+
+    if span_text.strip() != extraction_text.strip():
+        return {
+            "grounded": False,
+            "alignment_status": alignment_status,
+            "span_text": span_text,
+            "grounding_quality": "span_mismatch",
+        }
+
+    if alignment_status == "match_exact":
+        return {
+            "grounded": True,
+            "alignment_status": alignment_status,
+            "span_text": span_text,
+            "grounding_quality": "exact",
+        }
+
+    if alignment_status == "match_fuzzy":
+        return {
+            "grounded": False,
+            "alignment_status": alignment_status,
+            "span_text": span_text,
+            "grounding_quality": "fuzzy",
+        }
+
+    return {
+        "grounded": False,
+        "alignment_status": alignment_status,
+        "span_text": span_text,
+        "grounding_quality": "partial",
+    }
+
 def structure_filing_extractions(jsonl_path: str | Path) -> tuple[pd.DataFrame, list[dict[str, Any]]]:
     jsonl_path = Path(jsonl_path)
     if not jsonl_path.exists():
@@ -71,6 +133,7 @@ def structure_filing_extractions(jsonl_path: str | Path) -> tuple[pd.DataFrame, 
             return pd.DataFrame(), []
         data = json.loads(line)
 
+    doc_text = data.get("text", "")
     extractions = data.get("extractions", [])
 
     deal_fields: dict[str, dict[str, Any]] = {}
@@ -83,11 +146,13 @@ def structure_filing_extractions(jsonl_path: str | Path) -> tuple[pd.DataFrame, 
         attrs = item.get("attributes") or {}
         tranche_tag = attrs.get("tranche", "all")
 
+        grounding_info = assess_grounding(item, doc_text)
         field_data = {
             "raw": raw_text,
             "char_interval": char_interval,
-            "grounded": char_interval is not None,
+            **grounding_info,
         }
+
 
         if tranche_tag.lower() in ["all", "deal", "general"]:
             deal_fields[field_class] = field_data

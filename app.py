@@ -204,14 +204,29 @@ if selected_file and selected_file.exists():
             for field_name, meta in audit_entry.items():
                 interval = meta.get("char_interval")
                 offset_str = f"[{interval.get('start_pos')}:{interval.get('end_pos')}]" if interval else "N/A"
+                grounded = meta.get("grounded", False)
+                quality = meta.get("grounding_quality", "none")
+                alignment = meta.get("alignment_status") or "none"
+                span_text = meta.get("span_text")
+
+                if grounded:
+                    badge = "✅ Exact"
+                elif interval:
+                    badge = f"⚠️ Weak ({quality})"
+                else:
+                    badge = "❌ Ungrounded"
+
                 audit_rows.append({
                     "Field": field_name,
                     "Extracted Value": meta.get("raw"),
                     "Character Span": offset_str,
-                    "Grounded in Source": "✅ Grounded" if meta.get("grounded") else "❌ Ungrounded"
+                    "Alignment": alignment,
+                    "Source Span Text": span_text if span_text is not None else "N/A",
+                    "Grounded in Source": badge,
                 })
 
             st.dataframe(pd.DataFrame(audit_rows), use_container_width=True)
+
 
         with tab2:
             st.markdown("#### LangExtract Interactive Grounding Viewer")
