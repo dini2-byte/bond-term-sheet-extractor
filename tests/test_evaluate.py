@@ -143,4 +143,18 @@ class TestComputeSummaryMetrics:
         assert metrics["not_in_source"] == 0
         assert metrics["not_in_source_pct"] == 0.0
 
+    def test_missing_field_placeholder_not_counted_as_hallucination(self):
+        # structure.py fills absent text fields with "Not found"; that is a miss, not a hallucination
+        extracted_df = pd.DataFrame([{"Issuer": "Apple Inc.", "Par Call Date": "Not found"}])
+        audit_records = [{"fields": {"issuer": {"grounded": True, "found_in_source": True}}}]
+        ground_truth = [{"Issuer": "Apple Inc.", "Par Call Date": None}]
+
+        res = evaluate_deal("TEST_DEAL", extracted_df, audit_records, ground_truth)
+        par_call = res[res["Field"] == "Par Call Date"].iloc[0]
+        assert par_call["In Source"] is None
+
+        metrics = compute_summary_metrics(res)
+        assert metrics["not_in_source"] == 0
+        assert metrics["extracted"] == 1
+
 

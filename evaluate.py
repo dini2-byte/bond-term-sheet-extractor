@@ -97,7 +97,8 @@ def evaluate_deal(deal_key: str, extracted_df: pd.DataFrame, audit_records: list
             }
             raw_meta = audit_entry.get(field_class_map.get(field, ""), {})
             is_grounded = raw_meta.get("grounded", False) if actual_val is not None else False
-            in_source = raw_meta.get("found_in_source", False) if actual_val is not None else None
+            # No audit entry means the model extracted nothing ("Not found" placeholder): a miss, not a hallucination
+            in_source = raw_meta.get("found_in_source", False) if raw_meta else None
 
             is_correct = matches_value(actual_val, expected_val, field)
 
@@ -121,7 +122,7 @@ def compute_summary_metrics(eval_df: pd.DataFrame) -> dict[str, Any]:
     grounded = int(eval_df["Grounded"].sum()) if total > 0 else 0
     grounding_pct = (grounded / total * 100.0) if total > 0 else 0.0
 
-    extracted_mask = eval_df["Extracted"].notna()
+    extracted_mask = eval_df["In Source"].notna()
     extracted = int(extracted_mask.sum())
 
     not_in_source_mask = eval_df["In Source"] == False
