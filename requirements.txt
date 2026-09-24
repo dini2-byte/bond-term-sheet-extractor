@@ -1,0 +1,8 @@
+langextract
+edgartools
+pandas
+openpyxl
+streamlit
+python-dotenv
+pytest
+pytest-cov

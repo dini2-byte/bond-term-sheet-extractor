@@ -1,0 +1,72 @@
+{
+  "AAPL_FWP_TermSheet_2025-05-06": [
+    {
+      "Tranche": "4.000% Notes due 2028",
+      "Issuer": "Apple Inc.",
+      "Ratings": "Aaa / AA+",
+      "Trade Date": "May 5, 2025",
+      "Settlement Date": "May 12, 2025",
+      "Principal ($M)": 1500.0,
+      "Coupon (%)": 4.00,
+      "Issue Price": 99.804,
+      "Yield (%)": 4.070,
+      "Spread (bps)": 25,
+      "Benchmark Treasury": "3.750% due April 15, 2028",
+      "Maturity Date": "May 12, 2028",
+      "Day Count": "30/360",
+      "Par Call Date": "April 12, 2028",
+      "CUSIP": "037833EY2"
+    },
+    {
+      "Tranche": "4.200% Notes due 2030",
+      "Issuer": "Apple Inc.",
+      "Ratings": "Aaa / AA+",
+      "Trade Date": "May 5, 2025",
+      "Settlement Date": "May 12, 2025",
+      "Principal ($M)": 1000.0,
+      "Coupon (%)": 4.20,
+      "Issue Price": 99.830,
+      "Yield (%)": 4.238,
+      "Spread (bps)": 30,
+      "Benchmark Treasury": "3.875% due April 30, 2030",
+      "Maturity Date": "May 12, 2030",
+      "Day Count": "30/360",
+      "Par Call Date": "April 12, 2030",
+      "CUSIP": "037833EZ9"
+    },
+    {
+      "Tranche": "4.500% Notes due 2032",
+      "Issuer": "Apple Inc.",
+      "Ratings": "Aaa / AA+",
+      "Trade Date": "May 5, 2025",
+      "Settlement Date": "May 12, 2025",
+      "Principal ($M)": 1000.0,
+      "Coupon (%)": 4.50,
+      "Issue Price": 99.840,
+      "Yield (%)": 4.527,
+      "Spread (bps)": 40,
+      "Benchmark Treasury": "4.000% due April 30, 2032",
+      "Maturity Date": "May 12, 2032",
+      "Day Count": "30/360",
+      "Par Call Date": "March 12, 2032",
+      "CUSIP": "037833FA3"
+    },
+    {
+      "Tranche": "4.750% Notes due 2035",
+      "Issuer": "Apple Inc.",
+      "Ratings": "Aaa / AA+",
+      "Trade Date": "May 5, 2025",
+      "Settlement Date": "May 12, 2025",
+      "Principal ($M)": 1000.0,
+      "Coupon (%)": 4.75,
+      "Issue Price": 99.340,
+      "Yield (%)": 4.834,
+      "Spread (bps)": 50,
+      "Benchmark Treasury": "4.625% due February 15, 2035",
+      "Maturity Date": "May 12, 2035",
+      "Day Count": "30/360",
+      "Par Call Date": "February 12, 2035",
+      "CUSIP": "037833FB1"
+    }
+  ]
+}

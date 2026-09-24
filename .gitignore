@@ -1,0 +1,13 @@
+.venv/
+.env
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+.streamlit/secrets.toml
+*.html
+
+# Ephemeral pipeline outputs
+output/*.jsonl
+output/*.xlsx
+output/uploaded_*
