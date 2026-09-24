@@ -19,49 +19,25 @@
 
 ---
 
-## 2. Immediate Next Steps (Starting Next Session)
-
-### Step 2.1: Run Extraction on AAPL FWP
-Run the extraction once Google's temporary 503 load spike on free-tier flash models clears:
-```bash
-cd ~/bond-term-sheet-extractor
-source .venv/bin/activate
-python3 extract.py data/raw_filings/AAPL_FWP_TermSheet_2025-05-06.txt
-```
-- Verify `output/AAPL_FWP_TermSheet_2025-05-06_extractions.jsonl` is created.
-- Open `output/AAPL_FWP_TermSheet_2025-05-06_visualization.html` in browser to visually verify that all 4 tranches are properly highlighted and grounded.
-
-### Step 2.2: Phase 3 — Structuring into Comps Table (`structure.py`)
-Build `structure.py` to:
-1. Parse the JSONL extractions.
-2. Group extractions by tranche attribute (`2028 Notes`, `2030 Notes`, etc.).
-3. Distribute deal-level terms (`issuer`, `trade_date`, `settlement_date`, `ratings`) across all tranche rows.
-4. Clean and normalize data:
-   - Coupons to float percentages (`4.000%` → `4.00`)
-   - Principal amounts to millions (`$1,500,000,000` → `$1,500M`)
-   - Spreads to integer basis points (`25 basis points` / `+25 bps` → `25`)
-   - Dates to ISO format (`YYYY-MM-DD`)
-5. Keep source text offsets attached to each cell for full auditability.
-
-### Step 2.3: Phase 4 — Sanity Validator (`validate.py`)
-Implement finance-grade validation rules:
-- Flag if `maturity_date <= trade_date` or `settlement_date < trade_date`.
-- Flag coupon outside plausible range (0% – 15%).
-- Flag issue price outside par bounds (90.00 – 110.00).
-- Flag spread outside plausible range (0 – 1000 bps).
-- Flag ungrounded extractions (`char_interval is None`) as "Not found / Flagged".
-
-### Step 2.4: Phase 5 — Accuracy Evaluation (`evaluate.py`)
-- Create `data/answer_key.csv` by hand-checking the 4 tranches in the AAPL FWP.
-- Run `evaluate.py` to compare extraction output vs answer key and compute field-level accuracy percentage for the scholarship writeup.
-
-### Step 2.5: Phase 6 & 7 — Streamlit Application & Cloud Deployment (`app.py`)
-- Build clean DCM comps table interface.
-- Allow expanding any row/cell to inspect the exact source quote and character offsets.
-- One-click Excel download (`.xlsx`) via pandas/openpyxl.
-- Deploy to Streamlit Community Cloud and verify incognito URL access.
+## 2. Completed Milestones (Phases 0–6)
+- **Step 2.1 (Phase 2 Extraction)**: Complete. 4 tranches in AAPL FWP extracted with character-level grounding.
+- **Step 2.2 (Phase 3 Structuring)**: Complete. `structure.py` groups tranches, distributes deal-wide terms, and exports to `.xlsx`.
+- **Step 2.3 (Phase 4 Sanity Validator)**: Complete. `validate.py` enforces bounds (coupon 0-15%, price 90-110, spread 0-1000 bps, chronology, grounding).
+- **Step 2.4 (Phase 5 Accuracy Evaluation)**: Complete. `evaluate.py` + `data/answer_key.json` scored 100.0% accuracy (56/56) and 100% grounding.
+- **Step 2.5 (Phase 6 Streamlit UI)**: Complete. `app.py` provides interactive comps table, source drill-down, and HTML visualization.
+- **Step 2.6 (Pytest Suite & Git)**: Complete. 15 unit tests passing with 84% test coverage. Git repository initialized and clean.
 
 ---
+
+## 3. Remaining Tasks (AINA Scholarship Submission)
+1. **GitHub Remote & Cloud Deployment**:
+   - Push repository to GitHub (`aidin/bond-term-sheet-extractor`).
+   - Deploy to Streamlit Community Cloud and verify incognito access.
+2. **Scholarship Writeup (`SUBMISSION.md`)**:
+   - Write 500-word document covering the problem statement, system architecture, quantitative benchmark results (100% accuracy, 100% grounding), and scope boundaries.
+3. **Video Walkthrough**:
+   - Record 3–4 minute walkthrough demonstrating live extraction, tranche structuring, and Excel export.
+
 
 ## 3. Reference Files
 - Project Root: `/home/dini/bond-term-sheet-extractor`
