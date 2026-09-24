@@ -43,10 +43,10 @@ Instructions:
    - trade_date: Pricing or trade date
    - settlement_date: Closing or settlement date (including T-plus convention if mentioned)
    - principal_amount: Face value / aggregate principal amount offered for this tranche
-   - coupon: Stated annual fixed interest rate (e.g. 4.000%)
-   - issue_price: Price to public expressed as percentage of par (e.g. 99.804%)
-   - yield_to_maturity: Reoffer yield / yield to maturity (e.g. 4.070%)
-   - spread_bps: Spread to the benchmark Treasury in basis points (e.g. 25 basis points or +25 bps)
+   - coupon: Stated annual fixed interest rate (e.g. 5.125%)
+   - issue_price: Price to public expressed as percentage of par (e.g. 99.612%)
+   - yield_to_maturity: Reoffer yield / yield to maturity (e.g. 5.214%)
+   - spread_bps: Spread to the benchmark Treasury in basis points (e.g. 85 basis points or +85 bps)
    - benchmark_treasury: Underlying benchmark Treasury note/bond used for pricing
    - maturity_date: Stated date when principal is repaid
    - interest_payment_dates: Schedule / dates when coupon payments occur
@@ -61,7 +61,7 @@ Instructions:
 SAMPLE_TERM_SHEET = """
 ACME CORP.
 FINAL PRICING TERM SHEET
-$2,500,000,000 Senior Notes
+$2,000,000,000 Senior Notes
 
 Issuer: Acme Corp.
 Ratings: A2 / A
@@ -70,7 +70,7 @@ Settlement Date: March 17, 2025 (T+5)
 Joint Bookrunners: Morgan Stanley, J.P. Morgan, Citigroup
 
 3.850% Notes due 2028 ("2028 Notes")
-Principal Amount: $1,500,000,000
+Principal Amount: $1,250,000,000
 Maturity Date: March 15, 2028
 Coupon: 3.850%
 Price to Public: 99.750%
@@ -83,10 +83,10 @@ Make-Whole Call: Treasury Rate + 10 bps prior to February 15, 2028
 Par Call: On or after February 15, 2028
 CUSIP: 001234AA1
 
-4.200% Notes due 2035 ("2035 Notes")
-Principal Amount: $1,000,000,000
+5.375% Notes due 2035 ("2035 Notes")
+Principal Amount: $750,000,000
 Maturity Date: March 15, 2035
-Coupon: 4.200%
+Coupon: 5.375%
 Price to Public: 99.500%
 Yield: 4.262%
 Benchmark Treasury: 3.875% due February 15, 2035
@@ -112,7 +112,7 @@ FEW_SHOT_EXAMPLES = [
             
             # Tranche 1: 2028 Notes
             lx.data.Extraction(extraction_class="tranche_name", extraction_text="3.850% Notes due 2028", attributes={"tranche": "2028 Notes"}),
-            lx.data.Extraction(extraction_class="principal_amount", extraction_text="$1,500,000,000", attributes={"tranche": "2028 Notes"}),
+            lx.data.Extraction(extraction_class="principal_amount", extraction_text="$1,250,000,000", attributes={"tranche": "2028 Notes"}),
             lx.data.Extraction(extraction_class="maturity_date", extraction_text="March 15, 2028", attributes={"tranche": "2028 Notes"}),
             lx.data.Extraction(extraction_class="coupon", extraction_text="3.850%", attributes={"tranche": "2028 Notes"}),
             lx.data.Extraction(extraction_class="issue_price", extraction_text="99.750%", attributes={"tranche": "2028 Notes"}),
@@ -126,10 +126,10 @@ FEW_SHOT_EXAMPLES = [
             lx.data.Extraction(extraction_class="cusip", extraction_text="001234AA1", attributes={"tranche": "2028 Notes"}),
             
             # Tranche 2: 2035 Notes
-            lx.data.Extraction(extraction_class="tranche_name", extraction_text="4.200% Notes due 2035", attributes={"tranche": "2035 Notes"}),
-            lx.data.Extraction(extraction_class="principal_amount", extraction_text="$1,000,000,000", attributes={"tranche": "2035 Notes"}),
+            lx.data.Extraction(extraction_class="tranche_name", extraction_text="5.375% Notes due 2035", attributes={"tranche": "2035 Notes"}),
+            lx.data.Extraction(extraction_class="principal_amount", extraction_text="$750,000,000", attributes={"tranche": "2035 Notes"}),
             lx.data.Extraction(extraction_class="maturity_date", extraction_text="March 15, 2035", attributes={"tranche": "2035 Notes"}),
-            lx.data.Extraction(extraction_class="coupon", extraction_text="4.200%", attributes={"tranche": "2035 Notes"}),
+            lx.data.Extraction(extraction_class="coupon", extraction_text="5.375%", attributes={"tranche": "2035 Notes"}),
             lx.data.Extraction(extraction_class="issue_price", extraction_text="99.500%", attributes={"tranche": "2035 Notes"}),
             lx.data.Extraction(extraction_class="yield_to_maturity", extraction_text="4.262%", attributes={"tranche": "2035 Notes"}),
             lx.data.Extraction(extraction_class="benchmark_treasury", extraction_text="3.875% due February 15, 2035", attributes={"tranche": "2035 Notes"}),
