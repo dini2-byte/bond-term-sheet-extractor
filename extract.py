@@ -56,9 +56,9 @@ def extract_terms(
     for item in extractions:
         tranche = item.attributes.get("tranche", "unassigned") if item.attributes else "unassigned"
         tranches_found.add(tranche)
+        # alignment_status is a langextract AlignmentStatus Enum; compare its string value
         status = getattr(item, "alignment_status", None)
-        if isinstance(item, dict):
-            status = item.get("alignment_status")
+        status = getattr(status, "value", status)
         if status == "match_exact":
             exact_count += 1
         elif status == "match_fuzzy":
