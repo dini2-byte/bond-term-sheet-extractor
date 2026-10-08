@@ -2,7 +2,7 @@
 
 **Implementer**: agy
 **Reviewer**: Claude Code
-**Branch**: `slice-03-demo-mode`, cut from `master` after slice 1 merges
+**Branch**: `slice-03-demo-mode`, cut from `master` after slice 2 merged (`897076f`)
 **Due**: 2026-10-20
 
 Read `CONTEXT.md` first and use its terms.
@@ -43,9 +43,11 @@ AINA reviewers open one link in an incognito window. The app must show the bench
 ## Task D: Say how accurate it is
 
 1. Add a section "How accurate is this?" under the title. It shows the headline line from `output/accuracy_benchmark_report.md` (the line that starts with `Field accuracy:`), followed by the grounded and not-in-source lines.
-2. If the report file is missing, hide the section. Do not show a placeholder number.
-3. Add a footer link: "Code and benchmark: https://github.com/dini2-byte/bond-term-sheet-extractor".
-4. `output/accuracy_benchmark_report.md` must be tracked in git so the deployed app can read it. Check `.gitignore`.
+2. If the report has a "Scoring changes after the first run" section, show one line under the headline for each change, built from `data/fixtures/scoring_changes.jsonl`: "First scored at <headline_before number> before this fix: <change>." Read the file with `evaluate.load_scoring_changes`.
+3. Below that, one line: "Benchmark: 4 deals, 25 tranches, answer keys written before each deal was run. Each deal was run through Gemini once." Take the deal and tranche counts from the headline line, not hardcoded.
+4. If the report file is missing, hide the section. Do not show a placeholder number.
+5. Add a footer link: "Code and benchmark: https://github.com/dini2-byte/bond-term-sheet-extractor".
+6. `output/accuracy_benchmark_report.md` must be tracked in git so the deployed app can read it. Check `.gitignore`.
 
 ## Task E: Use the glossary's words
 
