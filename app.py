@@ -20,6 +20,7 @@ from demo import (
     get_gemini_api_key,
     save_uploaded_filing,
     parse_accuracy_report,
+    visualization_src,
 )
 from extract import extract_terms
 from structure import structure_filing_extractions, export_comps_to_excel, grounding_summary
@@ -316,7 +317,7 @@ if selected_jsonl and selected_jsonl.exists():
         st.caption("Visual audit showing all extractions mapped and color-highlighted in the original SEC text.")
         try:
             html_content = get_cached_visualization_html(str(selected_jsonl))
-            st.iframe(html_content, height=600, width="stretch")
+            st.iframe(visualization_src(html_content), height=600, width="stretch")
         except Exception as e:
             st.warning(f"Could not load visualization: {e}")
 

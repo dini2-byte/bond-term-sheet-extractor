@@ -16,6 +16,7 @@ from demo import (
     extract_headline_number,
     extract_deal_and_tranche_counts,
     format_scoring_change_line,
+    visualization_src,
     MAX_UPLOAD_SIZE_BYTES,
 )
 
@@ -72,6 +73,23 @@ class TestSourceHighlighting:
         assert isinstance(html, str)
         assert len(html) > 1000
         assert "lx-highlight" in html
+
+
+class TestVisualizationSrc:
+    def test_visualization_src_prefix_and_roundtrip(self):
+        import base64
+        prefix = "data:text/html;charset=utf-8;base64,"
+        sample_html = "<html><body><h1>Deal Terms: € 1.5bn</h1></body></html>"
+        result = visualization_src(sample_html)
+        assert result.startswith(prefix)
+        encoded_data = result[len(prefix):]
+        decoded = base64.b64decode(encoded_data.encode("ascii")).decode("utf-8")
+        assert decoded == sample_html
+
+    def test_visualization_src_no_script_substring(self):
+        malicious_html = "<p>Test</p></script><script>alert(1)</script>"
+        result = visualization_src(malicious_html)
+        assert "<script>" not in result
 
 
 class TestPasswordAndUpload:
@@ -174,13 +192,17 @@ class TestStreamlitDeprecations:
     def test_app_renders_iframe_without_deprecation_warnings(self):
         """G2: app.py uses st.iframe and renders highlighted source without exceptions."""
         from streamlit.testing.v1 import AppTest
+        import base64
         app_path = Path(__file__).resolve().parent.parent / "app.py"
         at = AppTest.from_file(str(app_path))
         at.run(timeout=10)
         assert len(at.exception) == 0
         iframe_elements = at.get("iframe")
         assert len(iframe_elements) > 0
-        assert "lx-highlight" in iframe_elements[0].proto.srcdoc
+        src = iframe_elements[0].proto.src
+        assert src.startswith("data:text/html;charset=utf-8;base64,")
+        decoded = base64.b64decode(src.split(",", 1)[1]).decode("utf-8")
+        assert "lx-highlight" in decoded
 
 
 class TestLiveUploadG1:
