@@ -65,3 +65,7 @@ python3 evaluate.py
 ## Task E (Claude): Record the result
 
 Commit the fixtures, the attempt log and the regenerated report. Put the headline line in the wiki and the Google Doc writeup.
+
+## Task A3 (agy): An empty result is not a successful run
+
+If `lx.extract` returns without raising but with zero extractions, the API returned nothing usable. In that case `extract_terms` must log the attempt with outcome `api_error` and error `"no extractions returned"`, must not write the fixture (or the `output/` JSONL), and must raise `RuntimeError` with that message. A later `--fixture` run for that deal is then allowed. Test it with a mocked `lx.extract` that returns a document with an empty `extractions` list.
