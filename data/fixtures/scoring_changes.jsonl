@@ -1,0 +1,1 @@
+{"date": "2026-10-08", "change": "CUSIP cell keeps only the 9-character CUSIP; it had kept the ISIN too, which failed every CUSIP and broke tranche pairing in GOOGL", "headline_before": "Field accuracy: 88.0% (308/350 fields, 4 deals, 25 tranches)"}

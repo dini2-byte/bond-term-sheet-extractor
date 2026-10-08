@@ -463,3 +463,118 @@ class TestComputeSummaryMetrics:
         assert fixture_file.exists(), f"Fixture file not found: {fixture_file}"
 
 
+class TestExtractionAttemptsSection:
+    def test_load_extraction_attempts_missing(self, tmp_path):
+        from evaluate import load_extraction_attempts
+        non_existent = tmp_path / "attempts.jsonl"
+        assert load_extraction_attempts(non_existent) == []
+
+    def test_load_extraction_attempts_parses(self, tmp_path):
+        from evaluate import load_extraction_attempts
+        import json
+        attempts_file = tmp_path / "attempts.jsonl"
+        entries = [
+            {"deal": "DEAL_1", "timestamp": "2026-10-07T20:00:00Z", "model_id": "gemini-3.5-flash-lite", "outcome": "ok", "error": None},
+            {"deal": "DEAL_2", "timestamp": "2026-10-07T20:05:00Z", "model_id": "gemini-3.5-flash-lite", "outcome": "api_error", "error": "503"},
+        ]
+        attempts_file.write_text("\n".join(json.dumps(e) for e in entries) + "\n", encoding="utf-8")
+        loaded = load_extraction_attempts(attempts_file)
+        assert len(loaded) == 2
+        assert loaded[0]["deal"] == "DEAL_1"
+        assert loaded[1]["outcome"] == "api_error"
+
+    def test_format_extraction_attempts_empty(self):
+        from evaluate import format_extraction_attempts
+        text = format_extraction_attempts([])
+        assert "AAPL: produced 2026-09-24 before the attempt log existed" in text
+
+    def test_format_extraction_attempts_with_rows(self):
+        from evaluate import format_extraction_attempts
+        attempts = [
+            {"deal": "MSFT_FWP_TermSheet_2017-01-31", "timestamp": "2026-10-07T21:00:00Z", "model_id": "gemini-3.5-flash-lite", "outcome": "ok", "error": None},
+        ]
+        text = format_extraction_attempts(attempts)
+        assert "AAPL: produced 2026-09-24 before the attempt log existed" in text
+        assert "MSFT_FWP_TermSheet_2017-01-31" in text
+        assert "gemini-3.5-flash-lite" in text
+        assert "ok" in text
+
+    def test_run_evaluation_report_includes_attempts_section(self, tmp_path, monkeypatch):
+        import evaluate
+        from evaluate import run_evaluation
+        # Point OUTPUT_DIR to tmp_path
+        monkeypatch.setattr(evaluate, "OUTPUT_DIR", tmp_path)
+        run_evaluation()
+        report_file = tmp_path / "accuracy_benchmark_report.md"
+        assert report_file.exists()
+        content = report_file.read_text(encoding="utf-8")
+        assert "Extraction Attempts" in content or "Extraction attempts" in content
+        assert "AAPL: produced 2026-09-24 before the attempt log existed" in content
+
+
+class TestScoringChangesSection:
+    def test_load_scoring_changes_missing(self, tmp_path):
+        from evaluate import load_scoring_changes
+        non_existent = tmp_path / "scoring_changes.jsonl"
+        assert load_scoring_changes(non_existent) == []
+
+    def test_load_scoring_changes_parses(self, tmp_path):
+        from evaluate import load_scoring_changes
+        import json
+        changes_file = tmp_path / "scoring_changes.jsonl"
+        entry = {
+            "date": "2026-10-08",
+            "change": "CUSIP cell keeps only the 9-character CUSIP; it had kept the ISIN too, which failed every CUSIP and broke tranche pairing in GOOGL",
+            "headline_before": "Field accuracy: 88.0% (308/350 fields, 4 deals, 25 tranches)",
+        }
+        changes_file.write_text(json.dumps(entry) + "\n", encoding="utf-8")
+        loaded = load_scoring_changes(changes_file)
+        assert len(loaded) == 1
+        assert loaded[0]["date"] == "2026-10-08"
+        assert loaded[0]["change"] == entry["change"]
+        assert loaded[0]["headline_before"] == entry["headline_before"]
+
+    def test_format_scoring_changes(self):
+        from evaluate import format_scoring_changes
+        changes = [{
+            "date": "2026-10-08",
+            "change": "CUSIP cell keeps only the 9-character CUSIP",
+            "headline_before": "Field accuracy: 88.0% (308/350 fields, 4 deals, 25 tranches)",
+        }]
+        text = format_scoring_changes(changes)
+        assert "2026-10-08" in text
+        assert "CUSIP cell keeps only the 9-character CUSIP" in text
+        assert "Field accuracy: 88.0%" in text
+
+    def test_run_evaluation_report_includes_scoring_changes_after_headline(self, tmp_path, monkeypatch):
+        import evaluate
+        from evaluate import run_evaluation
+        monkeypatch.setattr(evaluate, "OUTPUT_DIR", tmp_path)
+        run_evaluation()
+        report_file = tmp_path / "accuracy_benchmark_report.md"
+        assert report_file.exists()
+        content = report_file.read_text(encoding="utf-8")
+        assert "Scoring changes after the first run" in content or "Scoring Changes After the First Run" in content
+        assert "CUSIP cell keeps only the 9-character CUSIP" in content
+
+        headline_idx = content.find("Field accuracy:")
+        changes_idx = content.lower().find("scoring changes after the first run")
+        per_deal_idx = content.find("### Per-Deal Breakdown")
+        assert headline_idx != -1
+        assert changes_idx != -1
+        assert per_deal_idx != -1
+        assert headline_idx < changes_idx < per_deal_idx
+
+    def test_run_evaluation_report_omits_scoring_changes_when_file_missing(self, tmp_path, monkeypatch):
+        import evaluate
+        from evaluate import run_evaluation
+        monkeypatch.setattr(evaluate, "OUTPUT_DIR", tmp_path)
+        monkeypatch.setattr(evaluate, "SCORING_CHANGES_PATH", tmp_path / "nonexistent.jsonl")
+        run_evaluation()
+        report_file = tmp_path / "accuracy_benchmark_report.md"
+        content = report_file.read_text(encoding="utf-8")
+        assert "scoring changes after the first run" not in content.lower()
+
+
+
+

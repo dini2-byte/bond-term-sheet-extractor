@@ -10,6 +10,7 @@ import pandas as pd
 from structure import (
     assess_grounding,
     clean_coupon,
+    clean_cusip,
     clean_principal,
     clean_issue_price,
     clean_yield,
@@ -19,6 +20,32 @@ from structure import (
     normalize_ratings,
     structure_filing_extractions,
 )
+
+
+class TestCleanCusip:
+    def test_clean_cusip_examples(self):
+        assert clean_cusip("594918 BV5 / US594918BV54") == "594918BV5"
+        assert clean_cusip("68389XDH5 / US68389XDH52") == "68389XDH5"
+        assert clean_cusip("02079K CL9 / US02079KCL98") == "02079KCL9"
+        assert clean_cusip("037833EY2") == "037833EY2"
+
+    def test_clean_cusip_lowercase(self):
+        assert clean_cusip("68389xdh5 / us68389xdh52") == "68389XDH5"
+
+    def test_clean_cusip_no_cusip_returns_none(self):
+        assert clean_cusip("Not found") is None
+        assert clean_cusip("None") is None
+        assert clean_cusip("") is None
+        assert clean_cusip(None) is None
+        assert clean_cusip("US594918BV54") is None
+
+    def test_comps_table_cusip_cell_and_audit_record(self):
+        fixture_path = Path("data/fixtures/MSFT_FWP_TermSheet_2017-01-31_extractions.jsonl")
+        assert fixture_path.exists()
+        df, audit = structure_filing_extractions(fixture_path)
+        assert df["CUSIP"].iloc[0] == "594918BV5"
+        assert audit[0]["fields"]["cusip"]["raw"] == "594918 BV5 / US594918BV54"
+
 
 
 

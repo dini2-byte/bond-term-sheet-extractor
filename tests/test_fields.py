@@ -92,15 +92,21 @@ def test_few_shot_extractions_are_verbatim_in_sample():
             )
 
 
-def test_prompt_contains_no_benchmark_values():
-    """Verify prompt text, sample text, and few-shot examples contain no answer-key values."""
-    answer_key_path = Path("data/answer_key.json")
-    assert answer_key_path.exists(), "data/answer_key.json not found"
+# Known collisions between prompt/sample text in fields.py (written 2026-09-24)
+# and benchmark deals added later (2026-10-07). These are coincidental matches,
+# not leakage. See CONTEXT.md (Leakage and Collision) and docs/plans/02-benchmark-run.md Task E3.
+KNOWN_COLLISIONS = {
+    ("MSFT_FWP_TermSheet_2017-01-31", "594918BY9", "Spread (bps)"),
+    ("MSFT_FWP_TermSheet_2017-01-31", "594918CB8", "Principal ($M)"),
+    ("ORCL_FWP_TermSheet_2025-09-24", "68389XDT9", "Principal ($M)"),
+    ("GOOGL_FWP_TermSheet_2026-08-07", "02079KCL9", "Principal ($M)"),
+    ("GOOGL_FWP_TermSheet_2026-08-07", "02079KCN5", "Principal ($M)"),
+    ("GOOGL_FWP_TermSheet_2026-08-07", "02079KCS4", "Spread (bps)"),
+}
 
-    with open(answer_key_path) as f:
-        answer_key = json.load(f)
 
-    searchable_prompt = (
+def _get_searchable_prompt() -> str:
+    return (
         PROMPT_DESCRIPTION
         + "\n"
         + SAMPLE_TERM_SHEET
@@ -110,12 +116,26 @@ def test_prompt_contains_no_benchmark_values():
         )
     )
 
+
+def test_prompt_contains_no_benchmark_values():
+    """Verify prompt text, sample text, and few-shot examples contain no answer-key values."""
+    answer_key_path = Path("data/answer_key.json")
+    assert answer_key_path.exists(), "data/answer_key.json not found"
+
+    with open(answer_key_path) as f:
+        answer_key = json.load(f)
+
+    searchable_prompt = _get_searchable_prompt()
+
     leaked = []
     for deal_id, tranches in answer_key.items():
         for tranche in tranches:
             tranche_name = tranche.get("Tranche", "Unknown Tranche")
+            cusip = tranche.get("CUSIP")
             leak_strings = build_tranche_leak_strings(tranche)
             for field, leak_str in leak_strings:
+                if (deal_id, cusip, field) in KNOWN_COLLISIONS:
+                    continue
                 if leak_str in searchable_prompt:
                     leaked.append(
                         f"Deal: {deal_id} | Tranche: {tranche_name} | Field: {field} | Leaked: '{leak_str}'"
@@ -125,3 +145,29 @@ def test_prompt_contains_no_benchmark_values():
         f"Benchmark leakage detected in fields.py ({len(leaked)} values):\n"
         + "\n".join(f"  - {item}" for item in leaked)
     )
+
+
+def test_known_collisions_has_no_stale_entries():
+    """Verify every entry in KNOWN_COLLISIONS corresponds to an actual collision in fields.py."""
+    answer_key_path = Path("data/answer_key.json")
+    assert answer_key_path.exists(), "data/answer_key.json not found"
+
+    with open(answer_key_path) as f:
+        answer_key = json.load(f)
+
+    searchable_prompt = _get_searchable_prompt()
+
+    active_collisions = set()
+    for deal_id, tranches in answer_key.items():
+        for tranche in tranches:
+            cusip = tranche.get("CUSIP")
+            for field, leak_str in build_tranche_leak_strings(tranche):
+                if leak_str in searchable_prompt:
+                    active_collisions.add((deal_id, cusip, field))
+
+    stale_entries = KNOWN_COLLISIONS - active_collisions
+    assert not stale_entries, (
+        f"Stale entries found in KNOWN_COLLISIONS ({len(stale_entries)} entries):\n"
+        + "\n".join(f"  - {entry}" for entry in sorted(stale_entries))
+    )
+

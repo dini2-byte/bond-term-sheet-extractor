@@ -65,3 +65,39 @@ python3 evaluate.py
 ## Task E (Claude): Record the result
 
 Commit the fixtures, the attempt log and the regenerated report. Put the headline line in the wiki and the Google Doc writeup.
+
+## Task A3 (agy): An empty result is not a successful run
+
+If `lx.extract` returns without raising but with zero extractions, the API returned nothing usable. In that case `extract_terms` must log the attempt with outcome `api_error` and error `"no extractions returned"`, must not write the fixture (or the `output/` JSONL), and must raise `RuntimeError` with that message. A later `--fixture` run for that deal is then allowed. Test it with a mocked `lx.extract` that returns a document with an empty `extractions` list.
+
+## Result of the first run (2026-10-08)
+
+Field accuracy 88.0% (308/350), grounded 55.8% (183/328), not-in-source 0.0%. Of the 42 misses, 36 came from a scorer bug: the comps-table CUSIP cell kept the ISIN (`594918 BV5 / US594918BV54`), so every CUSIP scored wrong, and in GOOGL the broken CUSIP pairing fell back to maturity date and paired the fixed 2028 and 2029 notes with the floating-rate notes of the same maturity. The other 6 are real extraction misses: the extractor returned no par call date for any ORCL tranche.
+
+Aidin decided on 2026-10-08 to fix the CUSIP cell (no new extraction, fixtures unchanged) and to report both numbers.
+
+## Task E2 (agy): CUSIP cell holds only the CUSIP
+
+1. In `structure.py`, the comps-table `CUSIP` value is the first 9-character CUSIP in the extracted text: 6 alphanumerics, optional whitespace, 3 alphanumerics, returned uppercase with whitespace removed. `594918 BV5 / US594918BV54` gives `594918BV5`. `68389XDH5 / US68389XDH52` gives `68389XDH5`. `02079K CL9 / US02079KCL98` gives `02079KCL9`. Text with no CUSIP gives `None`. The raw text stays in the audit record.
+2. Do not change the CUSIP scoring rule or anything else in `evaluate.py` scoring.
+3. Add `data/fixtures/scoring_changes.jsonl` with one line: `{"date": "2026-10-08", "change": "CUSIP cell keeps only the 9-character CUSIP; it had kept the ISIN too, which failed every CUSIP and broke tranche pairing in GOOGL", "headline_before": "Field accuracy: 88.0% (308/350 fields, 4 deals, 25 tranches)"}`.
+4. `evaluate.py` adds a section "Scoring changes after the first run" to the console output and the report, one row per line of that file, placed right after the headline lines. If the file is missing, omit the section.
+5. Do not touch any file in `data/fixtures/` other than creating `scoring_changes.jsonl`. Make no Gemini API call.
+6. Regenerate the report with `python3 evaluate.py`.
+
+## Task E3 (agy): Allowlist the known prompt collisions
+
+After the keys were merged, `tests/test_fields.py::test_prompt_contains_no_benchmark_values` flags 6 fields (10 strings). They are collisions, not leakage (see `CONTEXT.md`): `fields.py` last changed on 2026-09-24, MSFT, ORCL and GOOGL joined the benchmark on 2026-10-07, and each value was extracted in the filing's own wording and found in source.
+
+| Deal | Tranche CUSIP | Field |
+|---|---|---|
+| MSFT_FWP_TermSheet_2017-01-31 | 594918BY9 | Spread (bps) |
+| MSFT_FWP_TermSheet_2017-01-31 | 594918CB8 | Principal ($M) |
+| ORCL_FWP_TermSheet_2025-09-24 | 68389XDT9 | Principal ($M) |
+| GOOGL_FWP_TermSheet_2026-08-07 | 02079KCL9 | Principal ($M) |
+| GOOGL_FWP_TermSheet_2026-08-07 | 02079KCN5 | Principal ($M) |
+| GOOGL_FWP_TermSheet_2026-08-07 | 02079KCS4 | Spread (bps) |
+
+1. Add `KNOWN_COLLISIONS` in `tests/test_fields.py` as a set of `(deal, cusip, field)` with a comment pointing to this section. The guard skips exactly those; any other collision still fails.
+2. Add a test that the allowlist has no stale entries: every entry must still match a real collision, so the list cannot grow silently.
+3. Touch only `tests/test_fields.py`.
