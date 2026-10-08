@@ -4,6 +4,7 @@ Encapsulates deal discovery, source highlighting runtime generation,
 password authentication, upload validation, and accuracy report parsing.
 """
 
+import base64
 import hmac
 import json
 import os
@@ -90,6 +91,12 @@ def list_benchmark_deals(
         })
 
     return deals
+
+
+def visualization_src(html: str) -> str:
+    """Return a data: URL containing base64-encoded UTF-8 HTML to isolate iframe origin."""
+    encoded = base64.b64encode(html.encode("utf-8")).decode("ascii")
+    return f"data:text/html;charset=utf-8;base64,{encoded}"
 
 
 def build_visualization_html(fixture_path: Path | str) -> str:
