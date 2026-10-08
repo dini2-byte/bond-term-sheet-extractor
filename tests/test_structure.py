@@ -15,8 +15,50 @@ from structure import (
     clean_yield,
     clean_spread,
     grounding_summary,
+    normalize_date,
+    normalize_ratings,
     structure_filing_extractions,
 )
+
+
+
+class TestNormalizeDate:
+    def test_normalize_date_required_cases(self):
+        assert normalize_date("On or after April 12, 2028") == "April 12, 2028"
+        assert normalize_date("May 12, 2025 (T+5)") == "May 12, 2025"
+        assert normalize_date("Sept. 14, 2026") == "September 14, 2026"
+        assert normalize_date("May 2028") is None
+        assert normalize_date("2028") is None
+        assert normalize_date(None) is None
+        assert normalize_date("") is None
+
+    def test_normalize_date_h3_cases(self):
+        assert normalize_date("Sep. 9, 2025") == "September 9, 2025"
+        assert normalize_date("Sept. 9, 2025") == "September 9, 2025"
+        assert normalize_date("Aug. 26, 2030") == "August 26, 2030"
+        assert normalize_date("Feb 31, 2025") is None
+
+
+
+class TestNormalizeRatings:
+    def test_normalize_ratings_required_cases(self):
+        assert normalize_ratings("Aaa (stable) by Moody’s Investors Service, Inc.\nAA+ (stable) by Standard & Poor’s Ratings Services") == "Aaa / AA+"
+        assert normalize_ratings("Moody’s, Aaa (negative outlook); S&P, AAA (stable outlook)") == "Aaa / AAA"
+        assert normalize_ratings("Moody’s: Aa2 (Stable); S&P: AA+ (Stable)") == "Aa2 / AA+"
+        assert normalize_ratings("A1 by Moody’s Investor Service, Inc.\nAA by Standard & Poor’s Ratings Services\nAA- by Fitch Ratings Inc.") == "A1 / AA / AA-"
+        assert normalize_ratings("Aaa / AA+") == "Aaa / AA+"
+        assert normalize_ratings("Not rated") is None
+        assert normalize_ratings(None) is None
+        assert normalize_ratings("") is None
+
+    def test_normalize_ratings_h2_cases(self):
+        assert normalize_ratings("N/A") is None
+        assert normalize_ratings("NA") is None
+        assert normalize_ratings("NR") is None
+        assert normalize_ratings("A rating of Aa1 / AA+") == "Aa1 / AA+"
+        assert normalize_ratings("Baa1 / A / A-") == "Baa1 / A / A-"
+        assert normalize_ratings("A (stable) by S&P") == "A"
+
 
 
 
@@ -36,6 +78,24 @@ class TestCleaners:
         assert clean_principal("750,000,000") == 750.0
         assert clean_principal(None) is None
         assert clean_principal("") is None
+
+    def test_clean_principal_words(self):
+        assert clean_principal("$1,500,000,000") == 1500.0
+        assert clean_principal("$1.5 billion") == 1500.0
+        assert clean_principal("$750 million") == 750.0
+        assert clean_principal("US$1,000,000,000") == 1000.0
+        assert clean_principal("$500,000,000 aggregate principal amount") == 500.0
+        assert clean_principal("$1,500 million") == 1500.0
+        assert clean_principal("1,250.5 million") == 1250.5
+        assert clean_principal("$2,000mm") == 2000.0
+        assert clean_principal("£1,250,000,000") == 1250.0
+
+    def test_clean_principal_h5_cases(self):
+        assert clean_principal("$1.5B") == 1500.0
+        assert clean_principal("$750MM") == 750.0
+        assert clean_principal("$2bn") == 2000.0
+
+
 
     def test_clean_issue_price(self):
         assert clean_issue_price("99.804%") == 99.804
@@ -241,9 +301,8 @@ class TestStructuring:
         assert audit[0]["fields"]["coupon"]["grounded"] is True
 
     def test_cached_aapl_fwp_extractions(self):
-        jsonl_path = Path("output/AAPL_FWP_TermSheet_2025-05-06_extractions.jsonl")
-        if not jsonl_path.exists():
-            pytest.skip("AAPL FWP cached extraction not found on disk")
+        jsonl_path = Path("data/fixtures/AAPL_FWP_TermSheet_2025-05-06_extractions.jsonl")
+        assert jsonl_path.exists(), f"AAPL FWP fixture not found on disk: {jsonl_path}"
 
         df, audit = structure_filing_extractions(jsonl_path)
         assert len(df) == 4
@@ -253,9 +312,14 @@ class TestStructuring:
         assert set(df["Spread (bps)"].tolist()) == {25, 30, 40, 50}
         assert len(audit) == 4
 
-        # 2028 tranche coupon has span mismatch in cached AAPL FWP
+        # 2028 tranche coupon is grounded with exact match
         t2028 = [a for a in audit if a["tranche"] == "2028 Notes"][0]
         coupon_meta = t2028["fields"]["coupon"]
-        assert coupon_meta["grounded"] is False
-        assert coupon_meta["grounding_quality"] == "span_mismatch"
+        assert coupon_meta["grounded"] is True
+        assert coupon_meta["grounding_quality"] == "exact"
+
+        # Settlement date of every tranche is not grounded (fuzzy alignment)
+        for a in audit:
+            settlement_meta = a["fields"]["settlement_date"]
+            assert settlement_meta["grounded"] is False
 

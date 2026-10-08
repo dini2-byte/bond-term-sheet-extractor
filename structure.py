@@ -4,6 +4,7 @@ Groups extractions by tranche, inherits deal-level fields, normalizes finance me
 and preserves character-level source text spans for auditability.
 """
 
+import datetime
 import json
 import re
 from pathlib import Path
@@ -23,18 +24,29 @@ def clean_principal(val: str | None) -> float | None:
     """Normalizes principal amounts into millions ($M). e.g. $1,500,000,000 -> 1500.0"""
     if not val:
         return None
-    clean_str = val.replace("$", "").replace(",", "").strip()
+    val_str = str(val).strip()
+
+    # Strip commas before matching unit words
+    val_clean = val_str.replace(",", "")
+
+    # Check for billion
+    match_billion = re.search(r"(\d+(?:\.\d+)?)\s*(?:billion|bn|b)\b", val_clean, re.IGNORECASE)
+    if match_billion:
+        return round(float(match_billion.group(1)) * 1000.0, 1)
+
+    # Check for million
+    match_million = re.search(r"(\d+(?:\.\d+)?)\s*(?:million|mn|mm)\b", val_clean, re.IGNORECASE)
+    if match_million:
+        return round(float(match_million.group(1)), 1)
+
+    clean_str = val_clean.replace("$", "").strip()
     match = re.search(r"(\d+(?:\.\d+)?)", clean_str)
     if not match:
         return None
     num = float(match.group(1))
-    if num >= 1_000_000_000:
-        return round(num / 1_000_000, 2)
-    elif num >= 1_000_000:
-        return round(num / 1_000_000, 2)
-    elif num >= 1_000:
-        return round(num, 2)
-    return round(num, 2)
+    if num >= 1_000_000:
+        return round(num / 1_000_000, 1)
+    return round(num, 1)
 
 def clean_issue_price(val: str | None) -> float | None:
     """Normalizes issue price as % of par. e.g. 99.804% -> 99.804"""
@@ -65,6 +77,120 @@ def normalize_ws(s: str) -> str:
     if not s:
         return ""
     return re.sub(r"\s+", " ", str(s)).strip()
+
+def normalize_ratings(raw: str | None) -> str | None:
+    """
+    Normalizes rating strings into grades joined by ' / '.
+    Removes parentheticals first.
+    Matches Moody's and S&P/Fitch grades as whole tokens in order of appearance.
+    Returns None if no grades found.
+    """
+    if not raw:
+        return None
+    raw_str = str(raw).strip()
+    if not raw_str:
+        return None
+
+    # Whole-value check for unrated or NA markers
+    if raw_str.rstrip(".").lower() in ["n/a", "na", "not rated", "nr"]:
+        return None
+
+    cleaned = re.sub(r"\(.*?\)", "", raw_str, flags=re.DOTALL)
+
+    grade_pattern = re.compile(
+        r"(?<![A-Za-z0-9+-])("
+        r"Baa[1-3]|Caa[1-3]|Aa[1-3]|Ba[1-3]|A[1-3]|B[1-3]|Aaa|Ca|"
+        r"BBB[+-]?|CCC[+-]?|AAA[+-]?|BB[+-]?|AA[+-]?|B[+-]?|A[+-]?|CC|D|"
+        r"C"
+        r")(?![A-Za-z0-9+-])"
+    )
+
+    grades = []
+    for m in grade_pattern.finditer(cleaned):
+        grade = m.group(1)
+        if grade in ["A", "B", "C", "D"]:
+            start, end = m.start(), m.end()
+            prefix = cleaned[:start]
+            suffix = cleaned[end:]
+            is_preceded = bool(re.search(r"[/;:,]\s*$", prefix))
+            is_followed = bool(
+                re.match(r"^\s*$", suffix)
+                or re.match(r"^[ \t]*\n", suffix)
+                or re.match(r"^\s*[/;,(]", suffix)
+                or re.match(r"^\s*(?:by|from)\b", suffix, re.IGNORECASE)
+            )
+            if not (is_preceded or is_followed):
+                continue
+        grades.append(grade)
+
+    if not grades:
+        return None
+    return " / ".join(grades)
+
+MONTH_NAMES = {
+    "jan": "January", "january": "January",
+    "feb": "February", "february": "February",
+    "mar": "March", "march": "March",
+    "apr": "April", "april": "April",
+    "may": "May",
+    "jun": "June", "june": "June",
+    "jul": "July", "july": "July",
+    "aug": "August", "august": "August",
+    "sep": "September", "sept": "September", "september": "September",
+    "oct": "October", "october": "October",
+    "nov": "November", "november": "November",
+    "dec": "December", "december": "December",
+}
+
+MONTH_NUMBERS = {
+    "jan": 1, "january": 1,
+    "feb": 2, "february": 2,
+    "mar": 3, "march": 3,
+    "apr": 4, "april": 4,
+    "may": 5,
+    "jun": 6, "june": 6,
+    "jul": 7, "july": 7,
+    "aug": 8, "august": 8,
+    "sep": 9, "sept": 9, "september": 9,
+    "oct": 10, "october": 10,
+    "nov": 11, "november": 11,
+    "dec": 12, "december": 12,
+}
+
+def normalize_date(raw: str | None) -> str | None:
+    """
+    Finds the first full date in the text, written as Month D, YYYY
+    (full or abbreviated month name, optional trailing dot, comma optional),
+    and returns it as Month D, YYYY with the full month name.
+    Validates with datetime.date(year, month, day).
+    Returns None if there is no full valid date.
+    """
+    if not raw:
+        return None
+    raw_str = str(raw).strip()
+    if not raw_str:
+        return None
+
+    match = re.search(r"\b([A-Za-z]+)\.?\s+(\d{1,2}),?\s+(\d{4})\b", raw_str)
+    if not match:
+        return None
+
+    month_token = match.group(1).lower()
+    if month_token not in MONTH_NAMES:
+        return None
+
+    try:
+        month_num = MONTH_NUMBERS[month_token]
+        day = int(match.group(2))
+        year = int(match.group(3))
+        valid_date = datetime.date(year, month_num, day)
+    except (ValueError, KeyError):
+        return None
+
+    full_month = MONTH_NAMES[month_token]
+    return f"{full_month} {valid_date.day}, {valid_date.year}"
+
+
 
 def assess_grounding(item: dict, doc_text: str) -> dict:
     """
@@ -203,41 +329,55 @@ def structure_filing_extractions(jsonl_path: str | Path) -> tuple[pd.DataFrame, 
         merged.update(fields)
 
         raw_tranche_name = merged.get("tranche_name", {}).get("raw", tranche_id)
-        raw_issuer = merged.get("issuer", {}).get("raw", "Not found")
-        raw_ratings = merged.get("ratings", {}).get("raw", "Not found")
-        raw_trade_date = merged.get("trade_date", {}).get("raw", "Not found")
-        raw_settle_date = merged.get("settlement_date", {}).get("raw", "Not found")
+        def _clean_missing(val: Any) -> Any:
+            if val is None:
+                return None
+            if isinstance(val, str) and val.strip().lower() == "not found":
+                return None
+            return val
+
+        raw_tranche_name = merged.get("tranche_name", {}).get("raw", tranche_id)
+        raw_issuer = _clean_missing(merged.get("issuer", {}).get("raw"))
+        raw_ratings = merged.get("ratings", {}).get("raw")
+        raw_trade_date = merged.get("trade_date", {}).get("raw")
+        raw_settle_date = merged.get("settlement_date", {}).get("raw")
         raw_principal = merged.get("principal_amount", {}).get("raw")
         raw_coupon = merged.get("coupon", {}).get("raw")
         raw_price = merged.get("issue_price", {}).get("raw")
         raw_yield = merged.get("yield_to_maturity", {}).get("raw")
         raw_spread = merged.get("spread_bps", {}).get("raw")
-        raw_benchmark = merged.get("benchmark_treasury", {}).get("raw", "Not found")
-        raw_maturity = merged.get("maturity_date", {}).get("raw", "Not found")
-        raw_day_count = merged.get("day_count", {}).get("raw", "Not found")
-        raw_make_whole = merged.get("make_whole_call", {}).get("raw", "Not found")
-        raw_par_call = merged.get("par_call_date", {}).get("raw", "Not found")
-        raw_cusip = merged.get("cusip", {}).get("raw", "Not found")
-        raw_bookrunners = merged.get("bookrunners", {}).get("raw", "Not found")
+        raw_benchmark = _clean_missing(merged.get("benchmark_treasury", {}).get("raw"))
+        raw_maturity = merged.get("maturity_date", {}).get("raw")
+        raw_day_count = _clean_missing(merged.get("day_count", {}).get("raw"))
+        raw_make_whole = _clean_missing(merged.get("make_whole_call", {}).get("raw"))
+        raw_par_call = merged.get("par_call_date", {}).get("raw")
+        raw_cusip = _clean_missing(merged.get("cusip", {}).get("raw"))
+        raw_bookrunners = _clean_missing(merged.get("bookrunners", {}).get("raw"))
+
+        bookrunners_val = (
+            ", ".join([b.strip() for b in raw_bookrunners.split("\n") if b.strip()])
+            if raw_bookrunners
+            else None
+        )
 
         row = {
             "Tranche": raw_tranche_name,
             "Issuer": raw_issuer,
-            "Ratings": raw_ratings.replace("\n", " ").strip(),
-            "Trade Date": raw_trade_date,
-            "Settlement Date": raw_settle_date,
+            "Ratings": normalize_ratings(raw_ratings),
+            "Trade Date": normalize_date(raw_trade_date),
+            "Settlement Date": normalize_date(raw_settle_date),
             "Principal ($M)": clean_principal(raw_principal),
             "Coupon (%)": clean_coupon(raw_coupon),
             "Issue Price": clean_issue_price(raw_price),
             "Yield (%)": clean_yield(raw_yield),
             "Spread (bps)": clean_spread(raw_spread),
             "Benchmark Treasury": raw_benchmark,
-            "Maturity Date": raw_maturity,
+            "Maturity Date": normalize_date(raw_maturity),
             "Day Count": raw_day_count,
             "Make-Whole Call": raw_make_whole,
-            "Par Call Date": raw_par_call,
+            "Par Call Date": normalize_date(raw_par_call),
             "CUSIP": raw_cusip,
-            "Bookrunners": ", ".join([b.strip() for b in raw_bookrunners.split("\n") if b.strip()]),
+            "Bookrunners": bookrunners_val,
         }
         records.append(row)
         audit_records.append({
