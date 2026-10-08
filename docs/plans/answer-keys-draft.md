@@ -1,4 +1,4 @@
-# Draft answer keys: MSFT, AMZN, GOOGL
+# Draft answer keys: MSFT, ORCL, GOOGL
 
 Drafted by Claude from the filing text on 2026-10-07, before any extraction was run on these deals. Every value cites its line in `data/raw_filings/<deal>.txt`. Aidin checks each value against the filing, then slice 2 merges `data/answer_key_draft.json` into `data/answer_key.json`.
 
@@ -146,87 +146,127 @@ Conventions copied from the AAPL key: text fields are the filing's own wording, 
 | Par Call Date | August 6, 2056 | 129 |
 | CUSIP | 594918CB8 | 190 |
 
-## AMZN_FWP_TermSheet_2026-09-09
+## ORCL_FWP_TermSheet_2025-09-24
 
-### 5.200% Notes due 2029
-
-| Field | Value | Line |
-|---|---|---|
-| Tranche | 5.200% Notes due 2029 | 147 |
-| Issuer | Amazon.com, Inc. | 40 |
-| Ratings | A1 / AA / AA- | 44, 47, 51 |
-| Trade Date | September 9, 2026 | 57 |
-| Settlement Date | September 14, 2026 | 59 |
-| Principal ($M) | 1250.0 | 157 (GBP, not USD) |
-| Coupon (%) | 5.2 | 178 |
-| Issue Price | 99.97 | 285 |
-| Yield (%) | 5.211 | 192 |
-| Spread (bps) | 53 | 203 |
-| Benchmark Treasury | UKT 4.125% due July 22, 2029 | 215 (a gilt, not a Treasury) |
-| Maturity Date | September 14, 2029 | 167 |
-| Day Count | null | not stated (ACTUAL/ACTUAL (ICMA) at 274 is the redemption discount basis, not the coupon day count) |
-| Par Call Date | August 14, 2029 | 237 |
-| CUSIP | 023135EK8 | 299 |
-
-### 5.550% Notes due 2032
+### 4.450% Notes due 2030
 
 | Field | Value | Line |
 |---|---|---|
-| Tranche | 5.550% Notes due 2032 | 150 |
-| Issuer | Amazon.com, Inc. | 40 |
-| Ratings | A1 / AA / AA- | 44, 47, 51 |
-| Trade Date | September 9, 2026 | 57 |
-| Settlement Date | September 14, 2026 | 59 |
-| Principal ($M) | 1000.0 | 160 (GBP, not USD) |
-| Coupon (%) | 5.55 | 182 |
-| Issue Price | 99.945 | 289 |
-| Yield (%) | 5.561 | 196 |
-| Spread (bps) | 75 | 207 |
-| Benchmark Treasury | UKT 4.250% due June 7, 2032 | 219 (a gilt, not a Treasury) |
-| Maturity Date | September 14, 2032 | 171 |
-| Day Count | null | not stated (ACTUAL/ACTUAL (ICMA) at 274 is the redemption discount basis, not the coupon day count) |
-| Par Call Date | July 14, 2032 | 241 |
-| CUSIP | 023135EL6 | 303 |
+| Tranche | 4.450% Notes due 2030 | 15 |
+| Issuer | Oracle Corporation | 16 |
+| Ratings | Baa2 / BBB / BBB | 49 |
+| Trade Date | September 24, 2025 | 44 |
+| Settlement Date | September 26, 2025 | 45 |
+| Principal ($M) | 3000.0 | 17 |
+| Coupon (%) | 4.45 | 19 |
+| Issue Price | 99.938 | 20 |
+| Yield (%) | 4.464 | 26 |
+| Spread (bps) | 75 | 25 |
+| Benchmark Treasury | 3.625% due August 31, 2030 | 23 |
+| Maturity Date | September 26, 2030 | 18 |
+| Day Count | 30/360 | 22 |
+| Par Call Date | August 26, 2030 | 27 |
+| CUSIP | 68389XDH5 | 46 |
 
-### 6.250% Notes due 2038
-
-| Field | Value | Line |
-|---|---|---|
-| Tranche | 6.250% Notes due 2038 | 153 |
-| Issuer | Amazon.com, Inc. | 40 |
-| Ratings | A1 / AA / AA- | 44, 47, 51 |
-| Trade Date | September 9, 2026 | 57 |
-| Settlement Date | September 14, 2026 | 59 |
-| Principal ($M) | 1000.0 | 163 (GBP, not USD) |
-| Coupon (%) | 6.25 | 186 |
-| Issue Price | 99.775 | 293 |
-| Yield (%) | 6.277 | 199 |
-| Spread (bps) | 90 | 210 |
-| Benchmark Treasury | UKT 3.750% due January 29, 2038 | 223 (a gilt, not a Treasury) |
-| Maturity Date | September 14, 2038 | 174 |
-| Day Count | null | not stated (ACTUAL/ACTUAL (ICMA) at 274 is the redemption discount basis, not the coupon day count) |
-| Par Call Date | June 14, 2038 | 245 |
-| CUSIP | 023135EM4 | 307 |
-
-### 6.650% Notes due 2045
+### 4.800% Notes due 2032
 
 | Field | Value | Line |
 |---|---|---|
-| Tranche | 6.650% Notes due 2045 | 156 |
-| Issuer | Amazon.com, Inc. | 40 |
-| Ratings | A1 / AA / AA- | 44, 47, 51 |
-| Trade Date | September 9, 2026 | 57 |
-| Settlement Date | September 14, 2026 | 59 |
-| Principal ($M) | 1000.0 | 166 (GBP, not USD) |
-| Coupon (%) | 6.65 | 190 |
-| Issue Price | 99.563 | 297 |
-| Yield (%) | 6.691 | 202 |
-| Spread (bps) | 93 | 213 |
-| Benchmark Treasury | UKT 3.500% due January 22, 2045 | 227 (a gilt, not a Treasury) |
-| Maturity Date | September 14, 2045 | 177 |
-| Day Count | null | not stated (ACTUAL/ACTUAL (ICMA) at 274 is the redemption discount basis, not the coupon day count) |
-| Par Call Date | March 14, 2045 | 249 |
-| CUSIP | 023135EN2 | 311 |
+| Tranche | 4.800% Notes due 2032 | 67 |
+| Issuer | Oracle Corporation | 16 |
+| Ratings | Baa2 / BBB / BBB | 100 |
+| Trade Date | September 24, 2025 | 96 |
+| Settlement Date | September 26, 2025 | 97 |
+| Principal ($M) | 3000.0 | 69 |
+| Coupon (%) | 4.8 | 71 |
+| Issue Price | 99.965 | 72 |
+| Yield (%) | 4.806 | 78 |
+| Spread (bps) | 90 | 77 |
+| Benchmark Treasury | 3.875% due August 31, 2032 | 75 |
+| Maturity Date | September 26, 2032 | 70 |
+| Day Count | 30/360 | 74 |
+| Par Call Date | July 26, 2032 | 79 |
+| CUSIP | 68389XDK8 | 98 |
+
+### 5.200% Notes due 2035
+
+| Field | Value | Line |
+|---|---|---|
+| Tranche | 5.200% Notes due 2035 | 129 |
+| Issuer | Oracle Corporation | 16 |
+| Ratings | Baa2 / BBB / BBB | 162 |
+| Trade Date | September 24, 2025 | 158 |
+| Settlement Date | September 26, 2025 | 159 |
+| Principal ($M) | 4000.0 | 131 |
+| Coupon (%) | 5.2 | 133 |
+| Issue Price | 99.985 | 134 |
+| Yield (%) | 5.202 | 140 |
+| Spread (bps) | 105 | 139 |
+| Benchmark Treasury | 4.250% due August 15, 2035 | 137 |
+| Maturity Date | September 26, 2035 | 132 |
+| Day Count | 30/360 | 136 |
+| Par Call Date | June 26, 2035 | 141 |
+| CUSIP | 68389XDM4 | 160 |
+
+### 5.875% Notes due 2045
+
+| Field | Value | Line |
+|---|---|---|
+| Tranche | 5.875% Notes due 2045 | 181 |
+| Issuer | Oracle Corporation | 16 |
+| Ratings | Baa2 / BBB / BBB | 214 |
+| Trade Date | September 24, 2025 | 210 |
+| Settlement Date | September 26, 2025 | 211 |
+| Principal ($M) | 2500.0 | 183 |
+| Coupon (%) | 5.875 | 185 |
+| Issue Price | 99.953 | 186 |
+| Yield (%) | 5.879 | 192 |
+| Spread (bps) | 115 | 191 |
+| Benchmark Treasury | 4.875% due August 15, 2045 | 189 |
+| Maturity Date | September 26, 2045 | 184 |
+| Day Count | 30/360 | 188 |
+| Par Call Date | March 26, 2045 | 193 |
+| CUSIP | 68389XDP7 | 212 |
+
+### 5.950% Notes due 2055
+
+| Field | Value | Line |
+|---|---|---|
+| Tranche | 5.950% Notes due 2055 | 233 |
+| Issuer | Oracle Corporation | 16 |
+| Ratings | Baa2 / BBB / BBB | 266 |
+| Trade Date | September 24, 2025 | 262 |
+| Settlement Date | September 26, 2025 | 263 |
+| Principal ($M) | 3500.0 | 235 |
+| Coupon (%) | 5.95 | 237 |
+| Issue Price | 99.02 | 238 |
+| Yield (%) | 6.021 | 244 |
+| Spread (bps) | 125 | 243 |
+| Benchmark Treasury | 4.750% due May 15, 2055 | 241 |
+| Maturity Date | September 26, 2055 | 236 |
+| Day Count | 30/360 | 240 |
+| Par Call Date | March 26, 2055 | 245 |
+| CUSIP | 68389XDR3 | 264 |
+
+### 6.100% Notes due 2065
+
+| Field | Value | Line |
+|---|---|---|
+| Tranche | 6.100% Notes due 2065 | 285 |
+| Issuer | Oracle Corporation | 16 |
+| Ratings | Baa2 / BBB / BBB | 318 |
+| Trade Date | September 24, 2025 | 314 |
+| Settlement Date | September 26, 2025 | 315 |
+| Principal ($M) | 2000.0 | 287 |
+| Coupon (%) | 6.1 | 289 |
+| Issue Price | 99.392 | 290 |
+| Yield (%) | 6.141 | 296 |
+| Spread (bps) | 137 | 295 |
+| Benchmark Treasury | 4.750% due May 15, 2055 | 293 |
+| Maturity Date | September 26, 2065 | 288 |
+| Day Count | 30/360 | 292 |
+| Par Call Date | March 26, 2065 | 297 |
+| CUSIP | 68389XDT9 | 316 |
 
 ## GOOGL_FWP_TermSheet_2026-08-07
 
