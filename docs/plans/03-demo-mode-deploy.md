@@ -73,3 +73,15 @@ Leave changes uncommitted on `slice-03-demo-mode`. Report:
 ## After agy: Aidin deploys
 
 Claude gives Aidin the exact steps: create the app on share.streamlit.io from the private repo, paste the secrets, open the URL in incognito. Deploying needs Aidin's Streamlit account, so Claude cannot do it.
+
+---
+
+# Task G: Review follow-ups (added 2026-10-08)
+
+## G1: Live uploads must not touch the benchmark record
+
+`app.py` calls `extract_terms` for a live upload, and `extract_terms` always appends to `data/fixtures/attempts.jsonl`. Uploads would then show up in the benchmark's attempt log. Add a keyword argument `log_attempt: bool = True` to `extract_terms` in `extract.py`; when it is `False`, write nothing to `attempts.jsonl`. `app.py` passes `log_attempt=False`. The live upload must also write its JSONL and HTML into the upload's temp directory, not `output/`, so two visitors never overwrite each other's results: add `output_dir: Path | None = None` to `extract_terms` (default `OUTPUT_DIR`), and pass the temp directory from `app.py`. Test both with a mocked `lx.extract`. Touch `extract.py` only for these two arguments.
+
+## G2: Replace deprecated Streamlit calls
+
+Streamlit 1.64 warns that `st.components.v1.html` was due for removal after 2026-06-01 and `use_container_width` after 2025-12-31. Replace `components.html(...)` with the current Streamlit equivalent for rendering an HTML string (check the 1.64 docs; `st.iframe` was named in the warning) and `use_container_width=True` with `width="stretch"`. The highlighted-source view must still render. Run the app headless for 15 seconds and confirm no deprecation warnings remain.
