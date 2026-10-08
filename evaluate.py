@@ -240,6 +240,41 @@ def compute_summary_metrics(eval_df: pd.DataFrame) -> dict[str, Any]:
         "not_in_source_pct": not_in_source_pct,
     }
 
+
+def load_extraction_attempts(attempts_path: Path = FIXTURES_DIR / "attempts.jsonl") -> list[dict[str, Any]]:
+    if not attempts_path.exists():
+        return []
+    attempts = []
+    with open(attempts_path, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                attempts.append(json.loads(line))
+            except json.JSONDecodeError:
+                continue
+    return attempts
+
+
+def format_extraction_attempts(attempts: list[dict[str, Any]]) -> str:
+    aapl_line = "AAPL: produced 2026-09-24 before the attempt log existed"
+    if not attempts:
+        return aapl_line
+
+    rows = []
+    for att in attempts:
+        rows.append({
+            "Deal": att.get("deal", ""),
+            "Timestamp": att.get("timestamp", ""),
+            "Model": att.get("model_id", ""),
+            "Outcome": att.get("outcome", ""),
+            "Error": att.get("error") or "",
+        })
+    df = pd.DataFrame(rows)
+    return f"{aapl_line}\n\n{df.to_markdown(index=False)}"
+
+
 def run_evaluation():
     if not ANSWER_KEY_PATH.exists():
         raise FileNotFoundError(f"Answer key not found: {ANSWER_KEY_PATH}")
@@ -325,7 +360,6 @@ def run_evaluation():
         discrepancies = all_eval_df[~all_eval_df["Correct"]][["Deal", "Tranche", "Field", "Expected", "Extracted"]]
     else:
         discrepancies = pd.DataFrame(columns=["Deal", "Tranche", "Field", "Expected", "Extracted"])
-
     # Console output
     print(headline)
     print(grounded_line)
@@ -341,9 +375,23 @@ def run_evaluation():
     else:
         print(discrepancies.to_string(index=False))
 
+    attempts = load_extraction_attempts()
+    print("\n--- Extraction Attempts ---")
+    print("AAPL: produced 2026-09-24 before the attempt log existed")
+    if attempts:
+        attempts_df = pd.DataFrame([{
+            "Deal": att.get("deal", ""),
+            "Timestamp": att.get("timestamp", ""),
+            "Model": att.get("model_id", ""),
+            "Outcome": att.get("outcome", ""),
+            "Error": att.get("error") or "",
+        } for att in attempts])
+        print(attempts_df.to_string(index=False))
+
     # Export markdown report
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     report_path = OUTPUT_DIR / "accuracy_benchmark_report.md"
+    attempts_content = format_extraction_attempts(attempts)
     with open(report_path, "w", encoding="utf-8") as f:
         f.write(f"{headline}\n")
         f.write(f"{grounded_line}\n")
@@ -359,6 +407,8 @@ def run_evaluation():
         else:
             f.write(discrepancies.to_markdown(index=False))
             f.write("\n")
+        f.write("\n### Extraction Attempts\n\n")
+        f.write(f"{attempts_content}\n")
 
     print(f"\n[✓] Saved evaluation report: {report_path}")
 

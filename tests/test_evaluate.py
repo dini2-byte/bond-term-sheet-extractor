@@ -463,3 +463,53 @@ class TestComputeSummaryMetrics:
         assert fixture_file.exists(), f"Fixture file not found: {fixture_file}"
 
 
+class TestExtractionAttemptsSection:
+    def test_load_extraction_attempts_missing(self, tmp_path):
+        from evaluate import load_extraction_attempts
+        non_existent = tmp_path / "attempts.jsonl"
+        assert load_extraction_attempts(non_existent) == []
+
+    def test_load_extraction_attempts_parses(self, tmp_path):
+        from evaluate import load_extraction_attempts
+        import json
+        attempts_file = tmp_path / "attempts.jsonl"
+        entries = [
+            {"deal": "DEAL_1", "timestamp": "2026-10-07T20:00:00Z", "model_id": "gemini-3.5-flash-lite", "outcome": "ok", "error": None},
+            {"deal": "DEAL_2", "timestamp": "2026-10-07T20:05:00Z", "model_id": "gemini-3.5-flash-lite", "outcome": "api_error", "error": "503"},
+        ]
+        attempts_file.write_text("\n".join(json.dumps(e) for e in entries) + "\n", encoding="utf-8")
+        loaded = load_extraction_attempts(attempts_file)
+        assert len(loaded) == 2
+        assert loaded[0]["deal"] == "DEAL_1"
+        assert loaded[1]["outcome"] == "api_error"
+
+    def test_format_extraction_attempts_empty(self):
+        from evaluate import format_extraction_attempts
+        text = format_extraction_attempts([])
+        assert "AAPL: produced 2026-09-24 before the attempt log existed" in text
+
+    def test_format_extraction_attempts_with_rows(self):
+        from evaluate import format_extraction_attempts
+        attempts = [
+            {"deal": "MSFT_FWP_TermSheet_2017-01-31", "timestamp": "2026-10-07T21:00:00Z", "model_id": "gemini-3.5-flash-lite", "outcome": "ok", "error": None},
+        ]
+        text = format_extraction_attempts(attempts)
+        assert "AAPL: produced 2026-09-24 before the attempt log existed" in text
+        assert "MSFT_FWP_TermSheet_2017-01-31" in text
+        assert "gemini-3.5-flash-lite" in text
+        assert "ok" in text
+
+    def test_run_evaluation_report_includes_attempts_section(self, tmp_path, monkeypatch):
+        import evaluate
+        from evaluate import run_evaluation
+        # Point OUTPUT_DIR to tmp_path
+        monkeypatch.setattr(evaluate, "OUTPUT_DIR", tmp_path)
+        run_evaluation()
+        report_file = tmp_path / "accuracy_benchmark_report.md"
+        assert report_file.exists()
+        content = report_file.read_text(encoding="utf-8")
+        assert "Extraction Attempts" in content or "Extraction attempts" in content
+        assert "AAPL: produced 2026-09-24 before the attempt log existed" in content
+
+
+

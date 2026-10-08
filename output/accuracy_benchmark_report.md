@@ -31,3 +31,7 @@ Unmatched extracted tranches: 0
 ### Discrepancy Log
 
 None. All extracted fields matched answer key.
+
+### Extraction Attempts
+
+AAPL: produced 2026-09-24 before the attempt log existed
