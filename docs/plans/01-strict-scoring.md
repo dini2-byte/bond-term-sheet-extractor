@@ -192,3 +192,39 @@ Add a fourth headline line: `Unmatched extracted tranches: N`. They are not scor
 ## G deliverable
 
 Same report shape as above: failing then passing output per item, full `pytest -q`, full `python3 evaluate.py`.
+
+---
+
+# Task H: Second review follow-ups (added 2026-10-07)
+
+A second Python review confirmed G1-G9 and found these. All must land before slice 2, same rules as above, test first.
+
+## H1: "Not found" is a missing value
+
+`structure.py` still fills Benchmark Treasury, Day Count, CUSIP and Issuer with the string `"Not found"` when nothing was extracted, while Ratings and the dates use `None`. An answer key of `null` against `"Not found"` then scores wrong, which punishes the extractor for correctly reporting Not found (MSFT states no day count, so this hits 7 fields). Make every comps-table field use `None` for "nothing extracted". The app may still display `None` as "Not found" (that is a display concern; leave `app.py` alone in this task). In `matches_value`, also treat the string `"Not found"` as `None`, as a safety net.
+
+Required test: key `{Day Count: null}` against an extracted tranche with no day_count extraction scores Correct=True, Grounded=False, and the field is not counted as extracted.
+
+## H2: Bare "A" must not match outside a rating context
+
+`normalize_ratings("N/A")` returns `"A"`, and `"A rating of Aa1 / AA+"` returns `"A / Aa1 / AA+"`. Fix:
+- Return `None` for `N/A`, `NA`, `Not rated`, `NR` (case-insensitive, whole value).
+- A token that is a single letter (`A`, `B`, `C`, `D`) counts only when it is followed, after optional whitespace, by `/`, `;`, `,`, `(`, end of text, or the words `by`, `from`, `\n`; or preceded by `/`, `;`, `:`, `,`. Otherwise skip it.
+
+Required tests: `N/A` gives `None`. `A rating of Aa1 / AA+` gives `Aa1 / AA+`. `Baa1 / A / A-` gives `Baa1 / A / A-`. `A (stable) by S&P` gives `A`. All existing G1 tests still pass.
+
+## H3: `normalize_date` accepts common abbreviations and rejects impossible dates
+
+Accept `Sept`, and an optional `.` after an abbreviated month (`Sep. 9, 2025`, `Sept. 9, 2025`, `Aug. 26, 2030`). Validate with `datetime.date(year, month, day)`; return `None` if it raises (`Feb 31, 2025` gives `None`).
+
+## H4: Extracted-field denominator
+
+Grounded % and not-in-source % divide by "fields with an extracted value". Count a field as extracted when its comps-table value is not `None` (after H1), not by whether an audit entry exists. A field with a value but no audit entry counts as extracted, not grounded and not in source. Add a test for that case.
+
+## H5: `clean_principal` handles `B` and `MM`
+
+`$1.5B` gives 1500.0, `$750MM` gives 750.0, `$2bn` gives 2000.0. Keep all existing principal tests passing.
+
+## H deliverable
+
+Same report shape: failing then passing output per item, full `pytest -q`, full `python3 evaluate.py`.
