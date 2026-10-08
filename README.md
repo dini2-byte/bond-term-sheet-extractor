@@ -2,6 +2,8 @@
 
 Pulls pricing terms for investment-grade corporate bond deals out of SEC term sheets and builds a comps table where every value points back to the exact text it came from. It groups values into tranches, normalizes pricing terms and flags any value that does not match the source text exactly.
 
+Live demo: https://bond-term-sheet-extractor-diwsf7fvsovutxsajuanis.streamlit.app/ (benchmark deals are open; live upload needs a password).
+
 ## Results
 
 - Field accuracy: 98.3% (344/350 fields, 4 deals, 25 tranches)
