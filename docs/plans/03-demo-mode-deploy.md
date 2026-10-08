@@ -2,7 +2,7 @@
 
 **Implementer**: agy
 **Reviewer**: Claude Code
-**Branch**: `slice-03-demo-mode`, cut from `master` after slice 1 merges
+**Branch**: `slice-03-demo-mode`, cut from `master` after slice 2 merged (`897076f`)
 **Due**: 2026-10-20
 
 Read `CONTEXT.md` first and use its terms.
@@ -43,9 +43,11 @@ AINA reviewers open one link in an incognito window. The app must show the bench
 ## Task D: Say how accurate it is
 
 1. Add a section "How accurate is this?" under the title. It shows the headline line from `output/accuracy_benchmark_report.md` (the line that starts with `Field accuracy:`), followed by the grounded and not-in-source lines.
-2. If the report file is missing, hide the section. Do not show a placeholder number.
-3. Add a footer link: "Code and benchmark: https://github.com/dini2-byte/bond-term-sheet-extractor".
-4. `output/accuracy_benchmark_report.md` must be tracked in git so the deployed app can read it. Check `.gitignore`.
+2. If the report has a "Scoring changes after the first run" section, show one line under the headline for each change, built from `data/fixtures/scoring_changes.jsonl`: "First scored at <headline_before number> before this fix: <change>." Read the file with `evaluate.load_scoring_changes`.
+3. Below that, one line: "Benchmark: 4 deals, 25 tranches, answer keys written before each deal was run. Each deal was run through Gemini once." Take the deal and tranche counts from the headline line, not hardcoded.
+4. If the report file is missing, hide the section. Do not show a placeholder number.
+5. Add a footer link: "Code and benchmark: https://github.com/dini2-byte/bond-term-sheet-extractor".
+6. `output/accuracy_benchmark_report.md` must be tracked in git so the deployed app can read it. Check `.gitignore`.
 
 ## Task E: Use the glossary's words
 
@@ -71,3 +73,19 @@ Leave changes uncommitted on `slice-03-demo-mode`. Report:
 ## After agy: Aidin deploys
 
 Claude gives Aidin the exact steps: create the app on share.streamlit.io from the private repo, paste the secrets, open the URL in incognito. Deploying needs Aidin's Streamlit account, so Claude cannot do it.
+
+---
+
+# Task G: Review follow-ups (added 2026-10-08)
+
+## G1: Live uploads must not touch the benchmark record
+
+`app.py` calls `extract_terms` for a live upload, and `extract_terms` always appends to `data/fixtures/attempts.jsonl`. Uploads would then show up in the benchmark's attempt log. Add a keyword argument `log_attempt: bool = True` to `extract_terms` in `extract.py`; when it is `False`, write nothing to `attempts.jsonl`. `app.py` passes `log_attempt=False`. The live upload must also write its JSONL and HTML into the upload's temp directory, not `output/`, so two visitors never overwrite each other's results: add `output_dir: Path | None = None` to `extract_terms` (default `OUTPUT_DIR`), and pass the temp directory from `app.py`. Test both with a mocked `lx.extract`. Touch `extract.py` only for these two arguments.
+
+## G2: Replace deprecated Streamlit calls
+
+Streamlit 1.64 warns that `st.components.v1.html` was due for removal after 2026-06-01 and `use_container_width` after 2025-12-31. Replace `components.html(...)` with the current Streamlit equivalent for rendering an HTML string (check the 1.64 docs; `st.iframe` was named in the warning) and `use_container_width=True` with `width="stretch"`. The highlighted-source view must still render. Run the app headless for 15 seconds and confirm no deprecation warnings remain.
+
+## Known limitation (review, 2026-10-08)
+
+`st.iframe` runs an HTML string with same-origin access to the app. `lx.visualize` escapes the document text but embeds extraction text in a `<script>` JSON literal without escaping `</script>`, so a crafted upload could inject script into the uploader's own session. Only password holders can upload, and demo mode renders only committed fixtures, so this is accepted for the submission. Fix later by escaping `</` in the visualization JSON or rendering uploads in a sandboxed iframe.
