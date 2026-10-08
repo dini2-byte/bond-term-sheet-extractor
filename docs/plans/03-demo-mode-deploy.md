@@ -85,3 +85,7 @@ Claude gives Aidin the exact steps: create the app on share.streamlit.io from th
 ## G2: Replace deprecated Streamlit calls
 
 Streamlit 1.64 warns that `st.components.v1.html` was due for removal after 2026-06-01 and `use_container_width` after 2025-12-31. Replace `components.html(...)` with the current Streamlit equivalent for rendering an HTML string (check the 1.64 docs; `st.iframe` was named in the warning) and `use_container_width=True` with `width="stretch"`. The highlighted-source view must still render. Run the app headless for 15 seconds and confirm no deprecation warnings remain.
+
+## Known limitation (review, 2026-10-08)
+
+`st.iframe` runs an HTML string with same-origin access to the app. `lx.visualize` escapes the document text but embeds extraction text in a `<script>` JSON literal without escaping `</script>`, so a crafted upload could inject script into the uploader's own session. Only password holders can upload, and demo mode renders only committed fixtures, so this is accepted for the submission. Fix later by escaping `</` in the visualization JSON or rendering uploads in a sandboxed iframe.

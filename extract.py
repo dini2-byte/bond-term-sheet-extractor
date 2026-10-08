@@ -74,6 +74,8 @@ def extract_terms(
     max_char_buffer: int = 40000,
     max_workers: int = 1,
     fixture: bool = False,
+    log_attempt: bool = True,
+    output_dir: Path | None = None,
 ) -> lx.data.AnnotatedDocument:
     filing_path = Path(filing_path)
     if not filing_path.exists():
@@ -111,12 +113,14 @@ def extract_terms(
             temperature=0.0,
         )
     except Exception as e:
-        _log_attempt(deal=deal, model_id=model_id, outcome="api_error", error=str(e))
+        if log_attempt:
+            _log_attempt(deal=deal, model_id=model_id, outcome="api_error", error=str(e))
         raise
 
     extractions = getattr(result, "extractions", None) or []
     if not extractions:
-        _log_attempt(deal=deal, model_id=model_id, outcome="api_error", error="no extractions returned")
+        if log_attempt:
+            _log_attempt(deal=deal, model_id=model_id, outcome="api_error", error="no extractions returned")
         raise RuntimeError("no extractions returned")
 
     print(f"\n[3/4] Extraction complete. Total entities captured: {len(extractions)}")
@@ -145,16 +149,18 @@ def extract_terms(
     print(f"      Alignment: exact={exact_count}, fuzzy={fuzzy_count}, lesser={lesser_count}, none={none_count}")
     print(f"      Tranches identified: {sorted(list(tranches_found))}")
 
-    # Save structured JSONL to output/
+    # Save structured JSONL to output/ or output_dir
     base_name = filing_path.stem
     jsonl_filename = f"{base_name}_extractions.jsonl"
+    target_output_dir = Path(output_dir) if output_dir is not None else OUTPUT_DIR
+    target_output_dir.mkdir(parents=True, exist_ok=True)
     lx.io.save_annotated_documents(
         annotated_documents=[result],
-        output_dir=OUTPUT_DIR,
+        output_dir=target_output_dir,
         output_name=jsonl_filename,
         show_progress=False,
     )
-    print(f"[4/4] Saved structured data: {OUTPUT_DIR / jsonl_filename}")
+    print(f"[4/4] Saved structured data: {target_output_dir / jsonl_filename}")
 
     # Save to data/fixtures/ if --fixture flag is present
     if fixture:
@@ -168,12 +174,13 @@ def extract_terms(
         print(f"      Saved fixture: {FIXTURES_DIR / jsonl_filename}")
 
     # Log successful attempt
-    _log_attempt(deal=deal, model_id=model_id, outcome="ok", error=None)
+    if log_attempt:
+        _log_attempt(deal=deal, model_id=model_id, outcome="ok", error=None)
 
     # Generate interactive highlighted HTML visualization
     html_content = lx.visualize(result)
     html_filename = f"{base_name}_visualization.html"
-    html_path = OUTPUT_DIR / html_filename
+    html_path = target_output_dir / html_filename
     with open(html_path, "w", encoding="utf-8") as f:
         f.write(str(html_content))
     print(f"      Saved HTML visualization: {html_path}")

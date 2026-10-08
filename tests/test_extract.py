@@ -240,3 +240,61 @@ def test_cli_fixture_flag(temp_env):
         assert args.filing == str(temp_env["dummy_filing"])
         assert args.model == "test-model"
 
+
+def test_extract_log_attempt_false_does_not_log_on_success(temp_env):
+    """G1: When log_attempt=False, successful extraction does not touch attempts.jsonl."""
+    mock_result = MagicMock()
+    mock_extraction = MagicMock(attributes={"tranche": "Tranche 1"}, alignment_status="match_exact")
+    mock_result.extractions = [mock_extraction]
+
+    with patch("langextract.extract", return_value=mock_result), \
+         patch("langextract.visualize", return_value="<html></html>"), \
+         patch("langextract.io.save_annotated_documents"):
+        extract.extract_terms(temp_env["dummy_filing"], log_attempt=False)
+
+    attempts_file = temp_env["fixtures_dir"] / "attempts.jsonl"
+    assert not attempts_file.exists()
+
+
+def test_extract_log_attempt_false_does_not_log_on_error(temp_env):
+    """G1: When log_attempt=False, failed extraction does not touch attempts.jsonl."""
+    with patch("langextract.extract", side_effect=RuntimeError("Mock API error")):
+        with pytest.raises(RuntimeError):
+            extract.extract_terms(temp_env["dummy_filing"], log_attempt=False)
+
+    attempts_file = temp_env["fixtures_dir"] / "attempts.jsonl"
+    assert not attempts_file.exists()
+
+
+def test_extract_output_dir_custom_saves_to_specified_directory(temp_env, tmp_path):
+    """G1: When output_dir is provided, JSONL and HTML visualization are saved to output_dir instead of OUTPUT_DIR."""
+    mock_result = MagicMock()
+    mock_extraction = MagicMock(attributes={"tranche": "Tranche 1"}, alignment_status="match_exact")
+    mock_result.extractions = [mock_extraction]
+
+    custom_dir = tmp_path / "custom_upload_temp"
+    custom_dir.mkdir()
+
+    saved_calls = []
+
+    def fake_save(annotated_documents, output_dir, output_name, show_progress=False):
+        saved_calls.append((Path(output_dir), output_name))
+        (Path(output_dir) / output_name).write_text("{}", encoding="utf-8")
+
+    with patch("langextract.extract", return_value=mock_result), \
+         patch("langextract.visualize", return_value="<html>custom visualization</html>"), \
+         patch("langextract.io.save_annotated_documents", side_effect=fake_save):
+        extract.extract_terms(temp_env["dummy_filing"], output_dir=custom_dir, log_attempt=False)
+
+    # JSONL saved to custom_dir
+    assert len(saved_calls) == 1
+    assert saved_calls[0][0] == custom_dir
+    assert (custom_dir / f"{temp_env['deal']}_extractions.jsonl").exists()
+    assert not (temp_env["output_dir"] / f"{temp_env['deal']}_extractions.jsonl").exists()
+
+    # HTML visualization saved to custom_dir
+    assert (custom_dir / f"{temp_env['deal']}_visualization.html").exists()
+    assert not (temp_env["output_dir"] / f"{temp_env['deal']}_visualization.html").exists()
+    assert (custom_dir / f"{temp_env['deal']}_visualization.html").read_text(encoding="utf-8") == "<html>custom visualization</html>"
+
+

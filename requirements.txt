@@ -1,8 +1,9 @@
-langextract
-edgartools
-pandas
-openpyxl
-streamlit
-python-dotenv
-pytest
-pytest-cov
+langextract==1.7.0
+edgartools==5.58.0
+pandas==3.0.6
+openpyxl==3.1.5
+streamlit==1.64.0
+python-dotenv==1.2.3
+pytest==9.1.1
+pytest-cov==7.1.0
+python-dateutil==2.9.0.post0
