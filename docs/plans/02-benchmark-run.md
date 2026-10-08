@@ -4,7 +4,7 @@
 **Reviewer**: Claude Code
 **Branch**: `slice-02-benchmark`, cut from `master` after slice 1 merges
 **Due**: 2026-10-17
-**Status**: blocked on Aidin (see Open decisions)
+**Status**: ready once slice 1 merges
 
 Read `CONTEXT.md` first and use its terms.
 
@@ -24,9 +24,7 @@ Produce the reported numbers: field accuracy, grounded % and not-in-source % acr
 - **GOOGL floating-rate tranches are not scored.** The key covers the 8 fixed-rate tranches. If the extractor returns the 2 floating-rate tranches, they show as unmatched extracted tranches.
 - **Grounded % and not-in-source % divide by fields with an extracted value** (slice 1, Task G7).
 
-## Still open (Aidin)
-
-**Draft keys verified?** `docs/plans/answer-keys-draft.md` lists every value with its filing line. A script confirmed that each value appears at its cited line, but not that the line belongs to the right tranche. Aidin checks the tranche mapping, most of all the MSFT par call dates: the MSFT filing's table layout is scrambled, so those lines were mapped to tranches by date order.
+- **Draft keys verified.** Aidin checked them against the SEC filings on 2026-10-07 and confirmed them with no corrections.
 
 ## Task A (agy): Attempt log
 

@@ -1,6 +1,6 @@
 # Draft answer keys: MSFT, ORCL, GOOGL
 
-Drafted by Claude from the filing text on 2026-10-07, before any extraction was run on these deals. Every value cites its line in `data/raw_filings/<deal>.txt`. Aidin checks each value against the filing, then slice 2 merges `data/answer_key_draft.json` into `data/answer_key.json`.
+Drafted by Claude from the filing text on 2026-10-07, before any extraction was run on these deals. Every value cites its line in `data/raw_filings/<deal>.txt`. Aidin checked the keys against the SEC filings on 2026-10-07 and confirmed them with no corrections. Slice 2 merges `data/answer_key_draft.json` into `data/answer_key.json`.
 
 Conventions copied from the AAPL key: text fields are the filing's own wording, numbers are normalised (principal in millions of the deal currency, spread in bps), a field the filing does not state is `null` (the extractor should report Not found).
 
