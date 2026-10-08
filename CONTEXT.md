@@ -55,4 +55,8 @@ The share of answer-key fields where the extracted value equals the key after no
 _Avoid_: Accuracy (unqualified), score
 
 **Leakage**:
-Any benchmark value that appears in the extraction prompt or its examples. A benchmark with leakage is invalid.
+A benchmark value placed in the extraction prompt or its examples by someone who had already seen that deal. A benchmark with leakage is invalid.
+
+**Collision**:
+A benchmark value that matches a prompt value by coincidence, because the prompt was written before the deal joined the benchmark. Collisions are listed and reported, not treated as leakage.
+_Avoid_: Leak (for a coincidental match)

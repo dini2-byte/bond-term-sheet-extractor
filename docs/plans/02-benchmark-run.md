@@ -84,3 +84,20 @@ Aidin decided on 2026-10-08 to fix the CUSIP cell (no new extraction, fixtures u
 4. `evaluate.py` adds a section "Scoring changes after the first run" to the console output and the report, one row per line of that file, placed right after the headline lines. If the file is missing, omit the section.
 5. Do not touch any file in `data/fixtures/` other than creating `scoring_changes.jsonl`. Make no Gemini API call.
 6. Regenerate the report with `python3 evaluate.py`.
+
+## Task E3 (agy): Allowlist the known prompt collisions
+
+After the keys were merged, `tests/test_fields.py::test_prompt_contains_no_benchmark_values` flags 6 fields (10 strings). They are collisions, not leakage (see `CONTEXT.md`): `fields.py` last changed on 2026-09-24, MSFT, ORCL and GOOGL joined the benchmark on 2026-10-07, and each value was extracted in the filing's own wording and found in source.
+
+| Deal | Tranche CUSIP | Field |
+|---|---|---|
+| MSFT_FWP_TermSheet_2017-01-31 | 594918BY9 | Spread (bps) |
+| MSFT_FWP_TermSheet_2017-01-31 | 594918CB8 | Principal ($M) |
+| ORCL_FWP_TermSheet_2025-09-24 | 68389XDT9 | Principal ($M) |
+| GOOGL_FWP_TermSheet_2026-08-07 | 02079KCL9 | Principal ($M) |
+| GOOGL_FWP_TermSheet_2026-08-07 | 02079KCN5 | Principal ($M) |
+| GOOGL_FWP_TermSheet_2026-08-07 | 02079KCS4 | Spread (bps) |
+
+1. Add `KNOWN_COLLISIONS` in `tests/test_fields.py` as a set of `(deal, cusip, field)` with a comment pointing to this section. The guard skips exactly those; any other collision still fails.
+2. Add a test that the allowlist has no stale entries: every entry must still match a real collision, so the list cannot grow silently.
+3. Touch only `tests/test_fields.py`.
