@@ -119,3 +119,76 @@ Leave changes uncommitted on `slice-01-strict-scoring`. Then report:
 3. Full `python3 -m pytest -q` output at the end
 4. Full `python3 evaluate.py` output
 5. Any place where you were unsure and what you chose
+
+---
+
+# Task G: Review follow-ups (added 2026-10-07)
+
+Claude's review and a Python review of Tasks A-F found the problems below. Fix them on the same branch, test first, same rules as above. Two of them (G1, G2) are defects in this plan, not in the code: the plan's ratings rule cannot work on real filings, and the comps table should show clean dates.
+
+All of G1-G9 must land before slice 2 runs the benchmark, because no scoring or normalisation change is allowed after that run.
+
+## G1: Normalise ratings in the comps table (`structure.py`)
+
+Add `normalize_ratings(raw: str | None) -> str | None` to `structure.py` and use it for the comps-table `Ratings` column. Keep the raw text in the audit record (grounding uses the raw text).
+
+It returns the rating grades in order of appearance, joined by `" / "`. Remove parentheticals first. A grade is a Moody's grade (`Aaa`, `Aa1`-`Aa3`, `A1`-`A3`, `Baa1`-`Baa3`, `Ba1`-`Ba3`, `B1`-`B3`, `Caa1`-`Caa3`, `Ca`, `C`) or an S&P/Fitch grade (`AAA`, `AA`, `A`, `BBB`, `BB`, `B`, `CCC`, each with optional `+` or `-`, plus `CC`, `C`, `D`), matched as a whole token. Return `None` when no grade is found.
+
+Required tests:
+
+| Input | Output |
+|---|---|
+| `Aaa (stable) by Moody’s Investors Service, Inc.\nAA+ (stable) by Standard & Poor’s Ratings Services` | `Aaa / AA+` |
+| `Moody’s, Aaa (negative outlook); S&P, AAA (stable outlook)` | `Aaa / AAA` |
+| `Moody’s: Aa2 (Stable); S&P: AA+ (Stable)` | `Aa2 / AA+` |
+| `A1 by Moody’s Investor Service, Inc.\nAA by Standard & Poor’s Ratings Services\nAA- by Fitch Ratings Inc.` | `A1 / AA / AA-` |
+| `Aaa / AA+` | `Aaa / AA+` |
+| `Not rated` | `None` |
+
+In `evaluate.py`, the `Ratings` rule becomes: `normalize_ratings(actual) == normalize_ratings(expected)`, both not `None`. Remove `clean_ratings_part`.
+
+## G2: Normalise dates in the comps table (`structure.py`)
+
+Add `normalize_date(raw: str | None) -> str | None`. It finds the first full date in the text, written as `Month D, YYYY` (full or 3-letter month name, comma optional), and returns it as `Month D, YYYY` with the full month name. Return `None` if there is no full date. Use it for the comps-table columns Trade Date, Settlement Date, Maturity Date and Par Call Date. Keep raw text in the audit record.
+
+Required tests: `On or after April 12, 2028` gives `April 12, 2028`. `May 12, 2025 (T+5)` gives `May 12, 2025`. `Sept. 14, 2026` is out of scope (return `None` is acceptable). `May 2028` gives `None`. `2028` gives `None`.
+
+## G3: Strict date parsing in `evaluate.py`
+
+Replace `dateutil.parser.parse`. It fills a missing day or month from today, so `May 2028` parses as May 7, 2028. Use `normalize_date` from G2 on both sides and compare the strings, both not `None`. Remove the `dateutil` import.
+
+## G4: `clean_principal` with commas and unit words
+
+Strip commas before matching the unit words. Add `mm` as a million unit. Required tests: `$1,500 million` gives 1500.0. `1,250.5 million` gives 1250.5. `$2,000mm` gives 2000.0. `£1,250,000,000` gives 1250.0.
+
+## G5: Two-pass tranche pairing
+
+Pairing is greedy, so the maturity fallback can take a tranche that a later answer-key tranche matches exactly by CUSIP. Pair in two passes: first every answer-key tranche by CUSIP, then the maturity fallback over the tranches left on both sides. Remove the index fallback completely. Give the mock rows in the existing tests a CUSIP so they pair by CUSIP.
+
+Required test: extracted `[{CUSIP: B, maturity: Jan 1, 2030}, {CUSIP: A, maturity: Jan 1, 2030}]`, key `[{CUSIP: X, maturity: Jan 1, 2030}, {CUSIP: B, maturity: Jan 1, 2030}]`. The key tranche with CUSIP B pairs with extracted B.
+
+## G6: NaN is a missing value
+
+After pandas, a missing value is `NaN`, not `None`. At the top of `matches_value`, and for each `actual_val` in `evaluate_deal`, turn a scalar `NaN` into `None`. Use the converted value for `Grounded` too, so a missing value is never grounded. Required test: key `{CUSIP: B, Par Call Date: None}` against an extracted row with `Par Call Date` NaN scores Correct=True and Grounded=False.
+
+## G7: Metric denominators
+
+- **Field accuracy**: correct / all answer-key fields (unchanged).
+- **Grounded %**: grounded / fields with an extracted value (not `None`). Today it divides by all fields, which mixes misses into grounding.
+- **Not-in-source %**: not-in-source / fields with an extracted value (same denominator as grounded %).
+
+Show each denominator in the headline lines, for example `Grounded: 92.9% (52/56 extracted fields)`.
+
+## G8: Report unmatched extracted tranches in the headline
+
+Add a fourth headline line: `Unmatched extracted tranches: N`. They are not scored, but they must be visible.
+
+## G9: Small fixes
+
+- `run_evaluation` must not crash when the combined results are empty. Build every results frame with explicit columns.
+- The Spread rule rejects `bool` values.
+- Principal: compare `abs(a - b) <= 0.05` after converting both to float, instead of `round(x, 1)` on both sides.
+
+## G deliverable
+
+Same report shape as above: failing then passing output per item, full `pytest -q`, full `python3 evaluate.py`.
