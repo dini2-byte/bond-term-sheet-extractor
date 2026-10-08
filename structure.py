@@ -72,6 +72,22 @@ def clean_spread(val: str | None) -> int | None:
     match_plus = re.search(r"\+?\s*(\d+)", val)
     return int(match_plus.group(1)) if match_plus else None
 
+def clean_cusip(val: str | None) -> str | None:
+    """
+    Extracts the first 9-character CUSIP in the extracted text:
+    6 alphanumerics, optional whitespace, 3 alphanumerics.
+    Returns uppercase with whitespace removed, or None if no CUSIP.
+    """
+    if not val:
+        return None
+    val_str = str(val).strip()
+    if not val_str:
+        return None
+    match = re.search(r"(?<![A-Za-z0-9])([A-Za-z0-9]{6})\s*([A-Za-z0-9]{3})(?![A-Za-z0-9])", val_str)
+    if not match:
+        return None
+    return f"{match.group(1)}{match.group(2)}".upper()
+
 def normalize_ws(s: str) -> str:
     """Collapses whitespace runs to a single space and strips."""
     if not s:
@@ -376,7 +392,7 @@ def structure_filing_extractions(jsonl_path: str | Path) -> tuple[pd.DataFrame, 
             "Day Count": raw_day_count,
             "Make-Whole Call": raw_make_whole,
             "Par Call Date": normalize_date(raw_par_call),
-            "CUSIP": raw_cusip,
+            "CUSIP": clean_cusip(raw_cusip),
             "Bookrunners": bookrunners_val,
         }
         records.append(row)

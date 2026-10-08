@@ -512,4 +512,69 @@ class TestExtractionAttemptsSection:
         assert "AAPL: produced 2026-09-24 before the attempt log existed" in content
 
 
+class TestScoringChangesSection:
+    def test_load_scoring_changes_missing(self, tmp_path):
+        from evaluate import load_scoring_changes
+        non_existent = tmp_path / "scoring_changes.jsonl"
+        assert load_scoring_changes(non_existent) == []
+
+    def test_load_scoring_changes_parses(self, tmp_path):
+        from evaluate import load_scoring_changes
+        import json
+        changes_file = tmp_path / "scoring_changes.jsonl"
+        entry = {
+            "date": "2026-10-08",
+            "change": "CUSIP cell keeps only the 9-character CUSIP; it had kept the ISIN too, which failed every CUSIP and broke tranche pairing in GOOGL",
+            "headline_before": "Field accuracy: 88.0% (308/350 fields, 4 deals, 25 tranches)",
+        }
+        changes_file.write_text(json.dumps(entry) + "\n", encoding="utf-8")
+        loaded = load_scoring_changes(changes_file)
+        assert len(loaded) == 1
+        assert loaded[0]["date"] == "2026-10-08"
+        assert loaded[0]["change"] == entry["change"]
+        assert loaded[0]["headline_before"] == entry["headline_before"]
+
+    def test_format_scoring_changes(self):
+        from evaluate import format_scoring_changes
+        changes = [{
+            "date": "2026-10-08",
+            "change": "CUSIP cell keeps only the 9-character CUSIP",
+            "headline_before": "Field accuracy: 88.0% (308/350 fields, 4 deals, 25 tranches)",
+        }]
+        text = format_scoring_changes(changes)
+        assert "2026-10-08" in text
+        assert "CUSIP cell keeps only the 9-character CUSIP" in text
+        assert "Field accuracy: 88.0%" in text
+
+    def test_run_evaluation_report_includes_scoring_changes_after_headline(self, tmp_path, monkeypatch):
+        import evaluate
+        from evaluate import run_evaluation
+        monkeypatch.setattr(evaluate, "OUTPUT_DIR", tmp_path)
+        run_evaluation()
+        report_file = tmp_path / "accuracy_benchmark_report.md"
+        assert report_file.exists()
+        content = report_file.read_text(encoding="utf-8")
+        assert "Scoring changes after the first run" in content or "Scoring Changes After the First Run" in content
+        assert "CUSIP cell keeps only the 9-character CUSIP" in content
+
+        headline_idx = content.find("Field accuracy:")
+        changes_idx = content.lower().find("scoring changes after the first run")
+        per_deal_idx = content.find("### Per-Deal Breakdown")
+        assert headline_idx != -1
+        assert changes_idx != -1
+        assert per_deal_idx != -1
+        assert headline_idx < changes_idx < per_deal_idx
+
+    def test_run_evaluation_report_omits_scoring_changes_when_file_missing(self, tmp_path, monkeypatch):
+        import evaluate
+        from evaluate import run_evaluation
+        monkeypatch.setattr(evaluate, "OUTPUT_DIR", tmp_path)
+        monkeypatch.setattr(evaluate, "SCORING_CHANGES_PATH", tmp_path / "nonexistent.jsonl")
+        run_evaluation()
+        report_file = tmp_path / "accuracy_benchmark_report.md"
+        content = report_file.read_text(encoding="utf-8")
+        assert "scoring changes after the first run" not in content.lower()
+
+
+
 

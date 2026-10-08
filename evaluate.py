@@ -15,6 +15,7 @@ from validate import validate_comps_table
 ANSWER_KEY_PATH = Path("data/answer_key.json")
 FIXTURES_DIR = Path("data/fixtures")
 OUTPUT_DIR = Path("output")
+SCORING_CHANGES_PATH = FIXTURES_DIR / "scoring_changes.jsonl"
 
 def normalize_text(s: Any) -> str:
     if s is None:
@@ -275,6 +276,38 @@ def format_extraction_attempts(attempts: list[dict[str, Any]]) -> str:
     return f"{aapl_line}\n\n{df.to_markdown(index=False)}"
 
 
+def load_scoring_changes(changes_path: Path | None = None) -> list[dict[str, Any]]:
+    if changes_path is None:
+        changes_path = SCORING_CHANGES_PATH
+    if not changes_path.exists():
+        return []
+    changes = []
+    with open(changes_path, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                changes.append(json.loads(line))
+            except json.JSONDecodeError:
+                continue
+    return changes
+
+
+def format_scoring_changes(changes: list[dict[str, Any]]) -> str:
+    if not changes:
+        return ""
+    rows = []
+    for c in changes:
+        rows.append({
+            "Date": c.get("date", ""),
+            "Change": c.get("change", ""),
+            "Headline Before": c.get("headline_before", ""),
+        })
+    df = pd.DataFrame(rows)
+    return df.to_markdown(index=False)
+
+
 def run_evaluation():
     if not ANSWER_KEY_PATH.exists():
         raise FileNotFoundError(f"Answer key not found: {ANSWER_KEY_PATH}")
@@ -365,6 +398,17 @@ def run_evaluation():
     print(grounded_line)
     print(not_in_source_line)
     print(unmatched_line)
+
+    scoring_changes = load_scoring_changes(SCORING_CHANGES_PATH)
+    if scoring_changes:
+        print("\n--- Scoring changes after the first run ---")
+        changes_df = pd.DataFrame([{
+            "Date": c.get("date", ""),
+            "Change": c.get("change", ""),
+            "Headline Before": c.get("headline_before", ""),
+        } for c in scoring_changes])
+        print(changes_df.to_string(index=False))
+
     print("\n--- Per-Deal Breakdown ---")
     print(per_deal_df.to_string(index=False))
     print("\n--- Per-Field Breakdown ---")
@@ -397,6 +441,9 @@ def run_evaluation():
         f.write(f"{grounded_line}\n")
         f.write(f"{not_in_source_line}\n")
         f.write(f"{unmatched_line}\n\n")
+        if scoring_changes:
+            f.write("### Scoring changes after the first run\n\n")
+            f.write(f"{format_scoring_changes(scoring_changes)}\n\n")
         f.write("### Per-Deal Breakdown\n\n")
         f.write(per_deal_df.to_markdown(index=False))
         f.write("\n\n### Per-Field Breakdown\n\n")
