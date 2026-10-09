@@ -171,14 +171,14 @@ def build_deal_line(df: pd.DataFrame) -> str:
 
 
 # 1. Title and one sentence
-st.title("Bond Term Sheet Extractor")
+st.title("Bond Term Sheet Extractor", anchor=False)
 st.markdown("Turn a bond term sheet into a comps table, with every number traced back to the SEC filing.")
 
 # 2. How to use it
 st.markdown("Pick a deal, read the table, then click any number to see the sentence it came from.")
 
 # 3. Step 1: Pick a deal
-st.subheader("1. Pick a deal")
+st.subheader("1. Pick a deal", anchor=False)
 
 deal_source = st.segmented_control(
     "Deal source",
@@ -361,7 +361,7 @@ else:
     validated_df = None
 
 # 4. Step 2: Read the table
-st.subheader("2. Read the table")
+st.subheader("2. Read the table", anchor=False)
 
 if validated_df is not None and selected_jsonl is not None:
     tf = table_frame(validated_df)
@@ -458,7 +458,7 @@ else:
     st.markdown("Search for a company above and extract a term sheet to build the table.")
 
 # 5. Step 3: Check any number
-st.subheader("3. Check any number")
+st.subheader("3. Check any number", anchor=False)
 
 if validated_df is not None and selected_jsonl is not None:
     doc_text = load_document_text(selected_jsonl)
@@ -508,7 +508,7 @@ else:
     st.markdown("Click any number in the table to see the sentence it came from.")
 
 # 6. How well does it work?
-st.subheader("How well does it work?")
+st.subheader("How well does it work?", anchor=False)
 acc_info = parse_accuracy_report()
 if acc_info:
     m1 = re.search(

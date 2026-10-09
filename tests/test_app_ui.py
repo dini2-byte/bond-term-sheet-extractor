@@ -259,3 +259,10 @@ def test_lookup_extract_without_gemini_key_shows_message(monkeypatch):
     assert not at.exception
     assert any("Live extraction is not set up on this deployment." in e.value for e in at.error)
     assert calls == []
+
+
+def test_headings_have_no_link_anchor():
+    at = AppTest.from_file(APP_PATH, default_timeout=30).run()
+    headings = list(at.title) + list(at.subheader)
+    assert headings
+    assert all(h.proto.hide_anchor for h in headings)
