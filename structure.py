@@ -62,20 +62,22 @@ def clean_yield(val: str | None) -> float | None:
     match = re.search(r"(\d+(?:\.\d+)?)", val)
     return float(match.group(1)) if match else None
 
-def clean_spread(val: str | None) -> int | None:
-    """Normalizes benchmark spread to integer basis points. e.g. '25 basis points' -> 25"""
+def clean_spread(val: str | None) -> float | int | None:
+    """Normalizes benchmark spread to basis points, keeping decimals. e.g. '+108.2 bps' -> 108.2, '25 basis points' -> 25"""
     if not val:
         return None
-    match = re.search(r"(\d+)\s*(?:basis points|bps)", val, re.IGNORECASE)
-    if match:
-        return int(match.group(1))
-    match_plus = re.search(r"\+?\s*(\d+)", val)
-    return int(match_plus.group(1)) if match_plus else None
+    match = re.search(r"(\d+(?:\.\d+)?)\s*(?:basis points|bps)", val, re.IGNORECASE)
+    if not match:
+        match = re.search(r"\+?\s*(\d+(?:\.\d+)?)", val)
+    if not match:
+        return None
+    number = float(match.group(1))
+    return int(number) if number.is_integer() else number
 
 def clean_cusip(val: str | None) -> str | None:
     """
     Extracts the first 9-character CUSIP in the extracted text:
-    6 alphanumerics, optional whitespace, 3 alphanumerics.
+    6 alphanumerics, optional whitespace, 3 alphanumerics, skipping Common Codes found inside XS ISINs.
     Returns uppercase with whitespace removed, or None if no CUSIP.
     """
     if not val:
@@ -83,10 +85,13 @@ def clean_cusip(val: str | None) -> str | None:
     val_str = str(val).strip()
     if not val_str:
         return None
-    match = re.search(r"(?<![A-Za-z0-9])([A-Za-z0-9]{6})\s*([A-Za-z0-9]{3})(?![A-Za-z0-9])", val_str)
-    if not match:
-        return None
-    return f"{match.group(1)}{match.group(2)}".upper()
+    # Euroclear ISINs (XS + 9-digit Common Code + check digit) sit next to the CUSIP; skip their Common Codes.
+    common_codes = {isin[2:11] for isin in re.findall(r"XS\d{10}", val_str.upper())}
+    for match in re.finditer(r"(?<![A-Za-z0-9])([A-Za-z0-9]{6})\s*([A-Za-z0-9]{3})(?![A-Za-z0-9])", val_str):
+        candidate = f"{match.group(1)}{match.group(2)}".upper()
+        if candidate not in common_codes:
+            return candidate
+    return None
 
 def normalize_ws(s: str) -> str:
     """Collapses whitespace runs to a single space and strips."""

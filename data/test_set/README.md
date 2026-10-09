@@ -211,3 +211,7 @@ Why the spread is right on only 3 of 26 fixed-rate bonds:
 The 4 CUSIP misses are both KO deals: `clean_cusip` takes the first 9-character code in "XS... / 287415494 / 191216 DW7", which is the Common Code.
 
 With the parser fixed, the spread and benchmark would pair correctly on 14 of the 22 fixed-rate euro bonds, below the plan's gate of 18.
+
+### After the parser fixes, 2026-10-09
+
+`clean_spread` keeps decimals and `clean_cusip` skips Common Codes found inside XS ISINs. Same saved extractions, no new Gemini calls: spread 18/26 (the 4 KO mid-swap bonds and the 4 tabular IBM bonds remain), CUSIP 27/27. The benchmark deals still score 344/350 (98.3%).

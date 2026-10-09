@@ -29,6 +29,14 @@ class TestCleanCusip:
         assert clean_cusip("02079K CL9 / US02079KCL98") == "02079KCL9"
         assert clean_cusip("037833EY2") == "037833EY2"
 
+    def test_clean_cusip_skips_common_code_inside_xs_isin(self):
+        assert clean_cusip("XS2874154946 / 287415494 /\n191216 DW7") == "191216DW7"
+        assert clean_cusip("XS2818290509\n / 281829050 / 191216 DU1") == "191216DU1"
+        assert clean_cusip("459200 LL3 / XS2999658136 / 299965813") == "459200LL3"
+
+    def test_clean_cusip_common_code_alone_is_not_a_cusip(self):
+        assert clean_cusip("XS2874154946 / 287415494") is None
+
     def test_clean_cusip_lowercase(self):
         assert clean_cusip("68389xdh5 / us68389xdh52") == "68389XDH5"
 
@@ -144,6 +152,13 @@ class TestCleaners:
         assert clean_spread("50 bps") == 50
         assert clean_spread(None) is None
         assert clean_spread("") is None
+
+    def test_clean_spread_keeps_decimals(self):
+        assert clean_spread("+108.2 bps") == 108.2
+        assert clean_spread("+60.7 basis points") == 60.7
+        assert clean_spread("+118.3\n                        bps") == 118.3
+        assert clean_spread("+140.0 bps") == 140
+        assert clean_spread("12.5") == 12.5
 
 
 class TestAssessGrounding:
