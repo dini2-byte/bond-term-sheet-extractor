@@ -57,3 +57,7 @@ AAPL: produced 2026-09-24 before the attempt log existed
 | MSFT_FWP_TermSheet_2017-01-31  | 2026-10-08T01:48:36Z | gemini-3.5-flash-lite | ok        |         |
 | ORCL_FWP_TermSheet_2025-09-24  | 2026-10-08T01:49:02Z | gemini-3.5-flash-lite | ok        |         |
 | GOOGL_FWP_TermSheet_2026-08-07 | 2026-10-08T01:51:09Z | gemini-3.5-flash-lite | ok        |         |
+| AAPL_FWP_TermSheet_2025-05-06  | 2026-10-09T16:12:21Z | gemini-3.5-flash-lite | ok        |         |
+| MSFT_FWP_TermSheet_2017-01-31  | 2026-10-09T16:12:34Z | gemini-3.5-flash-lite | ok        |         |
+| ORCL_FWP_TermSheet_2025-09-24  | 2026-10-09T16:12:44Z | gemini-3.5-flash-lite | ok        |         |
+| GOOGL_FWP_TermSheet_2026-08-07 | 2026-10-09T16:13:00Z | gemini-3.5-flash-lite | ok        |         |
