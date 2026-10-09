@@ -6,7 +6,7 @@ Visitors who use "Search company" on large US issuers get euro and sterling bond
 ## Evidence
 - Live run on the deployed app, 2026-10-09: KO term sheet filed 2024-08-09 showed "$500.0M" sizes, a "DBR" (Bund) benchmark under a column whose tooltip says "US Treasury", and "4 bonds" in the picker for a 2-bond deal. The 9-digit Common Codes in euro term sheets are counted as CUSIPs.
 - EDGAR scan, 2026-10-09, using the app's own search on 7 tickers: 44 of 118 bond term sheets (37%) are non-dollar. KO 13 of 25, PG 12 of 24, IBM 11 of 23, T 8 of 19, AAPL 0 of 18, CAT 0 of 9. Mostly EUR, with a few GBP and one JPY.
-- The currency check in that scan is a regex on the first page of each filing, so the 37% is an estimate. Needs validation via a hand check of a sample of flagged filings.
+- The currency check in that scan is a regex on the first page of each filing, so the 37% is an estimate. A hand check of 20 filings on 2026-10-09 found one false positive in 10 flagged, so the true share is closer to 32% (see `data/test_set/README.md`).
 
 ## Users
 - **Primary**: AINA scholarship reviewers and other first-time visitors who try "Search company" on a well-known US issuer, often during or after watching the demo video. They are finance or accounting people, not bond desk analysts, and will not spot a currency mix-up on their own.
@@ -44,7 +44,7 @@ We'll know we're right when **a fixed test set of about 10 EUR and GBP term shee
 ## Delivery Milestones
 | # | Milestone | Outcome | Status | Plan |
 |---|---|---|---|---|
-| 1 | Test set | About 10 EUR and GBP term sheets picked and hand-keyed for currency, size, bond count and benchmark before any run | pending | none yet |
+| 1 | Test set | About 10 EUR and GBP term sheets picked and hand-keyed for currency, size, bond count and benchmark before any run | complete | `.claude/plans/non-usd-test-set.plan.md` |
 | 2 | Correct non-dollar display | EUR and GBP deals from search show the right currency, sizes, bond count and benchmark; other currencies drop out of search; USD unchanged and still 98.3% | pending | none yet |
 | 3 | Other currencies | JPY and CHF deals handled the same way | deferred | none yet |
 | 4 | Floating-rate notes | FRN tranches extracted and shown with their own fields | deferred | none yet |
@@ -52,9 +52,9 @@ We'll know we're right when **a fixed test set of about 10 EUR and GBP term shee
 | 6 | Currency conversion | Optional view with sizes converted to USD | deferred | none yet |
 
 ## Open Questions
-- [ ] Do euro term sheets quote spreads over mid-swaps instead of a government bond? If so, what should the Spread and Benchmark columns show? Needs validation via reading the test set.
+- [x] Do euro term sheets quote spreads over mid-swaps instead of a government bond? Both: all 22 fixed-rate euro bonds in the test set state a mid-swap spread and a government spread; sterling prices over gilts only. What the columns show is a milestone 2 design choice. See `data/test_set/README.md`.
 - [ ] Does teaching the extraction about currency change field accuracy on the 4 saved USD deals? Needs one benchmark re-run (4 Gemini calls).
-- [ ] Do euro conventions (annual coupons, ACT/ACT day count) trip the current validation checks and mark every euro row for checking?
+- [x] Do euro conventions (annual coupons, ACT/ACT day count) trip the current validation checks? No: `validate.py` has no day count or frequency rule, and every keyed fixed-rate bond passes. See `data/test_set/README.md`.
 - [ ] Does the 2026-10-31 deadline leave time for milestone 2, or should search hide non-dollar deals until it ships?
 
 ## Risks

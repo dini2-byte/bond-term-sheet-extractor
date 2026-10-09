@@ -48,7 +48,11 @@ _Avoid_: Ground truth, gold labels
 
 **Benchmark**:
 The set of deals that have an answer key. The only deals reported numbers come from.
-_Avoid_: Test set, eval set
+_Avoid_: Eval set
+
+**Test set**:
+Hand-keyed deals that check one feature, such as non-dollar deals in `data/test_set/`. Keyed before any extraction run like an answer key, but never part of reported numbers.
+_Avoid_: Benchmark (for these deals)
 
 **Field accuracy**:
 The share of answer-key fields where the extracted value equals the key after normalisation, with tranches matched by CUSIP. The headline number.

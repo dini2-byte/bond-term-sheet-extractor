@@ -1,0 +1,168 @@
+Filed Pursuant to Rule 433
+
+Registration Number 333-276739
+
+€750,000,000 2.900%
+Notes Due 2030
+
+€1,100,000,000 3.150%
+Notes Due 2033
+
+€900,000,000 3.450%
+Notes Due 2037
+
+€750,000,000 3.800%
+Notes Due 2045
+
+International Business Machines Corporation
+February 5, 2025
+Pricing Term Sheet
+
+  Issuer                          International Business Machines Corporation
+  Issuer Legal Entity             VGRQXHF3J8VDLUA7XE92
+  Identifier
+  Expected Ratings*               A3 / A- / A- (Moody’s/S&P/Fitch)
+  Format                          SEC Registered
+  Form                            Registered Form
+  Trade Date                      February 5, 2025
+  Settlement Date**               February 10, 2025 (T+3)
+  Joint Bookrunning Managers      BNP PARIBAS
+
+
+                                  Banco Santander, S.A.
+
+
+                                  Barclays Bank PLC
+
+
+                                  Deutsche Bank AG, London Branch
+
+
+                                  RBC Europe Limited
+
+
+                                  SMBC Bank International plc
+
+
+                                  Société Générale
+
+
+                                  U.S. Bancorp Investments, Inc.
+
+
+                                  Wells Fargo Securities International Limited
+  Senior Co-Managers              Banco Bilbao Vizcaya Argentaria, S.A.
+
+
+                                  Canadian Imperial Bank of Commerce, London Branch
+
+
+                                  ING Bank N.V., Belgian Branch
+
+
+                                  Mizuho International plc
+
+
+                                  MUFG Securities EMEA plc
+
+
+                                  Scotiabank (Ireland) Designated Activity Company
+  Co-Managers                     Academy Securities, Inc.
+
+
+                                  Bancroft Capital, LLC
+
+
+                                  Samuel A. Ramirez & Company, Inc.
+
+
+                                  Siebert Williams Shank & Co., LLC
+  Listing                         Application will be made to list the Notes on the
+                                  New York Stock Exchange
+  Concurrent Offering             Substantially concurrently with this offering, the Issuer intends to offer dollar-denominated notes (the “concurrent offering”). The concurrent offering is being made by means of a separate prospectus supplement and not by means of the prospectus supplement to which this pricing term sheet relates. This communication is not an offer of any securities of the Issuer other than the notes to which this pricing term sheet relates. The concurrent offering may not be completed, and the completio...
+
+                                 2030 Notes                                                       2033 Notes                                                       2037 Notes                                                       2045 Notes
+  Size                           €750,000,000                                                     €1,100,000,000                                                   €900,000,000                                                     €750,000,000
+  Maturity                       February 10, 2030                                                February 10, 2033                                                February 10, 2037                                                February 10, 2045
+  Interest Payment Date          February 10 of each year                                         February 10 of each year                                         February 10 of each year                                         February 10 of each year
+  First Payment Date             February 10, 2026                                                February 10, 2026                                                February 10, 2026                                                February 10, 2026
+  Benchmark Bund                 DBR 0.000% due February 15, 2030                                 DBR 2.300% due February 15, 2033                                 DBR 4.000% due January 4, 2037                                   DBR 2.500% due July 4, 2044
+ ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  Benchmark Bund Yield           2.084%                                                           2.248%                                                           2.470%                                                           2.592%
+  Spread to Benchmark Bund       82.7 bps                                                         91.6 bps                                                         101.2 bps                                                        121.0 bps
+  Mid Swaps Yield                2.211%                                                           2.264%                                                           2.332%                                                           2.302%
+  Spread to Mid Swaps            +70 bps                                                          +90 bps                                                          +115 bps                                                         +150 bps
+  Yield to Maturity              2.911%                                                           3.164%                                                           3.482%                                                           3.802%
+  Coupon                         2.900% (payable annually)                                        3.150% (payable annually)                                        3.450% (payable annually)                                        3.800% (payable annually)
+  Make-Whole Call                Prior to January 10, 2030 at B + 15 bps                          Prior to November 10, 2032 at B + 15 bps                         Prior to November 10, 2036 at B + 20 bps                         Prior to August 10, 2044 at B + 20 bps
+  Par Call                       On or after January 10, 2030                                     On or after November 10, 2032                                    On or after November 10, 2036                                    On or after August 10, 2044
+  Price to Public                99.949%                                                          99.902%                                                          99.690%                                                          99.972%
+  Underwriting Discount          0.200%                                                           0.350%                                                           0.470%                                                           0.550%
+  Price to Issuer                99.749%                                                          99.552%                                                          99.220%                                                          99.422%
+  Day Count                      Actual / Actual (ICMA)                                           Actual / Actual (ICMA)                                           Actual / Actual (ICMA)                                           Actual / Actual (ICMA)
+  Minimum Denomination           €100,000 and integral multiples of €1,000 in excess thereof      €100,000 and integral multiples of €1,000 in excess thereof      €100,000 and integral multiples of €1,000 in excess thereof      €100,000 and integral multiples of €1,000 in excess thereof
+  CUSIP/ ISIN / Common Code      459200 LL3 / XS2999658136 / 299965813                            459200 LM1 / XS2999658565 / 299965856                            459200 LN9 / XS2999658649 / 299965864                            459200 LP4 / XS2999659456 / 299965945
+
+*Note: A securities rating is not a recommendation
+to buy, sell or hold securities and may be subject to revision or withdrawal at any time.
+
+**Note: We expect that delivery of the notes
+will be made to investors on or about February 10, 2025, which will be the third business day following the date of this final term sheet
+(such settlement being referred to as “T+3”). Under Rule 15c6-1 under the Securities Exchange Act of 1934, as amended (the
+“Exchange Act”), trades in the secondary market generally are required to settle in one business day (as such term is used
+for purposes of Rule 15c6-1 of the Exchange Act), unless the parties to any such trade expressly agree otherwise. Accordingly, purchasers
+who wish to trade the notes on any date prior to the business day before delivery of the notes will be required, by virtue of the fact
+that the notes will initially settle in T+3, to specify an alternate settlement arrangement at the time of any such trade to prevent a
+failed settlement; such purchasers should consult their own advisors in this regard.
+
+The notes will be represented by beneficial
+interests in fully registered permanent global notes (the “international global notes”) without interest coupons attached,
+which will be registered in the name of, and shall be deposited on or about February 10, 2025 with a common depositary for, and in respect
+of interests held through, Euroclear Bank, S.A./N.V., as operator of the Euroclear System (“Euroclear”), and Clearstream Banking,
+S.A. (“Clearstream”). Any notes represented by global notes held by a nominee of Euroclear or Clearstream will be subject
+to the then applicable procedures of Euroclear and Clearstream, as applicable. Euroclear and Clearstream’s current practice is to
+make payments in respect of global notes to participants of record that hold an interest in the relevant global notes at the close of
+business on the date that is the clearing system business day (for these purposes, Monday to Friday inclusive except December 25 th and January 1 st ) immediately preceding each applicable interest payment date.
+
+This term sheet is not a prospectus for the
+purposes of Regulation (EU) 2017/1129, including the same as it forms part of domestic law in the United Kingdom by virtue of the European
+Union (Withdrawal) Act 2018, as amended by the European Union (Withdrawal Agreement) Act 2020.
+
+MiFID II and UK MiFIR - professionals/ECPs-only
+/ No PRIIPs or UK PRIIPs KID - Manufacturer target market (MiFID II and UK MiFIR product governance) is eligible counterparties
+and professional clients only (all distribution channels). No PRIIPs or UK PRIIPs key information document (KID) has been prepared
+as not available to retail in EEA or UK.
+
+The communication of this term sheet and any
+other document or materials relating to the issue of the notes is not being made, and such documents or materials have not been approved,
+by an authorized person for the purposes of Section 21 of the United Kingdom’s Financial Services and Markets Act 2000, as amended
+(the “ FSMA ”). Accordingly, such documents and/or materials are not being distributed to, and must not be passed on
+to, the general public in the United Kingdom. This document and such other documents and/or materials are for distribution only to persons
+who (i) have professional experience in matters relating to investments and who fall within the definition of investment professionals
+(as defined in Article 19(5) of the Financial Services and Markets Act 2000 (Financial Promotion) Order 2005, as amended (the “Financial
+Promotion Order”)), (ii) fall within Article 49(2)(a) to (d) of the Financial Promotion Order, (iii) are outside the United Kingdom,
+or (iv) are other persons to whom it may otherwise lawfully be made under the Financial Promotion Order (all such persons together being
+referred to as “relevant persons”). This document is directed only at relevant persons and must not be acted on or relied
+on by persons who are not relevant persons. Any investment or investment activity to which this term sheet and any other document or materials
+relates will be engaged in only with relevant persons. Any person in the United Kingdom that is not a relevant person should not act or
+rely on this term sheet or any of its contents.
+
+Relevant stabilization regulations including
+FCA/ICMA will apply.
+
+The issuer has filed a registration statement
+(including a prospectus) with the SEC for the offering to which this communication relates. Before you invest, you should read the prospectus
+in that registration statement and other documents the issuer has filed with the SEC for more complete information about the issuer and
+this offering. You may get these documents for free by visiting EDGAR on the SEC website at www.sec.gov. Alternatively, the issuer, any
+underwriter or any dealer participating in the offering will arrange to send you the prospectus if you request it by calling BNP PARIBAS
+at +1-800-854-5674, Barclays Bank PLC at +1-888-603-5847, Deutsche Bank AG, London Branch at +44 207 545 4361, RBC Europe Limited at +1-866-375-6829,
+Banco Santander, S.A. at +34-91-257-2029, Société Générale at +1-855-881-2108, SMBC Bank International plc
+at +44-20-4507-1000, U.S. Bancorp Investments, Inc. at +1-877-558-2607 and Wells Fargo Securities International Limited at +1-800-645-3751.
+
+This pricing term sheet supplements the preliminary
+form of prospectus supplement, pertaining to the notes issuance referenced above, issued by International Business Machines Corporation
+on February 5, 2025 relating to its Prospectus dated January 29, 2024.
+
+Any disclaimers or other notices that may
+appear below are not applicable to this communication and should be disregarded. Such disclaimers or other notices were automatically
+generated as a result of this communication being sent via Bloomberg or another email system.

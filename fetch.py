@@ -46,12 +46,30 @@ DEALS_TO_FETCH = [
     },
 ]
 
-def fetch_filings(output_dir: Path = OUTPUT_DIR) -> list[dict[str, Any]]:
+# Non-dollar test set, picked by the rule in data/test_set/README.md
+TEST_SET_DIR = Path("data/test_set/raw")
+TEST_SET_DEALS = [
+    {"ticker": "KO", "form": "FWP", "label": "KO_FWP_TermSheet_EUR", "accession": "0001552781-24-000447"},
+    {"ticker": "KO", "form": "FWP", "label": "KO_FWP_TermSheet_EUR", "accession": "0001552781-24-000288"},
+    {"ticker": "PG", "form": "FWP", "label": "PG_FWP_TermSheet_EUR", "accession": "0001193125-25-251694"},
+    {"ticker": "PG", "form": "FWP", "label": "PG_FWP_TermSheet_EUR", "accession": "0001193125-24-104910"},
+    {"ticker": "IBM", "form": "FWP", "label": "IBM_FWP_TermSheet_EUR", "accession": "0001104659-26-007953"},
+    {"ticker": "IBM", "form": "FWP", "label": "IBM_FWP_TermSheet_EUR", "accession": "0001104659-25-009649"},
+    {"ticker": "T", "form": "FWP", "label": "T_FWP_TermSheet_EUR_GBP", "accession": "0001193125-26-318207"},
+    {"ticker": "T", "form": "FWP", "label": "T_FWP_TermSheet_EUR", "accession": "0001193125-25-061322"},
+    {"ticker": "PG", "form": "FWP", "label": "PG_FWP_TermSheet_GBP", "accession": "0001193125-17-143201"},
+    {"ticker": "IBM", "form": "FWP", "label": "IBM_FWP_TermSheet_GBP", "accession": "0001104659-15-054222"},
+    {"ticker": "PG", "form": "FWP", "label": "PG_FWP_TermSheet_JPY", "accession": "0001193125-21-312459"},
+]
+
+def fetch_filings(
+    deals: list[dict[str, str]] = DEALS_TO_FETCH, output_dir: Path = OUTPUT_DIR
+) -> list[dict[str, Any]]:
     print(f"Connecting to SEC EDGAR using identity: {SEC_IDENTITY}")
     manifest = []
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    for deal in DEALS_TO_FETCH:
+    for deal in deals:
         ticker = deal["ticker"]
         form = deal["form"]
         label = deal["label"]
@@ -96,4 +114,9 @@ def fetch_filings(output_dir: Path = OUTPUT_DIR) -> list[dict[str, Any]]:
     return manifest
 
 if __name__ == "__main__":
-    fetch_filings()
+    import sys
+
+    if "--test-set" in sys.argv:
+        fetch_filings(deals=TEST_SET_DEALS, output_dir=TEST_SET_DIR)
+    else:
+        fetch_filings()

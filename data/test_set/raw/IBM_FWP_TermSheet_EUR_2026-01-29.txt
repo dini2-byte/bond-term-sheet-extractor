@@ -1,0 +1,425 @@
+Filed Pursuant to Rule 433
+
+Registration Number 333-276739
+
+International Business Machines Corporation
+January 29, 2026
+Pricing Term Sheet
+
+€1,000,000,000 3.000%
+Notes Due 2031
+
+€1,000,000,000 3.450%
+Notes Due 2034
+
+€750,000,000 3.850%
+Notes Due 2038
+
+(together, the “Fixed
+Rate Notes”)
+
+€750,000,000 Floating
+Rate Notes Due 2028
+
+(the “Floating Rate
+Notes” and, together with the Fixed Rate Notes, the “Notes”)
+
+This pricing term sheet (the “Pricing Term Sheet”) supplements
+the prospectus supplement issued by International Business Machines Corporation on January 29, 2026 (the “Preliminary Prospectus
+Supplement”) and the accompanying prospectus dated January 29, 2024 (the “Prospectus”) and supersedes the information
+in the Preliminary Prospectus Supplement and Prospectus. Other information presented in the Preliminary Prospectus Supplement is deemed
+to have changed to the extent affected by the changes described herein. Otherwise, this Pricing Term Sheet is qualified in its entirety
+by reference to the Preliminary Prospectus Supplement and the Prospectus and should be read together with the Preliminary Prospectus Supplement,
+the Prospectus and the documents incorporated or deemed to be incorporated by reference therein before a decision is made to invest in
+the Notes.
+
+Terms Applicable to the Notes
+
+  Issuer:                          International Business Machines Corporation
+  Issuer Legal Entity              VGRQXHF3J8VDLUA7XE92
+  Identifier:
+  Expected Ratings*:               A3 / A- / A- (Moody’s/S&P/Fitch)
+  Format:                          SEC Registered
+  Trade Date:                      January 29, 2026
+  Settlement Date**:               February 3, 2026 (T+3)
+  Joint Bookrunning Managers:      Citigroup Global Markets Limited
+
+
+                                   BNP PARIBAS
+
+
+                                   Deutsche Bank AG, London Branch
+
+
+                                   Goldman Sachs & Co. LLC
+
+
+                                   HSBC Bank plc
+
+
+                                   Merrill Lynch International
+
+
+                                   Mizuho International plc
+  Senior Co-Managers:              Canadian Imperial Bank of Commerce, London Branch
+
+
+                                   Société Générale
+
+
+                                   TD Global Finance unlimited company
+  Co-Managers:                     Academy Securities, Inc.
+
+
+                                   Cabrera Capital Markets LLC
+
+  Listing:                    Application will be made to list the Notes on the
+                              New York Stock Exchange
+  Concurrent Offering:        Substantially concurrently with this offering, the Issuer intends to offer dollar-denominated notes (the “concurrent offering”). The concurrent offering is being made by means of a separate prospectus supplement and not by means of the prospectus supplement to which this pricing term sheet relates. This communication is not an offer of any securities of the Issuer other than the Notes to which this pricing term sheet relates. The concurrent offering may not be completed, and the completio...
+ ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  Day Count Convention:       Actual / Actual (ICMA)
+  Minimum Denominations:      €100,000 and integral multiples of €1,000 in excess thereof
+
+Terms Applicable to the Fixed Rate Notes
+
+  Maturity:                       2031 Notes: February 3, 2031
+
+
+                                  2034 Notes: February 3, 2034
+
+
+                                  2038 Notes: February 3, 2038
+  Coupon (payable annually):      2031 Notes: 3.000%
+
+
+                                  2034 Notes: 3.450%
+
+
+                                  2038 Notes: 3.850%
+  Interest Payment Dates:         2031 Notes: February 3 of each year
+
+
+                                  2034 Notes: February 3 of each year
+
+
+                                  2038 Notes: February 3 of each year
+  First Payment Date:             2031 Notes: February 3, 2027
+
+
+                                  2034 Notes: February 3, 2027
+
+
+                                  2038 Notes: February 3, 2027
+  Benchmark Bund Yield:           2031 Notes: 2.383%
+
+
+                                  2034 Notes: 2.693%
+
+
+                                  2038 Notes: 2.922%
+ ────────────────────────────────────────────────────────────────────────────────
+  Size:1                          2031 Notes: €1,000,000,000
+
+
+                                  2034 Notes: €1,000,000,000
+
+
+                                  2038 Notes: €750,000,000
+  Benchmark Bund:                 2031 Notes: DBR 0.000% due February 15, 2031
+
+
+                                  2034 Notes: DBR 2.200% due February 15, 2034
+
+
+                                  2038 Notes: DBR 4.000% due January 4, 2037
+
+  Spread to Benchmark Bund:        2031 Notes: +67.2 bps
+
+
+                                   2034 Notes: +79.4 bps
+
+
+                                   2038 Notes: +97.4 bps
+  Mid Swaps Yield:                 2031 Notes: 2.505%
+
+
+                                   2034 Notes: 2.737%
+
+
+                                   2038 Notes: 2.966%
+  Spread to Mid Swaps:             2031 Notes: +55 bps
+
+
+                                   2034 Notes: +75 bps
+
+
+                                   2038 Notes: +93 bps
+  Yield to Maturity:               2031 Notes: 3.055%
+
+
+                                   2034 Notes: 3.487%
+
+
+                                   2038 Notes: 3.896%
+  Make-Whole Call:                 2031 Notes: Prior to January 3, 2031 at B + 15 bps
+
+
+                                   2034 Notes: Prior to November 3, 2033 at B + 15 bps
+
+
+                                   2038 Notes: Prior to November 3, 2037 at B + 15 bps
+  Par Call:                        2031 Notes: On or after January 3, 2031
+
+
+                                   2034 Notes: On or after November 3, 2033
+
+
+                                   2038 Notes: On or after November 3, 2037
+  Price to Public:                 2031 Notes: 99.749%
+
+
+                                   2034 Notes: 99.746%
+
+
+                                   2038 Notes: 99.566%
+  Underwriting Discount:           2031 Notes: 0.200%
+
+
+                                   2034 Notes: 0.350%
+
+
+                                   2038 Notes: 0.470%
+  Price to the Issuer:             2031 Notes: 99.549%
+
+
+                                   2034 Notes: 99.396%
+
+
+                                   2038 Notes: 99.096%
+ ────────────────────────────────────────────────────────────────────────────────────────
+  CUSIP / ISIN / Common Code:      2031 Notes: 459200 LX7 / XS3289742234 / 328974223
+
+
+                                   2034 Notes: 459200 LY5 / XS3289742408 / 328974240
+
+
+                                   2038 Notes: 459200 LZ2 / XS3289741772 / 328974177
+
+Terms Applicable to the Floating Rate Notes
+
+  Size:      €750,000,000
+
+  Maturity:                        February 3, 2028
+  Interest Rate:                   Applicable EURIBOR Rate (based on the three-month EURIBOR) plus 28 basis points. The interest rate on the Floating Rate Notes will in no event be lower than zero.
+  Interest Reset Dates:            Interest will be reset quarterly.
+  Interest Payment Date:           Quarterly on each February 3, May 3, August 3 and November 3 of each year, commencing on May 3, 2026; provided however, that if any such interest payment date would fall on a day that is not a EURIBOR business day, other than the interest payment date that is also the date of maturity, that interest payment date will be postponed to the next succeeding EURIBOR business day, unless the next succeeding EURIBOR business day is in the next succeeding calendar month, in which case such interes...
+ ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  Price to Public:                 100.000%
+  Underwriting Discount:           0.075%
+  Price to the Issuer:             99.925%
+  Redemption:                      Except in connection with certain tax events, the Floating Rate Notes are not redeemable prior to maturity at the Issuer’s option. See “Description of Notes – Redemption for Tax Reasons” in the Preliminary Prospectus Supplement for more information.
+  CUSIP / ISIN / Common Code:      459200 LW9 / XS3289845631 / 328984563
+
+Additional Modifications to the Preliminary Prospectus Supplement:
+
+In addition to the pricing information above, the Preliminary Prospectus
+Supplement will be updated to include the following changes relating to the Floating Rate Notes, and other corresponding changes will
+be deemed to be made where applicable throughout the Preliminary Prospectus Supplement.
+
+Under the caption “Description of Notes,” the following
+terms relating to the Floating Rate Notes will be added:
+
+Floating Rate Notes
+
+The Floating Rate Notes will mature on February 3,
+2028 (“Floating Rate Notes Maturity Date”). If the Floating Rate Notes Maturity Date falls on a day that is not a EURIBOR
+business day, the payment of interest and principal will be made on the next succeeding EURIBOR business day, and no interest will accrue
+for the period from and after the Floating Rate Notes Maturity Date.
+
+The Floating Rate Notes will bear interest from February
+3, 2026 at a floating rate determined in the manner provided below, payable on February 3, May 3, August 3 and November 3 of each year
+(each such day, a “Floating Rate Interest Payment Date”), commencing on May 3, 2026, to the persons in whose names the Floating
+Rate Notes were registered at the close of business on the 15th day preceding the respective Floating Rate Interest Payment Date, subject
+to certain exceptions.
+
+The per annum interest rate on the Floating Rate Notes (the
+“Floating Interest Rate”) in effect for each day of a Floating Rate Interest Period (as defined below) will be equal to
+the Applicable EURIBOR Rate plus 28 basis points (0.280%). The Floating Interest Rate for each Floating Rate Interest Period will be
+set on February 3, May 3, August 3 and November 3 of each year, and will be set for the initial Floating Rate Interest Period on May
+3, 2026 (each such date, a “Floating Rate Interest Reset Date”) until the principal on the Floating Rate Notes is paid
+or made available for payment (the “Floating Rate Principal Payment Date”) or the Floating Rate Notes Maturity Date, as
+applicable. If any Floating Rate Interest Reset Date (other than the initial Floating Rate Interest Reset Date occurring on February
+3, 2026) and Floating Rate Interest Payment Date would otherwise be a day that is not a EURIBOR business day, other than the
+interest payment date that is also the Floating Rate Notes Maturity Date, such Floating Rate Interest Reset Date and Floating Rate
+Interest Payment Date shall be the next succeeding EURIBOR business day, unless the next succeeding EURIBOR business day is in the
+next succeeding calendar month, in which case such Floating Rate Interest Reset Date and Floating Rate Interest Payment Date shall
+be the immediately preceding EURIBOR business day; and provided further, that if the Floating Rate Notes Maturity Date is not a
+EURIBOR business day, payment of principal and interest will be made on the next succeeding business day and no interest will accrue
+for the period from and after such Floating Rate Notes Maturity Date.
+
+“EURIBOR business day” means any day that is not a Saturday
+or Sunday and that, in the City of New York or the City of London, is not a day on which banking institutions are generally authorized
+or obligated by law to close, and is a day on which the T2 System, or any successor thereto, operates.
+
+“Floating Rate Interest Period” shall mean the period from
+and including a Floating Rate Interest Reset Date to but excluding the next succeeding Floating Rate Interest Reset Date and, in the case
+of the last such period, from and including the Floating Rate Interest Reset Date immediately preceding the Floating Rate Notes Maturity
+Date or Floating Rate Principal Payment Date, as the case may be, to but not including such Floating Rate Notes Maturity Date or Floating
+Rate Principal Payment Date, as the case may be. If the Floating Rate Principal Payment Date or Floating Rate Notes Maturity Date is not
+a EURIBOR business day, then the principal amount of the Floating Rate Notes plus accrued and unpaid interest thereon shall be paid on
+the next succeeding EURIBOR business day and no interest shall accrue for the Floating Rate Notes Maturity Date, Floating Rate Principal
+Payment Date or any day thereafter.
+
+The “Applicable EURIBOR Rate” shall mean the rate determined
+in accordance with the following provisions:
+
+(1) Two prior T2 days on which dealings in deposits in euros are transacted
+in the euro-zone interbank market preceding each Floating Rate Interest Reset Date (each such date, an “Interest Determination Date”),
+The Bank of New York Mellon, London Branch (the “Calculation Agent”), as agent for the Issuer, will determine the Applicable
+EURIBOR Rate which shall be the rate for deposits in euro having a maturity of three months commencing on the first day of the applicable
+interest period that appears on the Bloomberg Screen BBAM Page as of 11:00 a.m., Brussels time, on such Interest Determination Date. “Bloomberg
+Screen BBAM Page” means the display designated on page “BBAM” on Bloomberg (or such other page as may replace the “BBAM”
+page on that service or any successor service for the purpose of displaying euro-zone interbank offered rates for euro-denominated deposits
+of major banks). If the Applicable EURIBOR Rate on such Interest Determination Date does not appear on the Bloomberg Screen BBAM Page,
+the Applicable EURIBOR Rate will be determined as described in (2) below.
+
+(2) With respect to an Interest Determination Date for which the Applicable
+EURIBOR Rate does not appear on the Bloomberg Screen BBAM Page as specified in (1) above, the Applicable EURIBOR Rate will be determined
+on the basis of the rates at which deposits in euro are offered by four major banks in the euro-zone interbank market as selected by the
+Issuer (the “Reference Banks”) at approximately 11:00 a.m., Brussels time, on such Interest Determination Date to prime banks
+in the euro-zone interbank market having a maturity of three months, and in a principal amount equal to an amount of not less than €1,000,000
+that is representative for a single transaction in such market at such time. The Issuer or its designee will request the principal euro-zone
+office of each of such Reference Banks to provide a quotation of its rate. If at least two such quotations are provided, the Applicable
+EURIBOR Rate on such Interest Determination Date will be the arithmetic mean (rounded upwards) of such quotations. If fewer than two quotations
+are provided, the Applicable EURIBOR Rate on such Interest Determination Date will be the arithmetic mean (rounded upwards) of the rates
+quoted by three major banks in the euro-zone selected by the Issuer at approximately 11:00 a.m., Brussels time, on such Interest Determination
+Date for loans in euro to leading European banks, having a maturity of three months, and in a principal amount equal to an amount of not
+less than €1,000,000 that is representative for a single transaction in such market at such time; provided, however, that if the
+banks so selected as aforesaid by the Issuer are not quoting as mentioned in this sentence, the relevant Floating Interest Rate for the
+Floating Rate Interest Period commencing on the Floating Rate Interest Reset Date following such Interest Determination Date will be the
+Floating Interest Rate in effect on such Interest Determination Date (i.e., the same as the rate determined for the immediately preceding
+Floating Rate Interest Reset Date).
+
+The amount of interest for each day that the Floating Rate Notes
+are outstanding (the “Daily Interest Amount”) will be calculated by dividing the Floating Interest Rate in effect for
+such day by 360 and multiplying the result by the principal amount of the Floating Rate Notes (known as the “Actual/360”
+day count). The amount of interest to be paid on the Floating Rate Notes for any Floating Rate Interest Period will be calculated by
+adding the Daily Interest Amounts for each day in such Floating Rate Interest Period.
+
+The Floating Interest Rate and amount of interest to be paid on the
+Floating Rate Notes for each Floating Rate Interest Period will be determined by the Calculation Agent. The Floating Interest Rate will
+in no event be lower than zero or higher than the maximum rate permitted by New York law as the same may be modified by United States
+law of general application; provided, however, that Calculation Agent shall not be responsible for verifying that the rate of interest
+on the Floating Rate Notes is permitted by New York law as the same may be modified by United States law of general application. The Calculation
+Agent will, upon the request of any holder of the Floating Rate Notes, provide the interest rate then in effect with respect to the Floating
+Rate Notes. All calculations made by the Calculation Agent shall in the absence of manifest error be conclusive for all purposes and binding
+on the Issuer and the holders of the Floating Rate Notes. So long as the Applicable EURIBOR Rate is required to be determined with respect
+to the Floating Rate Notes, there will at all times be a Calculation Agent. In the event that any then acting Calculation Agent shall
+be unable or unwilling to act, or that such Calculation Agent shall fail to duly establish the Applicable EURIBOR Rate for any Floating
+Rate Interest Period, or that the Issuer proposes to remove such Calculation Agent, the Issuer shall appoint itself or another person
+which is a bank, trust company, investment banking firm or other financial institution to act as the Calculation Agent.
+
+None of the trustee, the paying agent or the Calculation Agent shall
+be under any obligation (i) to monitor, determine or verify the unavailability or cessation of EURIBOR (or any other benchmark), or whether
+or when there has occurred, or to give notice to any other transaction party of the occurrence of, any benchmark transition event or related
+benchmark replacement date, (ii) to select, determine or designate any benchmark replacement, or other successor or replacement benchmark
+index, or whether any conditions to the designation of such a rate or index have been satisfied, or (iii) to select, determine or designate
+any benchmark replacement adjustment, or other modifier to any replacement or successor index, or (iv) to determine whether or what benchmark
+replacement conforming changes are necessary or advisable, if any, in connection with any of the foregoing, including, but not limited
+to, adjustments as to any alternative spread thereon, the business day convention, interest determination dates or any other relevant
+methodology applicable to such substitute or successor benchmark. In connection with the foregoing, each of the trustee, paying agent
+and Calculation Agent shall be entitled to conclusively rely on any determinations made by us without independent investigation, and none
+will have any liability for actions taken at the Issuer’s direction in connection therewith.
+
+None of the trustee, the paying agent or the Calculation Agent shall
+be liable for any inability, failure or delay on its part to perform any of its duties set forth in this prospectus supplement as a result
+of the unavailability of EURIBOR or other applicable benchmark replacement, including as a result of any failure, inability, delay, error
+or inaccuracy on the part of any other transaction party in providing any direction, instruction, notice or information required or contemplated
+by the terms of this prospectus supplement and reasonably required for the performance of such duties. None of the trustee, paying agent
+or Calculation Agent shall be responsible or liable for the Issuer’s actions or omissions, or for any failure or delay in the performance
+by us, nor shall any of the trustee, paying agent or Calculation Agent be under any obligation to oversee or monitor the Issuer’s
+performance.
+
+Under the caption “Risk Factors”, the following risk
+factor relating to the Floating Rate Notes will be added:
+
+European Union regulation and reform of “benchmarks”,
+including EURIBOR, is ongoing and could have a material adverse effect on the value and return on the Floating Rate Notes.
+
+EURIBOR and other interest rate, equity,
+commodity, foreign exchange rate and other types of indices which are deemed to be “benchmarks” are the subject of
+ongoing international regulatory reform in the European Union. Regulatory changes and the uncertainty as to the nature of such
+potential changes, alternative reference rates or other reforms may adversely affect the trading market for EURIBOR-based
+securities, including the Floating Rate Notes. Any changes announced by regulators or any other governance or oversight body, or
+future changes adopted by such body, in the method pursuant to which the EURIBOR rates are determined may result in a sudden or
+prolonged increase or decrease in the reported EURIBOR rates. If that were to occur, the level of interest payments and the value of
+the Floating Rate Notes may be affected. Although the Floating Rate Notes provide for alternative methods of calculating the
+interest rate payable on the Floating Rate Notes if EURIBOR is not reported, which include requesting certain rates from major
+reference banks in the euro-zone interbank market, or alternatively using EURIBOR for the immediately preceding interest period or
+using the initial interest rate, as applicable, uncertainty as to the extent and manner of future changes may adversely affect the
+current trading market for EURIBOR-based securities and the value of the Floating Rate Notes. To the extent that EURIBOR is
+discontinued, is no longer quoted, or is unavailable, the rate on the Floating Rate Notes will be determined as set forth in
+“Description of Notes.” Any of these alternative methods may result in interest rates and/or payments that are higher
+than, lower than or that do not otherwise correlate over time with the interest rates and/or payments that would have been made on
+the Floating Rate Notes if the EURIBOR rate was available in its current form.
+
+*Note: A securities rating is not a recommendation
+to buy, sell or hold securities and may be subject to revision or withdrawal at any time.
+
+**Note: We expect that delivery of the Notes
+will be made to investors on or about February 3, 2026, which will be the third business day following the date of this final term sheet
+(such settlement being referred to as “T+3”). Under Rule 15c6-1 under the Securities Exchange Act of 1934, as amended (the
+“Exchange Act”), trades in the secondary market generally are required to settle in one business day (as such term is used
+for purposes of Rule 15c6-1 of the Exchange Act), unless the parties to any such trade expressly agree otherwise. Accordingly, purchasers
+who wish to trade the Notes on any date prior to the business day before delivery of the Notes will be required, by virtue of the fact
+that the Notes will initially settle in T+3, to specify an alternate settlement arrangement at the time of any such trade to prevent a
+failed settlement; such purchasers should consult their own advisors in this regard.
+
+The Notes will be represented by beneficial
+interests in fully registered permanent global notes (the “global notes”) without interest coupons attached, which will be
+registered in the name of, and shall be deposited on or about February 3, 2026 with a common depositary for, and in respect of interests
+held through, Euroclear Bank, S.A./N.V., as operator of the Euroclear System (“Euroclear”), and Clearstream Banking, S.A.
+(“Clearstream”). Any Notes represented by global notes held by a nominee of Euroclear or Clearstream will be subject to the
+then applicable procedures of Euroclear and Clearstream, as applicable. Euroclear and Clearstream’s current practice is to make
+payments in respect of global notes to participants of record that hold an interest in the relevant global notes at the close of business
+on the date that is the clearing system business day (for these purposes, Monday to Friday inclusive except December 25 th and
+January 1 st ) immediately preceding each applicable interest payment date.
+
+This term sheet is not a prospectus for the
+purposes of Regulation (EU) 2017/1129, including the same as it forms part of domestic law in the United Kingdom by virtue of the European
+Union (Withdrawal) Act 2018, as amended by the European Union (Withdrawal Agreement) Act 2020.
+
+MiFID II and UK MiFIR - professionals/ECPs-only
+/ No PRIIPs or UK PRIIPs KID - Manufacturer target market (MiFID II and UK MiFIR product governance) is eligible counterparties
+and professional clients only (all distribution channels). No PRIIPs or UK PRIIPs key information document (KID) has been prepared
+as not available to retail in EEA or UK.
+
+The communication of this term sheet and any
+other document or materials relating to the issue of the Notes is not being made, and such documents or materials have not been approved,
+by an authorized person for the purposes of Section 21 of the United Kingdom’s Financial Services and Markets Act 2000, as amended
+(the “FSMA”). Accordingly, such documents and/or materials are not being distributed to, and must not be passed on to, the
+general public in the United Kingdom. This document and such other documents and/or materials are for distribution only to persons who
+(i) have professional experience in matters relating to investments and who fall within the definition of investment professionals (as
+defined in Article 19(5) of the Financial Services and Markets Act 2000 (Financial Promotion) Order 2005, as amended (the “Financial
+Promotion Order”)), (ii) fall within Article 49(2)(a) to (d) of the Financial Promotion Order, (iii) are outside the United Kingdom,
+or (iv) are other persons to whom it may otherwise lawfully be made under the Financial Promotion Order (all such persons together being
+referred to as “relevant persons”). This document is directed only at relevant persons and must not be acted on or relied
+on by persons who are not relevant persons. Any investment or investment activity to which this term sheet and any other document or materials
+relates will be engaged in only with relevant persons. Any person in the United Kingdom that is not a relevant person should not act or
+rely on this term sheet or any of its contents.
+
+Relevant stabilization regulations including
+FCA/ICMA will apply.
+
+The Issuer has filed a registration statement
+(including a prospectus) with the SEC for the offering to which this communication relates. Before you invest, you should read the prospectus
+in that registration statement and other documents the Issuer has filed with the SEC for more complete information about the Issuer and
+this offering. You may get these documents for free by visiting EDGAR on the SEC website at www.sec.gov. Alternatively, the Issuer, any
+underwriter or any dealer participating in the offering will arrange to send you the prospectus if you request it by calling Citigroup
+Global Markets Limited at 1-800-831-9146, BNP PARIBAS at 1-800-854-5674, Deutsche Bank AG, London Branch at 1-800-503-4611, Goldman Sachs
+& Co. LLC at 1-866-471-2526, HSBC Bank plc at 44-20-7991-1422, Merrill Lynch International at 1-800-294-1322 and Mizuho International
+plc. at 44-20-7248-3920.
+
+Any disclaimers or other notices that may
+appear below are not applicable to this communication and should be disregarded. Such disclaimers or other notices were automatically
+generated as a result of this communication being sent via Bloomberg or another email system.
