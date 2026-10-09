@@ -45,6 +45,7 @@ Search results in euros and sterling show the right currency, sizes, bond count 
 - **Action**: With Aidin's OK, run `extract_terms` on the 10 EUR/GBP test set filings (10 Gemini calls, `log_attempt=False`), saving output to `data/test_set/extractions/`. Write `score_test_set.py` and its tests first, then score the baseline. Read which spread and which benchmark the extractor picked for each euro bond.
 - **Gate**: If the extracted spread matches `Spread to benchmark (bps)` and the benchmark text matches `Benchmark text` on at least 18 of the 22 fixed-rate euro bonds, continue. Otherwise stop and report; a prompt change gets its own plan and a 4-call benchmark re-run.
 - **Validate**: `pytest tests/test_score_test_set.py -q`; baseline table in `data/test_set/README.md`.
+- **Outcome, 2026-10-09**: gate failed. After fixing two parser bugs (`clean_spread` decimals, `clean_cusip` Common Codes) the pair is right on 14 of 22. The prompt change is planned in `.claude/plans/non-usd-prompt.plan.md`; Task 2 waits for it. Task 4 must also change the table's spread format `+%d bps`, which truncates decimals.
 
 ### Task 2: Currency per bond (agy)
 - **Action**: Test first. `structure.clean_currency(raw)` returns "USD" for `$`, "EUR" for `€` or `EUR`, "GBP" for `£` or `GBP`, "JPY" for `¥` or `JPY`, else `None`. `structure_filing_extractions` adds a `Currency` column after `Principal ($M)`. Test on the 4 USD fixtures (all "USD") and on Task 1's saved extractions against the key's `Currency` per bond.
