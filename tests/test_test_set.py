@@ -15,7 +15,7 @@ TEST_SET_DIR = Path(__file__).resolve().parent.parent / "data" / "test_set"
 KEY = json.loads((TEST_SET_DIR / "answer_key.json").read_text(encoding="utf-8"))
 
 FIELDS = [
-    "Tranche", "Currency", "Size (M)", "Coupon (%)", "Issue Price", "Yield (%)",
+    "Tranche", "Currency", "Size (M)", "Coupon (%)", "Issue Price", "Yield (%)", "Semi-annual yield (%)",
     "Spread to mid-swaps (bps)", "Benchmark kind", "Benchmark text", "Spread to benchmark (bps)",
     "Maturity Date", "Par Call Date", "Day Count", "Coupon frequency", "ISIN", "Common Code", "CUSIP",
 ]
@@ -80,3 +80,10 @@ def test_sizes_appear_in_the_filing(stem):
 @pytest.mark.parametrize("stem", sorted(KEY))
 def test_count_bonds_matches_key(stem):
     assert count_bonds(raw_text(stem)) == KEY[stem]["bond_count"]
+
+
+def test_both_yields_kept_when_the_filing_states_two():
+    pg = KEY["PG_FWP_TermSheet_GBP_2017-04-27"]["bonds"]
+    assert [(b["Yield (%)"], b["Semi-annual yield (%)"]) for b in pg] == [(1.394, 1.389), (1.809, 1.801)]
+    ibm = KEY["IBM_FWP_TermSheet_GBP_2015-07-29"]["bonds"][0]
+    assert (ibm["Yield (%)"], ibm["Semi-annual yield (%)"]) == (None, 2.662)

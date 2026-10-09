@@ -74,6 +74,22 @@ Every 4th result in scan order from each regex group, 10 per group.
 
 The regex was right on 19 of 20. Its one miss was a dollar deal that mentions a euro deal, so it overcounts. Scaling the 1-in-10 false positive rate gives about 38 of 118 (32%) true non-dollar term sheets, down from the PRD's 37%. Currency detection in milestone 2 has to read the principal amounts, not the first currency word on the page.
 
+## Filings on SEC EDGAR
+
+Each link opens the filing index; click the document in the first row to read the term sheet.
+
+- [KO_FWP_TermSheet_EUR_2024-08-09](https://www.sec.gov/Archives/edgar/data/21344/000155278124000447/0001552781-24-000447-index.htm)
+- [KO_FWP_TermSheet_EUR_2024-05-07](https://www.sec.gov/Archives/edgar/data/21344/000155278124000288/0001552781-24-000288-index.htm)
+- [PG_FWP_TermSheet_EUR_2025-10-27](https://www.sec.gov/Archives/edgar/data/80424/000119312525251694/0001193125-25-251694-index.htm)
+- [PG_FWP_TermSheet_EUR_2024-04-22](https://www.sec.gov/Archives/edgar/data/80424/000119312524104910/0001193125-24-104910-index.htm)
+- [IBM_FWP_TermSheet_EUR_2026-01-29](https://www.sec.gov/Archives/edgar/data/51143/000110465926007953/0001104659-26-007953-index.htm)
+- [IBM_FWP_TermSheet_EUR_2025-02-05](https://www.sec.gov/Archives/edgar/data/51143/000110465925009649/0001104659-25-009649-index.htm)
+- [T_FWP_TermSheet_EUR_GBP_2026-07-27](https://www.sec.gov/Archives/edgar/data/732717/000119312526318207/0001193125-26-318207-index.htm)
+- [T_FWP_TermSheet_EUR_2025-03-24](https://www.sec.gov/Archives/edgar/data/732717/000119312525061322/0001193125-25-061322-index.htm)
+- [PG_FWP_TermSheet_GBP_2017-04-27](https://www.sec.gov/Archives/edgar/data/80424/000119312517143201/0001193125-17-143201-index.htm)
+- [IBM_FWP_TermSheet_GBP_2015-07-29](https://www.sec.gov/Archives/edgar/data/51143/000110465915054222/0001104659-15-054222-index.htm)
+- [PG_FWP_TermSheet_JPY_2021-10-29](https://www.sec.gov/Archives/edgar/data/80424/000119312521312459/0001193125-21-312459-index.htm)
+
 ## Answer key
 
 `answer_key.json`, keyed by file stem in `raw/`. Each deal has its `accession`, `currencies`, `bond_count` and one entry per bond. Conventions follow `data/answer_key.json`: text fields keep the filing's own wording, numbers are normalised and a field the filing does not state is `null`.
@@ -81,7 +97,7 @@ The regex was right on 19 of 20. Its one miss was a dollar deal that mentions a 
 - `Size (M)` is in millions of the bond's own currency (¥50bn is `50000.0`).
 - `Spread to mid-swaps (bps)` is the reoffer spread over the mid-swap rate. `Spread to benchmark (bps)` is the spread over the government bond in `Benchmark text`.
 - `Benchmark kind` is one of `US Treasury`, `German government` (DBR and OBL), `UK government` (UKT and Gilt), `Government, not named` (the filing gives a coupon and date but not the issuer) or `None`.
-- `Yield (%)` for sterling bonds is the yield the filing states. PG 2017 gives both a semi-annual (1.389%, 1.801%) and an annual (1.394%, 1.809%) yield; the key uses the annual one, since the bonds pay annually. IBM 2015 states only a semi-annual yield.
+- Every yield the filing states is kept. `Yield (%)` is the yield with no basis given or an annual one; `Semi-annual yield (%)` is a yield the filing labels semi-annual. PG 2017 states both (annual 1.394% and 1.809% on lines 26 and 70, semi-annual 1.389% and 1.801% on lines 25 and 69). IBM 2015 states only a semi-annual yield (2.662%, line 37), so its `Yield (%)` is `null`.
 - The floating-rate note in IBM 2026-01-29 has `Coupon (%)`, `Yield (%)` and both spreads `null`. Its day count comes from the floating-rate terms (line 305), not the deal-wide line 80.
 
 Drafted by Claude from the filing text on 2026-10-09, before any extraction run on these deals. Each value below is cited by line number in `raw/<stem>.txt`. Awaiting Aidin's check.
@@ -144,7 +160,7 @@ Drafted by Claude from the filing text on 2026-10-09, before any extraction run 
 
 ### IBM_FWP_TermSheet_GBP_2015-07-29
 
-- **2.625% Notes Due 2022**: Tranche 5, Size 30, Coupon 38, Price 40, Yield 37, Benchmark 34, Bmk spread 36, Maturity 31, Par call 39, Day count 43, Frequency 32, ISIN 45, Common Code 45, CUSIP 45
+- **2.625% Notes Due 2022**: Tranche 5, Size 30, Coupon 38, Price 40, Semi-annual yield 37, Benchmark 34, Bmk spread 36, Maturity 31, Par call 39, Day count 43, Frequency 32, ISIN 45, Common Code 45, CUSIP 45
 
 ### PG_FWP_TermSheet_JPY_2021-10-29
 
