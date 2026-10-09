@@ -308,7 +308,7 @@ def format_scoring_changes(changes: list[dict[str, Any]]) -> str:
     return df.to_markdown(index=False)
 
 
-def run_evaluation():
+def run_evaluation(fixtures_dir: Path = FIXTURES_DIR, report_path: Path | None = None):
     if not ANSWER_KEY_PATH.exists():
         raise FileNotFoundError(f"Answer key not found: {ANSWER_KEY_PATH}")
 
@@ -322,7 +322,7 @@ def run_evaluation():
     deal_summaries = []
 
     for deal_key, ground_truth in answer_keys.items():
-        fixture_file = FIXTURES_DIR / f"{deal_key}_extractions.jsonl"
+        fixture_file = Path(fixtures_dir) / f"{deal_key}_extractions.jsonl"
         if not fixture_file.exists():
             raise FileNotFoundError(f"Fixture not found for deal '{deal_key}': {fixture_file}")
 
@@ -433,8 +433,8 @@ def run_evaluation():
         print(attempts_df.to_string(index=False))
 
     # Export markdown report
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    report_path = OUTPUT_DIR / "accuracy_benchmark_report.md"
+    report_path = Path(report_path) if report_path is not None else OUTPUT_DIR / "accuracy_benchmark_report.md"
+    report_path.parent.mkdir(parents=True, exist_ok=True)
     attempts_content = format_extraction_attempts(attempts)
     with open(report_path, "w", encoding="utf-8") as f:
         f.write(f"{headline}\n")

@@ -578,3 +578,26 @@ class TestScoringChangesSection:
 
 
 
+
+
+def test_run_evaluation_scores_another_fixtures_dir_without_touching_the_report(tmp_path):
+    import shutil
+    from evaluate import FIXTURES_DIR, OUTPUT_DIR, run_evaluation
+
+    for path in FIXTURES_DIR.glob("*_extractions.jsonl"):
+        shutil.copy(path, tmp_path / path.name)
+    official = OUTPUT_DIR / "accuracy_benchmark_report.md"
+    before = official.read_text(encoding="utf-8")
+    report = tmp_path / "report.md"
+
+    run_evaluation(fixtures_dir=tmp_path, report_path=report)
+
+    assert "344/350" in report.read_text(encoding="utf-8")
+    assert official.read_text(encoding="utf-8") == before
+
+
+def test_run_evaluation_missing_fixture_in_other_dir_raises(tmp_path):
+    from evaluate import run_evaluation
+
+    with pytest.raises(FileNotFoundError):
+        run_evaluation(fixtures_dir=tmp_path, report_path=tmp_path / "r.md")

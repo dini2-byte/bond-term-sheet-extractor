@@ -109,7 +109,7 @@ def _get_searchable_prompt() -> str:
     return (
         PROMPT_DESCRIPTION
         + "\n"
-        + SAMPLE_TERM_SHEET
+        + "\n".join(eg.text for eg in FEW_SHOT_EXAMPLES)
         + "\n"
         + "\n".join(
             ex.extraction_text for eg in FEW_SHOT_EXAMPLES for ex in eg.extractions
@@ -171,3 +171,75 @@ def test_known_collisions_has_no_stale_entries():
         + "\n".join(f"  - {entry}" for entry in sorted(stale_entries))
     )
 
+
+
+def _test_set_leak_strings(bond: dict) -> list[str]:
+    symbol = {"EUR": "€", "GBP": "£", "JPY": "¥"}[bond["Currency"]]
+    leaks = [f"{symbol}{round(bond['Size (M)'] * 1_000_000):,}"]
+    for field in ("Benchmark text", "ISIN", "Common Code", "CUSIP", "Maturity Date", "Par Call Date"):
+        if bond[field]:
+            leaks.append(bond[field])
+    for field, fmt in (("Coupon (%)", "{:.3f}%"), ("Issue Price", "{:.3f}%"), ("Yield (%)", "{:.3f}%")):
+        if bond[field] is not None:
+            leaks.append(fmt.format(bond[field]))
+    if bond["Spread to benchmark (bps)"] is not None:
+        leaks.append(f"+{bond['Spread to benchmark (bps)']} bps")
+    return leaks
+
+
+# Coupons in SAMPLE_TERM_SHEET (written 2026-09-24) that match test set coupons keyed on 2026-10-09.
+# Coincidental, not leakage.
+TEST_SET_KNOWN_COLLISIONS = {
+    ("KO_FWP_TermSheet_EUR_2024-05-07", "3.500%"),
+    ("IBM_FWP_TermSheet_EUR_2026-01-29", "3.850%"),
+}
+
+
+def test_prompt_contains_no_test_set_values():
+    key = json.loads(Path("data/test_set/answer_key.json").read_text(encoding="utf-8"))
+    searchable = _get_searchable_prompt()
+    leaked = [
+        f"{stem}: {leak}"
+        for stem, deal in key.items()
+        for bond in deal["bonds"]
+        for leak in _test_set_leak_strings(bond)
+        if leak in searchable and (stem, leak) not in TEST_SET_KNOWN_COLLISIONS
+    ]
+    assert not leaked, "Test set values in fields.py:\n" + "\n".join(leaked)
+
+
+def _prompt_line(field: str) -> str:
+    return next(line for line in PROMPT_DESCRIPTION.splitlines() if line.strip().startswith(f"- {field}:"))
+
+
+def test_prompt_takes_spread_over_government_benchmark_not_mid_swaps():
+    spread_line = _prompt_line("spread_bps").lower()
+    assert "government" in spread_line
+    assert "mid-swap" in spread_line
+    assert "government" in _prompt_line("benchmark_treasury").lower()
+
+
+def test_prompt_explains_side_by_side_tables():
+    assert "side by side" in PROMPT_DESCRIPTION.lower()
+
+
+def test_euro_example_spreads_come_from_the_bund_row_not_the_mid_swap_row():
+    assert len(FEW_SHOT_EXAMPLES) == 2
+    euro = FEW_SHOT_EXAMPLES[1]
+    lines = euro.text.splitlines()
+    bund_row = next(l for l in lines if l.startswith("Spread to Benchmark Bund"))
+    swap_row = next(l for l in lines if l.startswith("Spread to Mid-Swaps"))
+    spreads = [ex.extraction_text for ex in euro.extractions if ex.extraction_class == "spread_bps"]
+    assert len(spreads) == 2
+    for spread in spreads:
+        assert spread in bund_row
+        assert spread not in swap_row
+
+
+def test_euro_example_tags_both_tranches():
+    euro = FEW_SHOT_EXAMPLES[1]
+    tags = {ex.attributes["tranche"] for ex in euro.extractions}
+    assert {"2031 Notes", "2036 Notes"} <= tags
+    for tag in ("2031 Notes", "2036 Notes"):
+        classes = {ex.extraction_class for ex in euro.extractions if ex.attributes["tranche"] == tag}
+        assert {"principal_amount", "coupon", "spread_bps", "benchmark_treasury", "cusip"} <= classes
