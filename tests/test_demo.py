@@ -219,13 +219,11 @@ class TestLiveUploadG1:
             at.secrets["GEMINI_API_KEY"] = "mock-key"
             at.run(timeout=10)
 
-            # Switch to upload mode
-            at.sidebar.radio[0].set_value("Upload a term sheet").run()
-            # Enter password
-            at.sidebar.text_input[0].set_value("test-pw").run()
+            # Enter password in 'Try your own term sheet' section
+            at.text_input[0].set_value("test-pw").run()
             # Upload a file
             dummy_content = b"Mock bond term sheet content"
-            at.sidebar.file_uploader[0].upload("test_terms.txt", dummy_content).run()
+            at.file_uploader[0].upload("test_terms.txt", dummy_content).run()
             # Trigger extraction button
             at.button[0].click().run()
 
