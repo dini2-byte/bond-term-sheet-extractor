@@ -215,3 +215,17 @@ With the parser fixed, the spread and benchmark would pair correctly on 14 of th
 ### After the parser fixes, 2026-10-09
 
 `clean_spread` keeps decimals and `clean_cusip` skips Common Codes found inside XS ISINs. Same saved extractions, no new Gemini calls: spread 18/26 (the 4 KO mid-swap bonds and the 4 tabular IBM bonds remain), CUSIP 27/27. The benchmark deals still score 344/350 (98.3%).
+
+## Prompt change trials, 2026-10-09
+
+Plan: `.claude/plans/non-usd-prompt.plan.md`. Each trial is one run of the 4 benchmark deals and the 10 euro and sterling deals (14 Gemini calls). Outputs are kept locally in `output/prompt-v2*` and `output/prompt-v3*`, not committed.
+
+| | Old prompt | v2: spread over government bond, euro example | v3: v2 plus "never join text from two places" |
+|---|---|---|---|
+| Benchmark field accuracy | 344/350 (98.3%) | 349/350 (99.7%) | 344/350 (98.3%) |
+| Not in the filing | 0/335 | 1/341 (GOOGL 2066 benchmark year taken from the par call date) | 0/335 |
+| Found word for word | 55.5% | 50.1% | 48.4% |
+| Euro spread and benchmark pair right | 14/22 | 22/22 | 19/22 |
+| Other test set fields | all right | all right | yield 23/26 (T 2025), KO 2024-05-07 back to mid-swaps |
+
+v3 also lost all 6 ORCL par call dates. Neither trial met every acceptance rule (v2 made one value up; v3 is under 20/22), so the old prompt stays in the saved results until Aidin decides. Each prompt was run once, so some of the gap between v2 and v3 may be run-to-run noise.
