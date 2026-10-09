@@ -30,10 +30,13 @@ from evaluate import load_scoring_changes
 from extract import extract_terms
 from structure import structure_filing_extractions
 from ui import (
-    comps_table_html,
-    field_rows,
+    TABLE_COLUMNS,
+    cell_source,
     load_document_text,
+    not_exact_mask,
+    plain_status,
     scored_grounding,
+    table_frame,
 )
 from validate import validate_comps_table
 
@@ -128,8 +131,8 @@ def build_deal_line(df: pd.DataFrame) -> str:
     else:
         size_str = f"${total_m:,.1f}m"
 
-    n_tranches = len(df)
-    tr_str = f"{n_tranches} tranche" if n_tranches == 1 else f"{n_tranches} tranches"
+    n_bonds = len(df)
+    bond_str = f"{n_bonds} bond" if n_bonds == 1 else f"{n_bonds} bonds"
 
     priced_str = ""
     for col in ["Trade Date", "Trade date"]:
@@ -139,36 +142,21 @@ def build_deal_line(df: pd.DataFrame) -> str:
                 priced_str = f"priced {dates.iloc[0]}"
                 break
 
-    parts = [issuer, f"{size_str} senior notes", tr_str]
+    parts = [issuer, f"{size_str} senior notes", bond_str]
     if priced_str:
         parts.append(priced_str)
     return " · ".join(parts)
 
 
-def tranche_selector_options(df: pd.DataFrame) -> list[str]:
-    """
-    Labels each tranche by maturity year when all tranches have distinct years,
-    otherwise by tranche name.
-    """
-    years: list[str | None] = []
-    for _, r in df.iterrows():
-        mat = r.get("Maturity Date") or r.get("Maturity") or ""
-        match = re.search(r"\b(20\d{2})\b", str(mat))
-        if match:
-            years.append(match.group(1))
-        else:
-            tr_match = re.search(r"\b(20\d{2})\b", str(r.get("Tranche", "")))
-            if tr_match:
-                years.append(tr_match.group(1))
-            else:
-                years.append(None)
+# 1. Title and one sentence
+st.title("Bond Term Sheet Extractor")
+st.markdown("Turn a bond term sheet into a comps table, with every number traced back to the SEC filing.")
 
-    if len(years) == len(df) and all(y is not None for y in years) and len(set(years)) == len(years):
-        return [str(y) for y in years]
-    return df["Tranche"].astype(str).tolist()
+# 2. How to use it
+st.markdown("Pick a deal, read the table, then click any number to see the sentence it came from.")
 
-
-# 1. Header & Deal Picker
+# 3. Step 1: Pick a deal
+st.subheader("1. Pick a deal")
 benchmark_deals = list_benchmark_deals()
 deal_options = {d["label"]: d for d in benchmark_deals}
 labels = list(deal_options.keys())
@@ -178,13 +166,7 @@ for i, d in enumerate(benchmark_deals):
         default_idx = i
         break
 
-col_header, col_deal = st.columns([3, 2])
-with col_header:
-    st.title("Bond Term Sheet Extractor")
-    st.markdown("Pulls pricing terms for investment-grade bond deals out of SEC term sheets and builds a comps table. Every value links to the text it came from.")
-
-with col_deal:
-    selected_label = st.selectbox("Deal", labels, index=default_idx)
+selected_label = st.selectbox("Sample deals", labels, index=default_idx)
 
 # Determine active deal
 selected_deal = deal_options[selected_label]
@@ -204,27 +186,178 @@ else:
 df, audit_records = structure_filing_extractions(selected_jsonl)
 validated_df = validate_comps_table(df, audit_records)
 
-# 2. Deal Line
 if is_uploaded:
     st.markdown("**Uploaded term sheet**")
 else:
     st.markdown(f"**{build_deal_line(validated_df)}**")
 
-# 3. Benchmark line
+# 4. Step 2: Read the table
+st.subheader("2. Read the table")
+
+tf = table_frame(validated_df)
+mask = not_exact_mask(validated_df, audit_records)
+
+
+def highlight_not_exact(data: pd.DataFrame) -> pd.DataFrame:
+    styles = pd.DataFrame("", index=data.index, columns=data.columns)
+    for col in data.columns:
+        if col in mask.columns:
+            styles[col] = [
+                "background-color: #FFF1B8" if is_not_exact else ""
+                for is_not_exact in mask[col]
+            ]
+    return styles
+
+
+styled = tf.style.apply(highlight_not_exact, axis=None)
+
+column_config: dict[str, Any] = {}
+for col_label, _, _, col_help in TABLE_COLUMNS:
+    if col_label == "Size ($M)":
+        column_config[col_label] = st.column_config.NumberColumn(
+            col_label,
+            help=col_help,
+            format="$%,.1fM",
+        )
+    elif col_label in ("Coupon", "Yield"):
+        column_config[col_label] = st.column_config.NumberColumn(
+            col_label,
+            help=col_help,
+            format="%.3f%%",
+        )
+    elif col_label == "Price":
+        column_config[col_label] = st.column_config.NumberColumn(
+            col_label,
+            help=col_help,
+            format="%.3f",
+        )
+    elif col_label == "Spread (bps)":
+        column_config[col_label] = st.column_config.NumberColumn(
+            col_label,
+            help=col_help,
+            format="+%d bps",
+        )
+    else:
+        column_config[col_label] = st.column_config.Column(
+            col_label,
+            help=col_help,
+            width="large" if col_label == "Check" else None,
+        )
+
+selection_default = (
+    {"selection": {"cells": [(0, "Coupon")]}}
+    if len(tf) > 0
+    else {"selection": {"cells": []}}
+)
+
+st.dataframe(
+    styled,
+    hide_index=True,
+    on_select="rerun",
+    selection_mode="single-cell",
+    key="comps",
+    column_config=column_config,
+    selection_default=selection_default,
+)
+
+st.html(
+    '<div style="font-size: 0.85rem; margin-top: 0.3rem; margin-bottom: 0.5rem;">'
+    '<span style="display: inline-block; width: 12px; height: 12px; background-color: #FFF1B8; border: 1px solid #D9D9D9; vertical-align: middle; margin-right: 6px;"></span>'
+    'Found, but the match is not exact. Click it to see the filing text.'
+    '</div>'
+)
+
+excel_buffer = io.BytesIO()
+with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
+    validated_df.to_excel(writer, sheet_name="Comps Table", index=False)
+excel_data = excel_buffer.getvalue()
+
+st.download_button(
+    label="Download .xlsx",
+    data=excel_data,
+    file_name=f"{deal_identifier}_comps_table.xlsx",
+    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+)
+
+# 5. Step 3: Check any number
+st.subheader("3. Check any number")
+doc_text = load_document_text(selected_jsonl)
+
+comps_state = st.session_state.get("comps")
+selected_cells = []
+if isinstance(comps_state, dict):
+    selected_cells = comps_state.get("selection", {}).get("cells", [])
+
+cs = None
+if selected_cells:
+    cell_row, cell_col = selected_cells[0]
+    cs = cell_source(audit_records, cell_row, cell_col, validated_df, doc_text)
+
+if cs is not None:
+    status = cs["status"]
+    if status == "Found word for word":
+        status_color = "#1E6B3A"
+    elif status == "Found, but the match is not exact":
+        status_color = "#8A5A00"
+    else:
+        status_color = "#5F6368"
+
+    card_lines = [
+        '<div style="border: 1px solid #D9D9D9; border-radius: 6px; padding: 1rem 1.25rem; margin: 0.5rem 0 1rem 0; background-color: #FAFAFA;">',
+        f'<div style="font-weight: 600; font-size: 0.95rem; color: #333333;">{html.escape(cs["field"])} · {html.escape(cs["tranche"])}</div>',
+        f'<div style="font-size: 1.8rem; font-weight: 700; margin: 0.2rem 0; color: #111111;">{html.escape(cs["value"])}</div>',
+        f'<div style="color: {status_color}; font-weight: 500; font-size: 0.9rem; margin-bottom: 0.75rem;">{html.escape(status)}</div>',
+    ]
+    if cs["quote_html"]:
+        card_lines.extend([
+            '<div style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.25rem;">From the filing</div>',
+            f'<div style="font-size: 0.9rem; line-height: 1.5; color: #222222;">{cs["quote_html"]}</div>',
+        ])
+    card_lines.append('</div>')
+    if status == "Found, but the match is not exact":
+        card_lines.insert(
+            4,
+            '<div style="color: #5F6368; font-size: 0.85rem; margin: -0.5rem 0 0.75rem 0;">'
+            "The value is in the filing, but the extracted text does not line up exactly with it. "
+            "Compare it with the text below.</div>",
+        )
+    st.html("".join(card_lines))
+else:
+    st.markdown("Click any number in the table to see the sentence it came from.")
+
+# 6. How well does it work?
+st.subheader("How well does it work?")
 acc_info = parse_accuracy_report()
 if acc_info:
-    benchmark_summary = " · ".join([
-        acc_info["headline_line"],
-        acc_info["grounded_line"],
-        acc_info["not_in_source_line"],
-    ])
-    st.markdown(benchmark_summary)
+    m1 = re.search(
+        r"Field accuracy:\s*([0-9.]+)%\s*\(([0-9]+)/([0-9]+)\s*fields,\s*([0-9]+)\s*deals",
+        acc_info.get("headline_line", ""),
+    )
+    if m1:
+        pct, correct, total, deals = m1.group(1), m1.group(2), m1.group(3), m1.group(4)
+        st.markdown(
+            f"On {deals} sample deals with hand-checked answers, it got {correct} of {total} values right ({pct}%)."
+        )
+
+    m2 = re.search(r"Grounded:\s*([0-9.]+)%", acc_info.get("grounded_line", ""))
+    if m2:
+        g_pct = m2.group(1)
+        st.markdown(
+            f"{g_pct}% of values were found word for word in the filing. The rest are marked in the table so you can check them."
+        )
+
+    m3 = re.search(r"Not-in-source:\s*[0-9.]+%\s*\(([0-9]+)/([0-9]+)", acc_info.get("not_in_source_line", ""))
+    if m3:
+        nis_count, nis_total = m3.group(1), m3.group(2)
+        st.markdown(
+            f"None were made up: {nis_count} of {nis_total} values were missing from the filing."
+        )
 
     scoring_changes = load_scoring_changes(Path("data/fixtures/scoring_changes.jsonl"))
     if scoring_changes:
         first_change = scoring_changes[0]
         m_before = re.search(r"([0-9.]+%)\s*\(([0-9]+/[0-9]+)", first_change.get("headline_before", ""))
-        m_after = re.search(r"([0-9.]+%)", acc_info["headline_line"])
+        m_after = re.search(r"([0-9.]+%)", acc_info.get("headline_line", ""))
         if m_before and m_after:
             scoring_text = (
                 f"First scored {m_before.group(1)} ({m_before.group(2)}). A CUSIP formatting fix after the run, "
@@ -232,85 +365,16 @@ if acc_info:
             )
             st.markdown(f'<div class="muted" style="font-size: 0.85rem;">{scoring_text}</div>', unsafe_allow_html=True)
 
-st.html('<hr class="thin">')
-
-# 4. Comps Table & Excel Download
-excel_buffer = io.BytesIO()
-with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
-    validated_df.to_excel(writer, sheet_name="Comps Table", index=False)
-excel_data = excel_buffer.getvalue()
-
-col_tbl_space, col_download = st.columns([5, 1])
-with col_download:
-    st.download_button(
-        label="Download .xlsx",
-        data=excel_data,
-        file_name=f"{deal_identifier}_comps_table.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    )
-
-st.html(comps_table_html(validated_df, audit_records))
-
-st.markdown(
-    '<div style="font-size: 0.85rem; margin-top: 0.4rem;">'
-    '† Not grounded: the value was extracted but its text is not an exact match in the filing.'
-    '</div>',
-    unsafe_allow_html=True,
-)
-
 g_res = scored_grounding(audit_records)
-tranche_count = len(validated_df)
-tranche_phrase = f"all {tranche_count} tranches" if tranche_count > 1 else f"{tranche_count} tranche"
-grounded_line = (
-    f"Grounded: {g_res['percent']:.1f}% "
-    f"({g_res['grounded']}/{g_res['extracted']} extracted fields, {tranche_phrase})"
+n_bonds = len(validated_df)
+bond_phrase = f"all {n_bonds} bonds" if n_bonds > 1 else f"{n_bonds} bond"
+deal_grounded_line = (
+    f"This deal: {g_res['percent']:.1f}% found word for word "
+    f"({g_res['grounded']} of {g_res['extracted']} values, {bond_phrase})."
 )
-st.markdown(
-    f'<div class="muted" style="font-size: 0.85rem; margin-top: 0.2rem;">{grounded_line}</div>',
-    unsafe_allow_html=True,
-)
+st.markdown(f'<div class="muted" style="font-size: 0.85rem;">{deal_grounded_line}</div>', unsafe_allow_html=True)
 
-# 5. Where each value came from
-st.subheader("Where each value came from")
-tranche_options = tranche_selector_options(validated_df)
-selected_tranche_opt = st.segmented_control(
-    "Select tranche",
-    options=tranche_options,
-    default=tranche_options[0] if tranche_options else None,
-    label_visibility="collapsed",
-)
-
-tranche_idx = 0
-if selected_tranche_opt and selected_tranche_opt in tranche_options:
-    tranche_idx = tranche_options.index(selected_tranche_opt)
-
-doc_text = load_document_text(selected_jsonl)
-rows = field_rows(audit_records[tranche_idx], doc_text)
-
-source_table_lines = [
-    '<div class="table-wrap">',
-    "<table>",
-    "<thead><tr>",
-    "<th>Field</th><th>Value</th><th>Status</th><th>Source text</th>",
-    "</tr></thead>",
-    "<tbody>",
-]
-for r in rows:
-    f_esc = html.escape(r["field"])
-    v_esc = html.escape(r["value"]) if r["value"] != "Not found" else '<span class="muted">Not found</span>'
-    status_str = r["status"]
-    if status_str == "not exact":
-        s_html = '<span class="accent">not exact</span>'
-    elif status_str == "not found":
-        s_html = '<span class="muted">not found</span>'
-    else:
-        s_html = "exact"
-    q_html = r["quote_html"] if r["quote_html"] else '<span class="muted">n/a</span>'
-    source_table_lines.append(f"<tr><td>{f_esc}</td><td>{v_esc}</td><td>{s_html}</td><td>{q_html}</td></tr>")
-source_table_lines.extend(["</tbody>", "</table>", "</div>"])
-st.html("".join(source_table_lines))
-
-# 6. Collapsed sections (Expanders)
+# 7. Collapsed sections
 with st.expander("Full filing with highlights", expanded=False):
     try:
         html_content = get_cached_visualization_html(str(selected_jsonl))
@@ -318,7 +382,7 @@ with st.expander("Full filing with highlights", expanded=False):
     except Exception as e:
         st.warning(f"Could not load visualization: {e}")
 
-with st.expander("Validation checks", expanded=False):
+with st.expander("Validation details", expanded=False):
     for _, r in validated_df.iterrows():
         st.markdown(f"**{r['Tranche']}**")
         st.text(f"Status: {r.get('Validation Status', 'n/a')}")
@@ -386,6 +450,6 @@ with st.expander("Try your own term sheet", expanded=False):
                                 except Exception as e:
                                     st.error(f"Extraction error: {e}")
 
-# 7. Footer
+# 8. Footer
 st.html('<hr class="thin">')
 st.markdown('<div class="muted" style="font-size: 0.85rem;">Code: github.com/dini2-byte/bond-term-sheet-extractor. Built on langextract and edgartools.</div>', unsafe_allow_html=True)

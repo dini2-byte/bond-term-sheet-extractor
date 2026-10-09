@@ -8,8 +8,12 @@ from ui import (
     load_document_text,
     scored_grounding,
     source_quote,
-    comps_table_html,
-    field_rows,
+    TABLE_COLUMNS,
+    plain_status,
+    plain_check,
+    table_frame,
+    not_exact_mask,
+    cell_source,
 )
 
 
@@ -147,138 +151,6 @@ class TestSourceQuote:
         assert source_quote("", 0, 5) == ""
 
 
-class TestCompsTableHtml:
-    def test_comps_table_html_columns_and_order(self):
-        fixture_path = Path("data/fixtures/AAPL_FWP_TermSheet_2025-05-06_extractions.jsonl")
-        df, audit_records = structure_filing_extractions(fixture_path)
-        html = comps_table_html(df, audit_records)
-        assert '<div class="table-wrap">' in html
-        assert "<table>" in html
-
-        expected_cols = [
-            "Tranche",
-            "Size ($M)",
-            "Coupon",
-            "Price",
-            "Yield",
-            "Spread (bps)",
-            "Benchmark",
-            "Maturity",
-            "Par call",
-            "CUSIP",
-            "Checks",
-        ]
-        # Check all expected headers appear in exact order in the HTML
-        last_pos = -1
-        for col in expected_cols:
-            header_str = f">{col}<"
-            pos = html.find(header_str)
-            assert pos != -1, f"Column header {col} not found in comps table"
-            assert pos > last_pos, f"Column header {col} is out of order"
-            last_pos = pos
-
-    def test_comps_table_html_no_index_column(self):
-        fixture_path = Path("data/fixtures/AAPL_FWP_TermSheet_2025-05-06_extractions.jsonl")
-        df, audit_records = structure_filing_extractions(fixture_path)
-        html = comps_table_html(df, audit_records)
-        # Check table headers: exactly 11 <th> elements for 11 columns
-        th_count = html.count("</th>")
-        assert th_count == 11
-
-    def test_comps_table_html_right_aligns_numbers_and_formats(self):
-        fixture_path = Path("data/fixtures/AAPL_FWP_TermSheet_2025-05-06_extractions.jsonl")
-        df, audit_records = structure_filing_extractions(fixture_path)
-        html = comps_table_html(df, audit_records)
-        assert "4.000%" in html
-        assert "4.200%" in html
-        # Check numeric alignment
-        assert 'class="num"' in html or 'text-align: right' in html
-
-    def test_comps_table_html_escapes_script_tag(self):
-        import pandas as pd
-        df = pd.DataFrame([{
-            "Tranche": "</td><script>alert(1)</script>",
-            "Principal ($M)": 1000.0,
-            "Coupon (%)": 4.0,
-            "Issue Price": 99.8,
-            "Yield (%)": 4.1,
-            "Spread (bps)": 25,
-            "Benchmark Treasury": "UST",
-            "Maturity Date": "May 1, 2030",
-            "Par Call Date": "April 1, 2030",
-            "CUSIP": "123456789",
-            "Validation Status": "PASSED",
-        }])
-        html = comps_table_html(df, [])
-        assert "<script>" not in html
-        assert "&lt;script&gt;" in html
-
-    def test_comps_table_html_dagger_for_ungrounded(self):
-        fixture_path = Path("data/fixtures/MSFT_FWP_TermSheet_2017-01-31_extractions.jsonl")
-        df, audit_records = structure_filing_extractions(fixture_path)
-        html = comps_table_html(df, audit_records)
-        # MSFT has ungrounded extracted fields, which must receive a superscript dagger
-        assert "<sup>†</sup>" in html
-
-    def test_comps_table_html_missing_value_shows_na_muted(self):
-        import pandas as pd
-        df = pd.DataFrame([{
-            "Tranche": "Test Tranche",
-            "Principal ($M)": None,
-            "Coupon (%)": None,
-            "Issue Price": None,
-            "Yield (%)": None,
-            "Spread (bps)": None,
-            "Benchmark Treasury": None,
-            "Maturity Date": None,
-            "Par Call Date": None,
-            "CUSIP": None,
-            "Validation Status": None,
-        }])
-        html = comps_table_html(df, [])
-        assert "n/a" in html
-        assert "muted" in html
-
-
-class TestFieldRows:
-    def test_field_rows_14_rows_and_order(self):
-        fixture_path = Path("data/fixtures/AAPL_FWP_TermSheet_2025-05-06_extractions.jsonl")
-        _, audit_records = structure_filing_extractions(fixture_path)
-        doc_text = load_document_text(fixture_path)
-        rows = field_rows(audit_records[0]["fields"], doc_text)
-        assert len(rows) == 14
-        expected_fields = list(SCORED_FIELDS.keys())
-        actual_fields = [r["field"] for r in rows]
-        assert actual_fields == expected_fields
-
-    def test_field_rows_keys_and_statuses(self):
-        fixture_path = Path("data/fixtures/AAPL_FWP_TermSheet_2025-05-06_extractions.jsonl")
-        _, audit_records = structure_filing_extractions(fixture_path)
-        doc_text = load_document_text(fixture_path)
-        rows = field_rows(audit_records[0]["fields"], doc_text)
-        for r in rows:
-            assert set(r.keys()) == {"field", "value", "status", "quote_html"}
-            assert r["status"] in {"exact", "not exact", "not found"}
-
-    def test_field_rows_not_found_has_empty_quote(self):
-        audit_entry = {
-            "coupon": {"raw": "Not found", "grounded": False},
-        }
-        rows = field_rows(audit_entry, "Some filing text")
-        coupon_row = next(r for r in rows if r["field"] == "Coupon (%)")
-        assert coupon_row["status"] == "not found"
-        assert coupon_row["quote_html"] == ""
-
-    def test_field_rows_exact_has_mark_in_quote(self):
-        fixture_path = Path("data/fixtures/AAPL_FWP_TermSheet_2025-05-06_extractions.jsonl")
-        _, audit_records = structure_filing_extractions(fixture_path)
-        doc_text = load_document_text(fixture_path)
-        rows = field_rows(audit_records[0]["fields"], doc_text)
-        exact_rows = [r for r in rows if r["status"] == "exact"]
-        assert len(exact_rows) > 0
-        assert any("<mark>" in r["quote_html"] for r in exact_rows)
-
-
 
 class TestReviewFixes:
     def test_source_quote_does_not_start_or_end_mid_word(self):
@@ -289,12 +161,138 @@ class TestReviewFixes:
         assert "del" not in result
         assert "<mark>charlie</mark>" in result
 
-    def test_checks_column_uses_sentence_case(self):
+
+class TestSlice6UiHelpers:
+    def test_table_columns_spec_and_order(self):
+        expected_labels = [
+            "Tranche",
+            "Size ($M)",
+            "Coupon",
+            "Price",
+            "Yield",
+            "Spread (bps)",
+            "Treasury",
+            "Maturity",
+            "Par call",
+            "CUSIP",
+            "Check",
+        ]
+        assert [col[0] for col in TABLE_COLUMNS] == expected_labels
+        assert len(TABLE_COLUMNS) == 11
+        # Check source columns and field classes
+        assert TABLE_COLUMNS[0] == ("Tranche", "Tranche", None, "One bond in the deal. A deal often sells several bonds with different maturities.")
+        assert TABLE_COLUMNS[1] == ("Size ($M)", "Principal ($M)", "principal_amount", "Amount of this bond sold, in millions of dollars.")
+        assert TABLE_COLUMNS[2] == ("Coupon", "Coupon (%)", "coupon", "Yearly interest rate the issuer pays.")
+        assert TABLE_COLUMNS[3] == ("Price", "Issue Price", "issue_price", "Price paid per 100 of face value.")
+        assert TABLE_COLUMNS[4] == ("Yield", "Yield (%)", "yield_to_maturity", "Return to an investor who buys at the issue price and holds to maturity.")
+        assert TABLE_COLUMNS[5] == ("Spread (bps)", "Spread (bps)", "spread_bps", "Extra yield over the matching US Treasury, in basis points (1 bp = 0.01%).")
+        assert TABLE_COLUMNS[6] == ("Treasury", "Benchmark Treasury", "benchmark_treasury", "The US Treasury the spread is measured against.")
+        assert TABLE_COLUMNS[7] == ("Maturity", "Maturity Date", "maturity_date", "Date the bond is repaid.")
+        assert TABLE_COLUMNS[8] == ("Par call", "Par Call Date", "par_call_date", "Date after which the issuer can repay early at 100.")
+        assert TABLE_COLUMNS[9] == ("CUSIP", "CUSIP", "cusip", "The bond's 9-character ID.")
+        assert TABLE_COLUMNS[10] == ("Check", None, None, "OK, or the first thing worth checking in this row.")
+
+    def test_plain_status(self):
+        assert plain_status({"grounded": True, "raw": "4.000%"}) == "Found word for word"
+        assert plain_status({"grounded": False, "raw": "4.000%"}) == "Found, but the match is not exact"
+        assert plain_status({"grounded": False, "raw": "Not found"}) == "Not in the filing"
+        assert plain_status({"grounded": False, "raw": None}) == "Not in the filing"
+        assert plain_status({"grounded": False, "raw": ""}) == "Not in the filing"
+        assert plain_status({}) == "Not in the filing"
+        assert plain_status(None) == "Not in the filing"
+
+    def test_plain_check_passed(self):
+        assert plain_check("PASSED", "None (All checks passed)") == "OK"
+        assert plain_check("PASSED", "") == "OK"
+
+    def test_plain_check_flagged_with_multiple_issues(self):
+        issues = [
+            "WEAK_GROUNDING: coupon (fuzzy, span '4%' vs '4.000%')",
+            "WEAK_GROUNDING: maturity_date (fuzzy, span '2028' vs 'May 12, 2028')",
+        ]
+        res = plain_check("FLAGGED", issues)
+        assert res == "Coupon not exact (+1 more)"
+
+        # Also supports semicolon-separated string
+        str_issues = "WEAK_GROUNDING: coupon (fuzzy); WEAK_GROUNDING: maturity_date (fuzzy)"
+        assert plain_check("FLAGGED", str_issues) == "Coupon not exact (+1 more)"
+
+    def test_plain_check_code_mappings(self):
+        assert plain_check("FLAGGED", ["SUSPICIOUS_COUPON: 20% outside plausible range"]) == "Coupon looks unusual"
+        assert plain_check("FLAGGED", ["MISSING_COUPON"]) == "Coupon missing"
+        assert plain_check("FLAGGED", ["PRICE_DEVIATION: 80 deviates significantly"]) == "Price far from 100"
+        assert plain_check("FLAGGED", ["SPREAD_ANOMALY: 2000 bps outside bounds"]) == "Spread looks unusual"
+        assert plain_check("FLAGGED", ["DATE_SEQUENCE_ERROR: Maturity <= Trade Date"]) == "Dates out of order"
+        assert plain_check("FLAGGED", ["UNGROUNDED: trade_date not anchored to source text"]) == "Trade date not exact"
+        assert plain_check("FLAGGED", ["UNKNOWN_CODE: something went wrong"]) == "See validation details"
+
+    def test_table_frame(self):
+        from validate import validate_comps_table
+        fixture_path = Path("data/fixtures/AAPL_FWP_TermSheet_2025-05-06_extractions.jsonl")
+        df, audit_records = structure_filing_extractions(fixture_path)
+        vdf = validate_comps_table(df, audit_records)
+        tf = table_frame(vdf)
+
+        expected_labels = [col[0] for col in TABLE_COLUMNS]
+        assert list(tf.columns) == expected_labels
+        assert len(tf) == len(vdf)
+        assert list(tf.index) == list(range(len(vdf)))
+        assert tf["Coupon"].iloc[0] == 4.0
+        assert tf["Check"].iloc[0] != "OK"
+
+    def test_not_exact_mask_shape_and_values(self):
+        from validate import validate_comps_table
+        fixture_path = Path("data/fixtures/AAPL_FWP_TermSheet_2025-05-06_extractions.jsonl")
+        df, audit_records = structure_filing_extractions(fixture_path)
+        vdf = validate_comps_table(df, audit_records)
+        tf = table_frame(vdf)
+        mask = not_exact_mask(vdf, audit_records)
+
+        assert mask.shape == tf.shape
+        assert list(mask.columns) == list(tf.columns)
+        assert list(mask.index) == list(tf.index)
+        assert not mask["Tranche"].any()
+        assert not mask["Check"].any()
+        assert not mask["Coupon"].iloc[0]
+
+    def test_cell_source_tranche_and_check_return_none(self):
+        from validate import validate_comps_table
+        fixture_path = Path("data/fixtures/AAPL_FWP_TermSheet_2025-05-06_extractions.jsonl")
+        df, audit_records = structure_filing_extractions(fixture_path)
+        vdf = validate_comps_table(df, audit_records)
+        doc_text = load_document_text(fixture_path)
+
+        assert cell_source(audit_records, 0, "Tranche", vdf, doc_text) is None
+        assert cell_source(audit_records, 0, "Check", vdf, doc_text) is None
+
+    def test_cell_source_aapl_first_row_coupon(self):
+        from validate import validate_comps_table
+        fixture_path = Path("data/fixtures/AAPL_FWP_TermSheet_2025-05-06_extractions.jsonl")
+        df, audit_records = structure_filing_extractions(fixture_path)
+        vdf = validate_comps_table(df, audit_records)
+        doc_text = load_document_text(fixture_path)
+
+        cs = cell_source(audit_records, 0, "Coupon", vdf, doc_text)
+        assert cs is not None
+        assert cs["field"] == "Coupon"
+        assert cs["tranche"] == "4.000% Notes due 2028"
+        assert cs["value"] == "4.000%"
+        assert cs["status"] == "Found word for word"
+        assert "<mark>4.000%</mark>" in cs["quote_html"]
+
+
+
+class TestTableFrameReadability:
+    def _frame(self, deal):
         from structure import structure_filing_extractions
         from validate import validate_comps_table
-        df, audit = structure_filing_extractions(
-            "data/fixtures/AAPL_FWP_TermSheet_2025-05-06_extractions.jsonl"
-        )
-        html_out = comps_table_html(validate_comps_table(df, audit), audit)
-        assert "FLAGGED" not in html_out and "PASSED" not in html_out
-        assert "Flagged" in html_out
+        df, audit = structure_filing_extractions(f"data/fixtures/{deal}_extractions.jsonl")
+        return table_frame(validate_comps_table(df, audit))
+
+    def test_dates_are_short(self):
+        tf = self._frame("MSFT_FWP_TermSheet_2017-01-31")
+        assert tf["Maturity"].iloc[0] == "6 Feb 2020"
+
+    def test_missing_text_values_show_na(self):
+        tf = self._frame("MSFT_FWP_TermSheet_2017-01-31")
+        assert tf["Par call"].iloc[0] == "n/a"

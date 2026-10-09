@@ -4,9 +4,13 @@ No Streamlit imports; all functions are independently testable.
 """
 
 from collections import OrderedDict
+import html
 import json
 from pathlib import Path
+import re
 from typing import Any
+
+import pandas as pd
 
 # Scored fields: 14 pairs from comps table column name to extraction field class.
 # Preserves order matching evaluate.py field_class_map.
@@ -26,6 +30,281 @@ SCORED_FIELDS: dict[str, str] = OrderedDict([
     ("Par Call Date", "par_call_date"),
     ("CUSIP", "cusip"),
 ])
+
+# Ordered list of (label, source_column, field_class, help_text) for the comps table.
+TABLE_COLUMNS: list[tuple[str, str | None, str | None, str]] = [
+    ("Tranche", "Tranche", None, "One bond in the deal. A deal often sells several bonds with different maturities."),
+    ("Size ($M)", "Principal ($M)", "principal_amount", "Amount of this bond sold, in millions of dollars."),
+    ("Coupon", "Coupon (%)", "coupon", "Yearly interest rate the issuer pays."),
+    ("Price", "Issue Price", "issue_price", "Price paid per 100 of face value."),
+    ("Yield", "Yield (%)", "yield_to_maturity", "Return to an investor who buys at the issue price and holds to maturity."),
+    ("Spread (bps)", "Spread (bps)", "spread_bps", "Extra yield over the matching US Treasury, in basis points (1 bp = 0.01%)."),
+    ("Treasury", "Benchmark Treasury", "benchmark_treasury", "The US Treasury the spread is measured against."),
+    ("Maturity", "Maturity Date", "maturity_date", "Date the bond is repaid."),
+    ("Par call", "Par Call Date", "par_call_date", "Date after which the issuer can repay early at 100."),
+    ("CUSIP", "CUSIP", "cusip", "The bond's 9-character ID."),
+    ("Check", None, None, "OK, or the first thing worth checking in this row."),
+]
+
+
+def plain_status(meta: dict[str, Any] | None) -> str:
+    """
+    Returns plain words status for an extracted field's audit metadata:
+    - 'Found word for word' when meta['grounded'] is True
+    - 'Found, but the match is not exact' when extracted but not grounded
+    - 'Not in the filing' when nothing was extracted (missing meta, raw is None or 'Not found')
+    """
+    if not meta or not isinstance(meta, dict):
+        return "Not in the filing"
+    raw = meta.get("raw")
+    if raw is None or (isinstance(raw, str) and raw.strip().lower() in ("", "none", "nan", "not found", "n/a")):
+        return "Not in the filing"
+    if meta.get("grounded") is True:
+        return "Found word for word"
+    return "Found, but the match is not exact"
+
+
+def _field_label_map() -> dict[str, str]:
+    mapping: dict[str, str] = {}
+    for label, src_col, fc, _ in TABLE_COLUMNS:
+        if fc:
+            mapping[fc] = label.lower()
+        if src_col:
+            mapping[src_col] = label.lower()
+        mapping[label] = label.lower()
+    for col_name, fc in SCORED_FIELDS.items():
+        if fc not in mapping:
+            mapping[fc] = col_name.lower()
+        if col_name not in mapping:
+            mapping[col_name] = col_name.lower()
+    return mapping
+
+
+def plain_check(status: str | None, issues: Any) -> str:
+    """
+    Returns plain-words validation check result for a tranche row.
+    'OK' for PASSED.
+    For FLAGGED, the first reason in plain words, capitalized, plus ' (+N more)'
+    when there are more issues.
+    """
+    if not status or str(status).strip().upper() != "FLAGGED":
+        return "OK"
+
+    if isinstance(issues, str):
+        issue_list = [i.strip() for i in issues.split(";") if i.strip() and not i.strip().lower().startswith("none")]
+    elif isinstance(issues, (list, tuple)):
+        issue_list = [str(i).strip() for i in issues if str(i).strip() and not str(i).strip().lower().startswith("none")]
+    else:
+        issue_list = []
+
+    if not issue_list:
+        return "See validation details"
+
+    first_issue = issue_list[0]
+    parts = first_issue.split(":", 1)
+    code = parts[0].strip()
+    rest = parts[1].strip() if len(parts) > 1 else ""
+
+    if code in ("UNGROUNDED", "WEAK_GROUNDING"):
+        raw_field = rest.split()[0].strip() if rest else ""
+        raw_field_clean = re.sub(r"[^a-zA-Z0-9_% \-]", "", raw_field)
+        field_map = _field_label_map()
+        label = (
+            field_map.get(raw_field)
+            or field_map.get(raw_field_clean)
+            or field_map.get(raw_field.lower())
+            or field_map.get(raw_field_clean.lower())
+            or (raw_field_clean.lower() if raw_field_clean else "field")
+        )
+        reason = f"{label} not exact"
+    elif code == "SUSPICIOUS_COUPON":
+        reason = "coupon looks unusual"
+    elif code == "MISSING_COUPON":
+        reason = "coupon missing"
+    elif code == "PRICE_DEVIATION":
+        reason = "price far from 100"
+    elif code == "SPREAD_ANOMALY":
+        reason = "spread looks unusual"
+    elif code == "DATE_SEQUENCE_ERROR":
+        reason = "dates out of order"
+    else:
+        reason = "see validation details"
+
+    reason = reason[:1].upper() + reason[1:]
+    more = len(issue_list) - 1
+    if more > 0:
+        return f"{reason} (+{more} more)"
+    return reason
+
+
+NA_TEXT = "n/a"
+DATE_COLUMNS = ("Maturity", "Par call")
+TEXT_COLUMNS = ("Tranche", "Treasury", "CUSIP")
+
+
+def _is_missing(value: Any) -> bool:
+    if value is None:
+        return True
+    if isinstance(value, float) and pd.isna(value):
+        return True
+    return isinstance(value, str) and value.strip().lower() in ("", "nan", "none", "not found", "n/a")
+
+
+def short_date(value: Any) -> str:
+    """Format a date as '6 Feb 2020'; 'n/a' when missing; unchanged when it cannot be parsed."""
+    if _is_missing(value):
+        return NA_TEXT
+    parsed = pd.to_datetime(str(value), errors="coerce")
+    if pd.isna(parsed):
+        return str(value)
+    return f"{parsed.day} {parsed:%b %Y}"
+
+
+def table_frame(validated_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Returns the table with TABLE_COLUMNS labels in order,
+    the Check column from plain_check, and a fresh 0..n-1 index.
+    """
+    n_rows = len(validated_df)
+    data: dict[str, Any] = {}
+    for label, source_column, _, _ in TABLE_COLUMNS:
+        if label == "Check":
+            checks = []
+            for i in range(n_rows):
+                row = validated_df.iloc[i]
+                status = row.get("Validation Status") if "Validation Status" in row else (row.get("Status") if "Status" in row else "PASSED")
+                issues = row.get("Validation Issues") if "Validation Issues" in row else (row.get("Issues") if "Issues" in row else "")
+                checks.append(plain_check(status, issues))
+            data[label] = checks
+        else:
+            if source_column and source_column in validated_df.columns:
+                values = validated_df[source_column].tolist()
+                if label in DATE_COLUMNS:
+                    values = [short_date(v) for v in values]
+                elif label in TEXT_COLUMNS:
+                    values = [NA_TEXT if _is_missing(v) else v for v in values]
+                data[label] = values
+            elif label in validated_df.columns:
+                data[label] = validated_df[label].tolist()
+            else:
+                data[label] = [None] * n_rows
+
+    res_df = pd.DataFrame(data, index=pd.RangeIndex(n_rows))
+    return res_df
+
+
+def not_exact_mask(
+    validated_df: pd.DataFrame,
+    audit_records: list[dict[str, Any]],
+) -> pd.DataFrame:
+    """
+    Same shape and labels as table_frame, True where a value was extracted
+    but is not grounded.
+    """
+    n_rows = len(validated_df)
+    col_labels = [label for label, _, _, _ in TABLE_COLUMNS]
+    field_class_by_label = {label: fc for label, _, fc, _ in TABLE_COLUMNS}
+
+    mask_dict: dict[str, list[bool]] = {label: [False] * n_rows for label in col_labels}
+
+    for row_idx in range(n_rows):
+        audit_entry = audit_records[row_idx] if row_idx < len(audit_records) else {}
+        fields = audit_entry.get("fields", {}) if isinstance(audit_entry, dict) else {}
+
+        for label in col_labels:
+            fc = field_class_by_label.get(label)
+            if not fc:
+                continue
+            meta = fields.get(fc)
+            if not meta or not isinstance(meta, dict):
+                continue
+            raw = meta.get("raw")
+            if raw is None or (isinstance(raw, str) and raw.strip().lower() in ("", "none", "nan", "not found", "n/a")):
+                continue
+            if meta.get("grounded") is not True:
+                mask_dict[label][row_idx] = True
+
+    return pd.DataFrame(mask_dict, index=pd.RangeIndex(n_rows))
+
+
+def _format_cell_display_value(val: Any, label: str) -> str:
+    if val is None or (isinstance(val, float) and pd.isna(val)):
+        return "Not in the filing"
+    if isinstance(val, str) and val.strip().lower() in ("", "none", "nan", "not found", "n/a"):
+        return "Not in the filing"
+    if isinstance(val, (int, float)):
+        if label in ("Size ($M)", "Principal ($M)"):
+            return f"${float(val):,.1f}M"
+        elif label in ("Coupon", "Coupon (%)"):
+            return f"{float(val):.3f}%"
+        elif label in ("Price", "Issue Price"):
+            return f"{float(val):.3f}"
+        elif label in ("Yield", "Yield (%)"):
+            return f"{float(val):.3f}%"
+        elif label in ("Spread (bps)", "Spread"):
+            v_flt = float(val)
+            return f"+{int(v_flt)} bps" if v_flt.is_integer() else f"+{v_flt} bps"
+    return str(val)
+
+
+def cell_source(
+    audit_records: list[dict[str, Any]],
+    row: int,
+    label: str,
+    validated_df: pd.DataFrame,
+    doc_text: str,
+) -> dict[str, Any] | None:
+    """
+    For a clicked cell, returns:
+    {"field": label, "tranche": <tranche name>, "value": <displayed value>,
+     "status": plain_status(...), "quote_html": source_quote(...) or ""}
+    Returns None for the Tranche and Check columns.
+    """
+    if label in ("Tranche", "Check"):
+        return None
+    if row < 0 or row >= len(validated_df):
+        return None
+
+    matched_col = next((col for col in TABLE_COLUMNS if col[0] == label), None)
+    if not matched_col:
+        return None
+
+    _, source_column, field_class, _ = matched_col
+    tranche_name = str(validated_df.iloc[row]["Tranche"])
+
+    audit_entry = audit_records[row] if row < len(audit_records) else {}
+    fields = audit_entry.get("fields", {}) if isinstance(audit_entry, dict) else {}
+    meta = fields.get(field_class) if field_class else {}
+
+    status = plain_status(meta)
+
+    raw_val = None
+    if source_column and source_column in validated_df.columns:
+        raw_val = validated_df.iloc[row][source_column]
+    elif label in validated_df.columns:
+        raw_val = validated_df.iloc[row][label]
+    elif isinstance(meta, dict):
+        raw_val = meta.get("raw")
+
+    if status == "Not in the filing":
+        displayed_val = "Not in the filing"
+    else:
+        displayed_val = _format_cell_display_value(raw_val, label)
+
+    quote_html = ""
+    if isinstance(meta, dict) and doc_text:
+        interval = meta.get("char_interval")
+        if interval and "start_pos" in interval and "end_pos" in interval:
+            quote_html = source_quote(doc_text, interval["start_pos"], interval["end_pos"])
+
+    return {
+        "field": label,
+        "tranche": tranche_name,
+        "value": displayed_val,
+        "status": status,
+        "quote_html": quote_html,
+    }
+
 
 
 def load_document_text(jsonl_path: str | Path) -> str:
@@ -133,148 +412,3 @@ def source_quote(
 
     return " ".join(parts)
 
-
-def comps_table_html(df: Any, audit_records: list[dict[str, Any]] | None = None) -> str:
-    """
-    Renders an HTML <table> wrapped in <div class="table-wrap">.
-    Columns in exact order:
-    Tranche, Size ($M), Coupon, Price, Yield, Spread (bps), Benchmark, Maturity, Par call, CUSIP, Checks.
-    No index column. Numbers right-aligned with standard app formatting.
-    Extracted but ungrounded values receive a <sup>†</sup> dagger.
-    Missing values show '<span class="muted">n/a</span>'.
-    All cell values are escaped with html.escape.
-    """
-    import html
-    import pandas as pd
-
-    records = audit_records or []
-
-    # Column specifications: (Display Name, Candidate df keys, field_class, is_numeric)
-    col_specs = [
-        ("Tranche", ["Tranche"], None, False),
-        ("Size ($M)", ["Size ($M)", "Principal ($M)"], "principal_amount", True),
-        ("Coupon", ["Coupon", "Coupon (%)"], "coupon", True),
-        ("Price", ["Price", "Issue Price"], "issue_price", True),
-        ("Yield", ["Yield", "Yield (%)"], "yield_to_maturity", True),
-        ("Spread (bps)", ["Spread (bps)", "Spread"], "spread_bps", True),
-        ("Benchmark", ["Benchmark", "Benchmark Treasury"], "benchmark_treasury", False),
-        ("Maturity", ["Maturity", "Maturity Date"], "maturity_date", False),
-        ("Par call", ["Par call", "Par Call Date"], "par_call_date", False),
-        ("CUSIP", ["CUSIP"], "cusip", False),
-        ("Checks", ["Checks", "Validation Status"], None, False),
-    ]
-
-    lines = ['<div class="table-wrap">', "<table>", "<thead>", "<tr>"]
-    for header, _, _, is_num in col_specs:
-        align = ' class="num" style="text-align: right;"' if is_num else ""
-        lines.append(f"<th{align}>{html.escape(header)}</th>")
-    lines.extend(["</tr>", "</thead>", "<tbody>"])
-
-    if hasattr(df, "iterrows"):
-        row_iter = df.iterrows()
-    else:
-        row_iter = enumerate(df)
-
-    for row_idx, row in row_iter:
-        fields = records[row_idx].get("fields", {}) if row_idx < len(records) else {}
-        lines.append("<tr>")
-
-        for col_name, keys, field_class, is_num in col_specs:
-            val = None
-            for k in keys:
-                if k in row:
-                    val = row[k]
-                    break
-
-            is_missing = False
-            if val is None:
-                is_missing = True
-            elif isinstance(val, float) and pd.isna(val):
-                is_missing = True
-            elif isinstance(val, str) and val.strip().lower() in ("", "nan", "none", "not found", "n/a"):
-                is_missing = True
-
-            align = ' class="num" style="text-align: right;"' if is_num else ""
-
-            if is_missing:
-                cell_content = '<span class="muted">n/a</span>'
-            else:
-                formatted_str = ""
-                if is_num and isinstance(val, (int, float)):
-                    if col_name == "Size ($M)":
-                        formatted_str = f"${float(val):,.1f}M"
-                    elif col_name == "Coupon":
-                        formatted_str = f"{float(val):.3f}%"
-                    elif col_name == "Price":
-                        formatted_str = f"{float(val):.3f}"
-                    elif col_name == "Yield":
-                        formatted_str = f"{float(val):.3f}%"
-                    elif col_name == "Spread (bps)":
-                        v_flt = float(val)
-                        formatted_str = f"+{int(v_flt)} bps" if v_flt.is_integer() else f"+{v_flt} bps"
-                    else:
-                        formatted_str = str(val)
-                elif col_name == "Checks":
-                    formatted_str = str(val).capitalize()
-                else:
-                    formatted_str = str(val)
-
-                cell_escaped = html.escape(formatted_str)
-
-                # Check if extracted but not grounded
-                dagger = ""
-                if field_class and field_class in fields:
-                    meta = fields[field_class]
-                    raw = meta.get("raw")
-                    raw_extracted = raw is not None and not (
-                        isinstance(raw, str) and raw.strip().lower() in ("not found", "none", "n/a")
-                    )
-                    if raw_extracted and meta.get("grounded") is not True:
-                        dagger = "<sup>†</sup>"
-
-                cell_content = f"{cell_escaped}{dagger}"
-
-            lines.append(f"<td{align}>{cell_content}</td>")
-        lines.append("</tr>")
-
-    lines.extend(["</tbody>", "</table>", "</div>"])
-    return "".join(lines)
-
-
-def field_rows(audit_entry: dict[str, Any], doc_text: str) -> list[dict[str, Any]]:
-    """
-    Returns one row per scored field for one tranche, in SCORED_FIELDS order.
-    Keys: field, value, status ('exact', 'not exact', 'not found'),
-    and quote_html (from source_quote, or an empty string when not found).
-    """
-    fields = audit_entry.get("fields", audit_entry) if isinstance(audit_entry, dict) else {}
-    rows: list[dict[str, Any]] = []
-
-    for col_name, field_class in SCORED_FIELDS.items():
-        meta = fields.get(field_class) or {}
-        raw = meta.get("raw")
-        if raw is None or (isinstance(raw, str) and raw.strip().lower() in ("not found", "none", "n/a")):
-            rows.append({
-                "field": col_name,
-                "value": "Not found",
-                "status": "not found",
-                "quote_html": "",
-            })
-            continue
-
-        grounded = meta.get("grounded") is True
-        status = "exact" if grounded else "not exact"
-
-        interval = meta.get("char_interval")
-        quote = ""
-        if interval and "start_pos" in interval and "end_pos" in interval:
-            quote = source_quote(doc_text, interval["start_pos"], interval["end_pos"])
-
-        rows.append({
-            "field": col_name,
-            "value": str(raw),
-            "status": status,
-            "quote_html": quote,
-        })
-
-    return rows
