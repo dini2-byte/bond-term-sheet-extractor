@@ -27,7 +27,6 @@ from demo import (
     save_uploaded_filing,
     visualization_src,
 )
-from evaluate import load_scoring_changes
 from extract import extract_terms
 import lookup
 from lookup import (
@@ -44,7 +43,6 @@ from ui import (
     load_document_text,
     not_exact_mask,
     plain_status,
-    scored_grounding,
     table_frame,
 )
 from validate import validate_comps_table
@@ -176,6 +174,17 @@ st.markdown("Turn a bond term sheet into a comps table, with every number traced
 
 # 2. How to use it
 st.markdown("Pick a deal, read the table, then click any number to see the sentence it came from.")
+
+acc_info = parse_accuracy_report()
+acc_match = re.search(
+    r"Field accuracy:\s*([0-9.]+)%\s*\([0-9]+/[0-9]+\s*fields,\s*([0-9]+)\s*deals",
+    (acc_info or {}).get("headline_line", ""),
+)
+if acc_match:
+    st.caption(
+        f"AI can make mistakes. On {acc_match.group(2)} hand-checked deals it got "
+        f"{acc_match.group(1)}% of values right. Highlighted values are worth checking against the filing."
+    )
 
 # 3. Step 1: Pick a deal
 st.subheader("1. Pick a deal", anchor=False)
@@ -506,56 +515,6 @@ if validated_df is not None and selected_jsonl is not None:
         st.markdown("Click any number in the table to see the sentence it came from.")
 else:
     st.markdown("Click any number in the table to see the sentence it came from.")
-
-# 6. How well does it work?
-st.subheader("How well does it work?", anchor=False)
-acc_info = parse_accuracy_report()
-if acc_info:
-    m1 = re.search(
-        r"Field accuracy:\s*([0-9.]+)%\s*\(([0-9]+)/([0-9]+)\s*fields,\s*([0-9]+)\s*deals",
-        acc_info.get("headline_line", ""),
-    )
-    if m1:
-        pct, correct, total, deals = m1.group(1), m1.group(2), m1.group(3), m1.group(4)
-        st.markdown(
-            f"On {deals} saved deals with hand-checked answers, it got {correct} of {total} values right ({pct}%)."
-        )
-
-    m2 = re.search(r"Grounded:\s*([0-9.]+)%", acc_info.get("grounded_line", ""))
-    if m2:
-        g_pct = m2.group(1)
-        st.markdown(
-            f"{g_pct}% of values were found word for word in the filing. The rest are marked in the table so you can check them."
-        )
-
-    m3 = re.search(r"Not-in-source:\s*[0-9.]+%\s*\(([0-9]+)/([0-9]+)", acc_info.get("not_in_source_line", ""))
-    if m3:
-        nis_count, nis_total = m3.group(1), m3.group(2)
-        st.markdown(
-            f"None were made up: {nis_count} of {nis_total} values were missing from the filing."
-        )
-
-    scoring_changes = load_scoring_changes(Path("data/fixtures/scoring_changes.jsonl"))
-    if scoring_changes:
-        first_change = scoring_changes[0]
-        m_before = re.search(r"([0-9.]+%)\s*\(([0-9]+/[0-9]+)", first_change.get("headline_before", ""))
-        m_after = re.search(r"([0-9.]+%)", acc_info.get("headline_line", ""))
-        if m_before and m_after:
-            scoring_text = (
-                f"First scored {m_before.group(1)} ({m_before.group(2)}). A CUSIP formatting fix after the run, "
-                f"with no new extraction, gave {m_after.group(1)}."
-            )
-            st.markdown(f'<div class="muted" style="font-size: 0.85rem;">{scoring_text}</div>', unsafe_allow_html=True)
-
-if not is_live_run and validated_df is not None and audit_records is not None:
-    g_res = scored_grounding(audit_records)
-    n_bonds = len(validated_df)
-    bond_phrase = f"all {n_bonds} bonds" if n_bonds > 1 else f"{n_bonds} bond"
-    deal_grounded_line = (
-        f"This deal: {g_res['percent']:.1f}% found word for word "
-        f"({g_res['grounded']} of {g_res['extracted']} values, {bond_phrase})."
-    )
-    st.markdown(f'<div class="muted" style="font-size: 0.85rem;">{deal_grounded_line}</div>', unsafe_allow_html=True)
 
 # 7. Collapsed sections
 with st.expander("Full filing with highlights", expanded=False):

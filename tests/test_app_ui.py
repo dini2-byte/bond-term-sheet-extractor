@@ -112,13 +112,17 @@ class TestAppUi:
 
 
 
-def test_scoring_change_line_shows_first_score():
-    from streamlit.testing.v1 import AppTest
-    at = AppTest.from_file("../app.py")
-    at.run(timeout=20)
-    lines = [m.value for m in at.markdown if "First scored" in m.value]
-    assert lines and "88.0% (308/350)" in lines[0]
-
+def test_accuracy_note_replaces_how_well_section():
+    at = AppTest.from_file(APP_PATH, default_timeout=30).run()
+    notes = [c.value for c in at.caption]
+    assert any(
+        "AI can make mistakes. On 4 hand-checked deals it got 98.3% of values right." in n
+        for n in notes
+    )
+    assert "How well does it work?" not in [h.value for h in at.subheader]
+    page_text = " ".join(m.value for m in at.markdown)
+    assert "First scored" not in page_text
+    assert "This deal:" not in page_text
 
 def test_css_does_not_override_theme_fonts():
     source = (Path(__file__).resolve().parent.parent / "app.py").read_text(encoding="utf-8")
