@@ -123,3 +123,139 @@ def test_scoring_change_line_shows_first_score():
 def test_css_does_not_override_theme_fonts():
     source = (Path(__file__).resolve().parent.parent / "app.py").read_text(encoding="utf-8")
     assert "font-family" not in source
+
+
+class TestCompanyLookupUi:
+    def test_lookup_shows_not_set_up_when_no_identity(self, monkeypatch):
+        monkeypatch.delenv("EDGAR_IDENTITY", raising=False)
+        at = AppTest.from_file(APP_PATH, default_timeout=30).run()
+        assert not at.exception
+        assert len(at.segmented_control) > 0
+        at.segmented_control[0].select("Another company").run()
+        assert not at.exception
+        all_info = [i.value for i in at.info]
+        assert any("Company lookup is not set up on this deployment." in inf for inf in all_info)
+
+    def test_lookup_and_extract_flow(self, monkeypatch, tmp_path):
+        monkeypatch.setenv("EDGAR_IDENTITY", "Test User test@example.com")
+        fake_sheet = {
+            "accession": "0001-26-000001",
+            "filing_date": "2026-08-10",
+            "chars": 1500,
+            "bond_count": 1,
+            "text": "Pricing Term Sheet\nIssuer: KO Corp\n3.000% Notes due 2030\nCUSIP: 123456AA1",
+        }
+        import lookup
+        monkeypatch.setattr(lookup, "find_term_sheets", lambda ticker, **kw: [fake_sheet])
+
+        # Mock extract_terms to write a valid jsonl from fixture
+        sample_jsonl = Path("data/fixtures/AAPL_FWP_TermSheet_2025-05-06_extractions.jsonl").read_text(encoding="utf-8")
+        def fake_extract_terms(path, **kw):
+            out_dir = kw.get("output_dir", path.parent)
+            out_file = Path(out_dir) / f"{path.stem}_extractions.jsonl"
+            out_file.write_text(sample_jsonl, encoding="utf-8")
+            return out_file
+
+        import extract
+        monkeypatch.setattr(extract, "extract_terms", fake_extract_terms)
+        import demo
+        monkeypatch.setattr(demo, "get_gemini_api_key", lambda secrets=None: "fake-key")
+        monkeypatch.setenv("GEMINI_API_KEY", "fake-key")
+        monkeypatch.setenv("GOOGLE_API_KEY", "fake-key")
+
+        at = AppTest.from_file(APP_PATH, default_timeout=30).run()
+        assert not at.exception
+        at.segmented_control[0].select("Another company").run()
+        assert not at.exception
+
+        # Enter ticker and search
+        at.text_input[0].input("KO")
+        # Find term sheets button is present
+        find_btn = [b for b in at.button if b.label == "Find term sheets"][0]
+        find_btn.click().run()
+        assert not at.exception
+
+        # Radio options present
+        assert len(at.radio) == 0
+        picker = [s for s in at.selectbox if s.label == "Recent bond term sheets"][0]
+        assert "Filed 2026-08-10 · 1 bond" in picker.options[0]
+
+        # Extract button is present
+        extract_btn = [b for b in at.button if b.label == "Extract"][0]
+        extract_btn.click().run()
+        assert not at.exception
+
+        # The deal line reads '<TICKER> · term sheet filed <date> · live run'
+        markdowns = [m.value for m in at.markdown]
+        assert any("KO · term sheet filed 2026-08-10 · live run" in m for m in markdowns)
+        # Muted line under step 2
+        assert any("Live run: there is no hand-checked answer for this deal" in m for m in markdowns)
+
+    def test_budget_exhausted_shows_cap_message_and_blocks_extract(self, monkeypatch):
+        monkeypatch.setenv("EDGAR_IDENTITY", "Test User test@example.com")
+        fake_sheet = {
+            "accession": "0001-26-000001",
+            "filing_date": "2026-08-10",
+            "chars": 1500,
+            "bond_count": 1,
+            "text": "Pricing Term Sheet\nIssuer: KO Corp\n3.000% Notes due 2030\nCUSIP: 123456AA1",
+        }
+        import lookup
+        monkeypatch.setattr(lookup, "find_term_sheets", lambda ticker, **kw: [fake_sheet])
+
+        # Exhaust budget
+        import streamlit as st
+        st.cache_resource.clear()
+        exhausted_budget = lookup.RunBudget(daily_limit=20)
+        for _ in range(20):
+            exhausted_budget.record_run()
+        monkeypatch.setattr(lookup, "RunBudget", lambda *a, **kw: exhausted_budget)
+
+        extract_called = []
+        import extract
+        monkeypatch.setattr(extract, "extract_terms", lambda *a, **kw: extract_called.append(True))
+
+        at = AppTest.from_file(APP_PATH, default_timeout=30).run()
+        at.segmented_control[0].select("Another company").run()
+        at.text_input[0].input("KO")
+        find_btn = [b for b in at.button if b.label == "Find term sheets"][0]
+        find_btn.click().run()
+
+        extract_btn = [b for b in at.button if b.label == "Extract"][0]
+        extract_btn.click().run()
+        assert not at.exception
+        assert len(extract_called) == 0
+
+        errors = [e.value for e in at.error]
+        assert any("Today's 20 free runs are used up. Try again tomorrow." in err for err in errors)
+
+
+
+
+def test_lookup_extract_without_gemini_key_shows_message(monkeypatch):
+    monkeypatch.setenv("EDGAR_IDENTITY", "Test User test@example.com")
+    fake_sheet = {
+        "accession": "0001-26-000001",
+        "filing_date": "2026-08-10",
+        "chars": 1500,
+        "bond_count": 1,
+        "text": "Pricing Term Sheet\n3.000% Notes due 2030\nCUSIP: 123456AA1",
+    }
+    import lookup, extract, demo
+    import streamlit as st
+    st.cache_data.clear()
+    st.cache_resource.clear()
+    monkeypatch.setattr(lookup, "find_term_sheets", lambda ticker, **kw: [fake_sheet])
+    calls = []
+    monkeypatch.setattr(extract, "extract_terms", lambda *a, **kw: calls.append(a))
+    monkeypatch.setattr(demo, "get_gemini_api_key", lambda secrets=None: None)
+
+    at = AppTest.from_file(APP_PATH, default_timeout=30).run()
+    at.segmented_control[0].select("Another company").run()
+    at.text_input[0].input("KO")
+    [b for b in at.button if b.label == "Find term sheets"][0].click().run()
+    [b for b in at.button if b.label == "Extract"][0].click().run()
+
+    assert not at.exception
+    assert any("Live extraction is not set up on this deployment." in e.value for e in at.error)
+    assert calls == []
