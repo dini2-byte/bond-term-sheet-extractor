@@ -34,7 +34,7 @@ class TestAppUi:
         assert any("Bond Term Sheet Extractor" in t.value for t in at.title)
         assert len(at.selectbox) > 0
         sb = at.selectbox[0]
-        assert sb.label == "Sample deals"
+        assert sb.label == "Saved deals"
         assert "AAPL" in sb.value or "Apple" in sb.value
 
     def test_one_dataframe_with_single_cell_selection_mode(self):
@@ -131,7 +131,7 @@ class TestCompanyLookupUi:
         at = AppTest.from_file(APP_PATH, default_timeout=30).run()
         assert not at.exception
         assert len(at.segmented_control) > 0
-        at.segmented_control[0].select("Another company").run()
+        at.segmented_control[0].select("Search company").run()
         assert not at.exception
         all_info = [i.value for i in at.info]
         assert any("Company lookup is not set up on this deployment." in inf for inf in all_info)
@@ -165,7 +165,7 @@ class TestCompanyLookupUi:
 
         at = AppTest.from_file(APP_PATH, default_timeout=30).run()
         assert not at.exception
-        at.segmented_control[0].select("Another company").run()
+        at.segmented_control[0].select("Search company").run()
         assert not at.exception
 
         # Enter ticker and search
@@ -216,7 +216,7 @@ class TestCompanyLookupUi:
         monkeypatch.setattr(extract, "extract_terms", lambda *a, **kw: extract_called.append(True))
 
         at = AppTest.from_file(APP_PATH, default_timeout=30).run()
-        at.segmented_control[0].select("Another company").run()
+        at.segmented_control[0].select("Search company").run()
         at.text_input[0].input("KO")
         find_btn = [b for b in at.button if b.label == "Find term sheets"][0]
         find_btn.click().run()
@@ -251,7 +251,7 @@ def test_lookup_extract_without_gemini_key_shows_message(monkeypatch):
     monkeypatch.setattr(demo, "get_gemini_api_key", lambda secrets=None: None)
 
     at = AppTest.from_file(APP_PATH, default_timeout=30).run()
-    at.segmented_control[0].select("Another company").run()
+    at.segmented_control[0].select("Search company").run()
     at.text_input[0].input("KO")
     [b for b in at.button if b.label == "Find term sheets"][0].click().run()
     [b for b in at.button if b.label == "Extract"][0].click().run()

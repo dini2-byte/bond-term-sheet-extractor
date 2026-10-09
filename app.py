@@ -182,10 +182,10 @@ st.subheader("1. Pick a deal")
 
 deal_source = st.segmented_control(
     "Deal source",
-    ["Sample deals", "Another company"],
-    default="Sample deals",
+    ["Saved deals", "Search company"],
+    default="Saved deals",
     label_visibility="collapsed",
-) or "Sample deals"
+) or "Saved deals"
 
 selected_jsonl: Path | None = None
 deal_identifier: str | None = None
@@ -193,7 +193,7 @@ is_uploaded = False
 is_live_run = False
 live_deal_line: str = ""
 
-if deal_source == "Sample deals":
+if deal_source == "Saved deals":
     benchmark_deals = list_benchmark_deals()
     deal_options = {d["label"]: d for d in benchmark_deals}
     labels = list(deal_options.keys())
@@ -203,7 +203,7 @@ if deal_source == "Sample deals":
             default_idx = i
             break
 
-    selected_label = st.selectbox("Sample deals", labels, index=default_idx)
+    selected_label = st.selectbox("Saved deals", labels, index=default_idx)
 
     # Determine active deal
     selected_deal = deal_options[selected_label]
@@ -220,7 +220,7 @@ if deal_source == "Sample deals":
         deal_identifier = selected_deal["deal_key"]
         is_uploaded = False
 else:
-    # "Another company"
+    # "Search company"
     secrets_dict = None
     try:
         if hasattr(st, "secrets"):
@@ -518,7 +518,7 @@ if acc_info:
     if m1:
         pct, correct, total, deals = m1.group(1), m1.group(2), m1.group(3), m1.group(4)
         st.markdown(
-            f"On {deals} sample deals with hand-checked answers, it got {correct} of {total} values right ({pct}%)."
+            f"On {deals} saved deals with hand-checked answers, it got {correct} of {total} values right ({pct}%)."
         )
 
     m2 = re.search(r"Grounded:\s*([0-9.]+)%", acc_info.get("grounded_line", ""))
