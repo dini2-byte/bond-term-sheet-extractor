@@ -100,7 +100,7 @@ Each link opens the filing index; click the document in the first row to read th
 - Every yield the filing states is kept. `Yield (%)` is the yield with no basis given or an annual one; `Semi-annual yield (%)` is a yield the filing labels semi-annual. PG 2017 states both (annual 1.394% and 1.809% on lines 26 and 70, semi-annual 1.389% and 1.801% on lines 25 and 69). IBM 2015 states only a semi-annual yield (2.662%, line 37), so its `Yield (%)` is `null`.
 - The floating-rate note in IBM 2026-01-29 has `Coupon (%)`, `Yield (%)` and both spreads `null`. Its day count comes from the floating-rate terms (line 305), not the deal-wide line 80.
 
-Drafted by Claude from the filing text on 2026-10-09, before any extraction run on these deals. Each value below is cited by line number in `raw/<stem>.txt`. Awaiting Aidin's check.
+Drafted by Claude from the filing text on 2026-10-09, before any extraction run on these deals. Each value below is cited by line number in `raw/<stem>.txt`. Aidin confirmed the key and the judgment calls on 2026-10-09.
 
 ## Line citations
 

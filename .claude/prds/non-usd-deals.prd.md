@@ -44,7 +44,7 @@ We'll know we're right when **a fixed test set of about 10 EUR and GBP term shee
 ## Delivery Milestones
 | # | Milestone | Outcome | Status | Plan |
 |---|---|---|---|---|
-| 1 | Test set | About 10 EUR and GBP term sheets picked and hand-keyed for currency, size, bond count and benchmark before any run | in-progress | `.claude/plans/non-usd-test-set.plan.md` |
+| 1 | Test set | About 10 EUR and GBP term sheets picked and hand-keyed for currency, size, bond count and benchmark before any run | complete | `.claude/plans/non-usd-test-set.plan.md` |
 | 2 | Correct non-dollar display | EUR and GBP deals from search show the right currency, sizes, bond count and benchmark; other currencies drop out of search; USD unchanged and still 98.3% | pending | none yet |
 | 3 | Other currencies | JPY and CHF deals handled the same way | deferred | none yet |
 | 4 | Floating-rate notes | FRN tranches extracted and shown with their own fields | deferred | none yet |
