@@ -1,0 +1,99 @@
+Filed Pursuant to Rule 433
+
+Registration No. 333-249545
+
+October 29, 2021
+
+Pricing Term Sheet
+
+¥100,000,000,000
+
+The Procter & Gamble Company
+
+¥50,000,000,000 0.110% Notes due 2026
+
+¥50,000,000,000 0.230% Notes due 2031
+
+  0.110% Notes due 2026
+  Issuer:                             The Procter & Gamble Company
+  Aggregate Principal Amount:         ¥50,000,000,000
+  Maturity Date:                      November 6, 2026
+  Coupon (Interest Rate):             0.110% per annum accruing from November 8, 2021
+  Price to Public (Issue Price):      100.0% of principal amount
+  Yield to Maturity:                  0.110%
+  Mid-swap rate (TONA):               0.007%
+  Spread to mid-swap rate:            +10.3 basis points
+  Interest Payment Dates:             May 6 and November 6, commencing May 6, 2022
+  Day Count Convention:               30/360
+  Tax Redemption:                     The notes will not be redeemable prior to maturity unless certain events occur involving United States taxation as described in the Prospectus Supplement
+  Trade Date:                         October 29, 2021
+  Settlement Date:                    November 8, 2021 (T+6 business days in the City of New York, T+5 business days in Tokyo and T+6 business days in London)
+  Common Code:                        240427257
+  ISIN:                               XS2404272572
+
+  CUSIP:                              742718 FU8
+  Denominations:                      ¥100,000,000 x ¥10,000,000
+  Joint Book-Running Managers:        Goldman Sachs International
+
+
+                                      Morgan
+                                      Stanley & Co. International plc
+                                      MUFG Securities EMEA plc
+  Co-Managers:                        Citigroup Global Markets Limited
+
+
+                                      Deutsche Bank
+                                      AG, London Branch
+                                      HSBC Securities (USA) Inc.
+  Type of Offering:                   SEC Registered
+  Listing:                            Application will be made for listing on the New York Stock Exchange on terms described in the Prospectus Supplement
+  Long-term Debt Ratings:             Moody’s: Aa3 (Stable); S&P: AA- (Stable)
+  Concurrent Offering:                €500,000,000 of 0.350% Notes due 2030 and €600,000,000 of 0.900% Notes due 2041 expected to be issued on November 5, 2021 by The Procter & Gamble Company. The closing of the offering of the notes offered
+                                      hereby is not contingent on the closing of the concurrent offering.
+  0.230% Notes due 2031
+  Issuer:                             The Procter & Gamble Company
+  Aggregate Principal Amount:         ¥50,000,000,000
+  Maturity Date:                      November 6, 2031
+  Coupon (Interest Rate):             0.230% per annum accruing from November 8, 2021
+  Price to Public (Issue Price):      100.0% of principal amount
+  Yield to Maturity:                  0.230%
+  Mid-swap rate (TONA):               0.094%
+  Spread to mid-swap rate:            +13.6 basis points
+  Interest Payment Dates:             May 6 and November 6, commencing May 6, 2022
+  Day Count Convention:               30/360
+
+  Tax Redemption:                   The notes will not be redeemable prior to maturity unless certain events occur involving United States taxation as described in the Prospectus Supplement
+  Trade Date:                       October 29, 2021
+  Settlement Date:                  November 8, 2021 (T+6 business days in the City of New York, T+5 business days in Tokyo and T+6 business days in London)
+  Common Code:                      240427346
+  ISIN:                             XS2404273463
+  CUSIP:                            742718 FT1
+  Denominations:                    ¥100,000,000 x ¥10,000,000
+  Joint Book-Running Managers:      Goldman Sachs International
+                                    Morgan Stanley & Co. International plc
+                                    MUFG Securities EMEA plc
+  Co-Managers:                      Citigroup Global Markets Limited
+                                    Deutsche Bank AG, London Branch
+                                    HSBC Securities (USA) Inc.
+  Type of Offering:                 SEC Registered
+  Listing:                          Application will be made for listing on the New York Stock Exchange on terms described in the Prospectus Supplement
+  Long-term Debt Ratings:           Moody’s: Aa3 (Stable); S&P: AA- (Stable)
+  Concurrent Offering:              €500,000,000 of 0.350% Notes due 2030 and €600,000,000 of 0.900% Notes due 2041 expected to be issued on November 5, 2021 by The Procter & Gamble Company. The closing of the offering of the notes offered hereby is not
+                                    contingent on the closing of the concurrent offering.
+
+Note: A securities rating is not a recommendation to buy, sell or hold securities and may be subject to revision or
+withdrawal at any time.
+
+Manufacturer target market (MiFID II product governance/UK MiFIR product governance) is eligible counterparties and professional
+clients only (all distribution channels). No PRIIPs/UK PRIIPs key information document has been prepared as the notes are not available to retail investors in the EEA and the United Kingdom.
+
+This communication is being distributed to, and is directed only at, persons in the United Kingdom in
+circumstances where section 21(1) of the Financial Services and Markets Act 2000 does not apply.
+
+The issuer has filed a registration statement
+(including a prospectus) with the SEC for the offering to which this communication relates. Before you invest, you should read the prospectus in that registration statement and other documents the issuer has filed with the SEC for more complete
+information about the issuer and this offering. You may get these documents for free by visiting EDGAR on the SEC Web site at www.sec.gov. Alternatively, the issuer, any underwriter or any dealer participating in the offering will arrange to send
+you the prospectus if you request it by calling Goldman Sachs International at +44 20 7774 1000, Morgan Stanley & Co. International plc toll-free at 1-866-718-1649 or MUFG Securities EMEA plc +44 20 7628 5555.
+
+Any disclaimers or other notices that
+may appear below are not applicable to this communication and should be disregarded. Such disclaimers or other notices were automatically generated as a result of this communication being sent via Bloomberg or another email system.

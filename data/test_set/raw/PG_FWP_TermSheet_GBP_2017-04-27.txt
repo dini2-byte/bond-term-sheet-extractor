@@ -1,0 +1,114 @@
+Filed Pursuant to Rule 433
+
+Registration No. 333-199594
+
+April 27, 2017
+
+Pricing
+Term Sheet
+
+£750,000,000
+
+The Procter & Gamble Company
+
+£375,000,000 1.375% Notes due 2025
+
+£375,000,000 1.800% Notes due 2029
+
+1.375% Notes due 2025
+
+  Issuer:                                         The Procter & Gamble Company
+  Aggregate Principal Amount:                     £375,000,000
+  Maturity Date:                                  May 3, 2025
+  Coupon (Interest Rate):                         1.375%
+  Price to Public (Issue Price):                  99.858% of principal amount
+  Semi-Annual Yield to Maturity:                  1.389%
+  Annual Yield to Maturity:                       1.394%
+  Spread to reference Government security:        +63 basis points
+  Reference Government security:                  UKT 5.000% due March 7, 2025
+  Reference Government security yield/price:      132.29%; 0.759%
+  Interest Payment Date:                          May 3, commencing May 3, 2018
+  Day Count Convention:                           ACT/ACT, following, unadjusted
+  Make-Whole Redemption:                          At any time at the greater of 100% or a discount rate of the Comparable Government Bond Rate plus 10 basis points
+  Tax Redemption:                                 The notes will be redeemable if certain events occur involving United States taxation as described in the Prospectus Supplement
+  Trade Date:                                     April 27, 2017
+
+  Settlement Date:                  May 3, 2017 (T+4 business days in the City of New York and T+3 business days in London)
+ ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  Common Code:                      160810106
+  ISIN:                             XS1608101066
+  CUSIP:                            742718 ES4
+  Denominations:                    £100,000 x £1,000
+  Joint Book-Running Managers:      Barclays Bank PLC
+                                    J.P. Morgan Securities plc
+                                    Merrill Lynch International
+  Senior Co-Managers:               Citigroup Global Markets Limited
+                                    Deutsche Bank AG, London Branch
+                                    Goldman, Sachs & Co.
+                                    HSBC Bank plc
+                                    Morgan Stanley & Co. International plc
+  Co-Managers:                      MUFG Securities EMEA plc
+                                    RBC Europe Limited
+                                    Banco Bilbao Vizcaya Argentaria, S.A.
+                                    ING Bank N.V. Belgian Branch
+                                    The Williams Capital Group, L.P.
+                                    Wells Fargo Securities International Limited
+                                    Fifth Third Securities, Inc.
+                                    PNC Capital Markets LLC
+                                    U.S. Bancorp Investments, Inc.
+  Type of Offering:                 SEC Registered
+  Listing:                          Application will be made for listing on the New York Stock Exchange on terms described in the Prospectus Supplement
+  Long-term Debt Ratings:           Moody’s: Aa3 (Stable); S&P: AA- (Stable)
+  1.800% Notes due 2029
+  Issuer:                           The Procter & Gamble Company
+  Aggregate Principal Amount:       £375,000,000
+  Maturity Date:                    May 3, 2029
+
+  Coupon (Interest Rate):                         1.800%
+  Price to Public (Issue Price):                  99.903% of principal amount
+  Semi-Annual Yield to Maturity:                  1.801%
+  Annual Yield to Maturity:                       1.809%
+  Spread to reference Government security:        +68 basis points
+  Reference Government security:                  UKT 6.000% due December 7, 2028
+  Reference Government security yield/price:      152.97%; 1.121%
+  Interest Payment Date:                          May 3, commencing May 3, 2018
+  Day Count Convention:                           ACT/ACT, following, unadjusted
+  Make-Whole Redemption:                          At any time at the greater of 100% or a discount rate of the Comparable Government Bond Rate plus 12.5 basis points
+  Tax Redemption:                                 The notes will be redeemable if certain events occur involving United States taxation as described in the Prospectus Supplement
+  Trade Date:                                     April 27, 2017
+  Settlement Date:                                May 3, 2017 (T+4 business days in the City of New York and T+3 business days in London)
+  Common Code:                                    160810165
+  ISIN:                                           XS1608101652
+  CUSIP:                                          742718 ET2
+  Denominations:                                  £100,000 x £1,000
+  Joint Book-Running Managers:                    Barclays Bank PLC
+                                                  J.P. Morgan Securities plc
+                                                  Merrill Lynch International
+  Senior Co-Managers:                             Citigroup Global Markets Limited
+                                                  Deutsche Bank AG, London Branch
+                                                  Goldman, Sachs & Co.
+                                                  HSBC Bank plc
+                                                  Morgan Stanley & Co. International plc
+
+  Co-Managers:                 MUFG Securities EMEA plc
+                               RBC Europe Limited
+                               Banco Bilbao Vizcaya Argentaria, S.A.
+                               ING Bank N.V. Belgian Branch
+                               The Williams Capital Group, L.P.
+                               Wells Fargo Securities International Limited
+                               Fifth Third Securities, Inc.
+                               PNC Capital Markets LLC
+                               U.S. Bancorp Investments, Inc.
+  Type of Offering:            SEC Registered
+  Listing:                     Application will be made for listing on the New York Stock Exchange on terms described in the Prospectus Supplement
+  Long-term Debt Ratings:      Moody’s: Aa3 (Stable); S&P: AA- (Stable)
+
+Note: A securities rating is not a recommendation to buy, sell or hold securities and may be subject to
+revision or withdrawal at any time.
+
+The issuer has filed a registration statement (including a prospectus) with the SEC for the offering to which this communication relates. Before you
+invest, you should read the prospectus in that registration statement and other documents the issuer has filed with the SEC for more complete information about the issuer and this offering. You may get these documents for free by visiting EDGAR on
+the SEC Web site at www.sec.gov. Alternatively, the issuer, any underwriter or any dealer participating in the offering will arrange to send you the prospectus if you request it by calling Barclays Bank PLC at 1-888-603-5847, J.P. Morgan Securities plc collect at +44-207-134-2468 or Merrill Lynch International at 1-800-294-1322.
+
+Any disclaimers or other notices that may appear below are not applicable to this
+communication and should be disregarded. Such disclaimers or other notices were automatically generated as a result of this communication being sent via Bloomberg or another email system.

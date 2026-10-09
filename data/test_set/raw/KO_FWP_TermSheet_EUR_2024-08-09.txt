@@ -1,0 +1,173 @@
+Registration Statement No. 333-268053
+Filed Pursuant to Rule 433
+Supplementing the Preliminary
+Prospectus Supplement
+Dated August 8, 2024
+(To Prospectus dated October 28, 2022)
+
+Pricing Term Sheet
+
+Fixed-Rate Notes due 2037 and 2053
+
+The information in this pricing term sheet relates only to the offering
+of euro-denominated notes (the “Euro Notes Offering”) and should be read together with (i) the preliminary prospectus supplement
+dated August 8, 2024 relating to the Euro Notes Offering, filed pursuant to Rule 424(b) under the Securities Act of 1933, as amended,
+including the documents incorporated by reference therein, and (ii) the related base prospectus dated October 28, 2022, which forms a
+part of Registration Statement No. 333-268053.
+
+  Issuer:                        The Coca-Cola Company
+  Security:                      3.375% notes due 2037
+
+
+                                 3.750% notes due 2053
+  Offering Format:               SEC Registered
+  Principal Amount:              €500,000,000 of 2037 notes
+
+
+                                 €500,000,000 of 2053 notes
+  Maturity Date:                 August 15, 2037 for 2037 notes
+
+
+                                 August 15, 2053 for 2053 notes
+  Spread to Mid-Swap Yield:      +88 bps for 2037 notes
+
+
+                                 +148 bps for 2053 notes
+  Mid-Swap Yield:                2.599% for 2037 notes
+
+
+                                 2.366% for 2053 notes
+  Yield to Maturity:             3.479% for 2037 notes
+
+
+                                 3.846% for 2053 notes
+  Coupon:                        3.375% per year for 2037 notes
+
+
+                                 3.750% per year for 2053 notes
+  Interest Payment Dates:        Annually on August
+                                 15, commencing on August 15, 2025 for 2037 notes
+
+
+                                 Annually on August 15, commencing on August 15, 2025 for 2053 notes
+  Price to Public:               98.927% of principal amount for 2037 notes
+
+
+                                 98.339% of principal amount for 2053 notes
+  Underwriting Discounts:        0.500% of principal amount for 2037 notes
+
+
+                                 0.750% of principal amount for 2053 notes
+  Proceeds to Issuer:            98.427%
+                                 of principal amount for 2037 notes
+
+
+                                 97.589% of principal amount for 2053 notes
+
+  Benchmark Security:                DBR
+                                     4.000% due January 4, 2037 for 2037 notes
+
+
+                                     DBR 1.800% due August 15, 2053 for 2053 notes
+  Benchmark Security Yield:          2.397%
+                                     for 2037 notes
+
+
+                                     2.498% for 2053 notes
+  Benchmark Security Price:          117.010
+                                     for 2037 notes
+
+
+                                     85.710 for 2053 notes
+  Spread to Benchmark Security:      +108.2
+                                     bps for 2037 notes
+
+
+                                     +134.8 bps for 2053 notes
+  Optional Redemption:               Prior to May 15, 2037 (three months prior to the maturity date (the “2037 Par Call Date”)) with respect to the 2037 notes and prior to February 15, 2053 (six months prior to the maturity date (the “2053 Par Call Date” and, together with the 2037 Par Call Date, each a “Par Call Date”)) with respect to the 2053 notes, The Coca-Cola Company may, at its option, redeem the notes of the applicable series, in whole or in part, at any time and from time to time, at a redemption price (as determin...
+ ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+                                     •                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     100% of the principal amount of the applicable series of notes to be redeemed; and
+                                     •                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     (a) the sum of the present values of the remaining scheduled payments of principal and interest on the applicable series of notes to be redeemed discounted to the redemption date (assuming the notes matured on the applicable Par Call Date) on an annual basis (ACTUAL/ACTUAL (ICMA)) at the applicable comparable government bond rate plus 20 basis points in the case of the 2037 notes and 20 basis points in the case of the 2053 notes less (b) accrued and unpaid interest thereon to, but excludi...
+                                     plus, in either case, accrued and unpaid interest thereon to, but excluding, the applicable redemption date.
+
+
+                                     On or after the 2037 Par Call Date with respect to the 2037 notes and the 2053 Par Call Date with respect to the 2053 notes, The Coca-Cola Company may, at its option, redeem the notes of such series, in whole or in part, at any time and from time to time, at a redemption price equal to 100% of the principal amount of the applicable series of notes to be redeemed, plus accrued and unpaid interest thereon to, but excluding, the applicable redemption date.
+
+  Use of Proceeds:           The Coca-Cola Company expects to use the net proceeds from the offering for general corporate purposes, which may include working capital, capital expenditures, acquisitions of or investments in businesses or assets and redemption and repayment of short-term or long-term borrowings, as well as making any potential payments in connection with our ongoing tax litigation with the United States Internal Revenue Service and our final contingent consideration payment in 2025 in connection with ...
+ ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  Day Count Convention:      Actual / Actual (ICMA)
+  Trade Date:                August 8, 2024
+
+  Settlement Date*:                August 15, 2024
+  Listing:                         The Coca-Cola Company intends to apply to list the notes on the New York Stock Exchange.
+ ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  ISIN / Common Code / CUSIP:      XS2874154946 / 287415494 /
+                                   191216 DW7 for 2037 notes
+
+
+                                   XS2874157295 / 287415729 / 191216 DX5 for 2053 notes
+  Denominations:                   €100,000 and integral multiples of €1,000 in excess thereof
+  Expected Ratings**:              A1
+                                   by Moody’s Investors Service, Inc.
+
+
+                                   A+ by Standard & Poor’s Ratings Services
+  MiFID II Target Market           MiFID II professionals/ECPs-only / No PRIIPs KID – Manufacturer target
+                                   market (MiFID II product governance) is eligible counterparties and professional clients only (all distribution channels). No PRIIPs key
+                                   information document (KID) has been prepared as not available to retail in EEA.
+
+  and PRIIPS and UK MiFIR
+
+
+  and UK PRIIPs:                   UK MiFIR professionals/ECPs-only / No UK PRIIPs KID – Manufacturer
+                                   target market (UK MiFIR product governance) is eligible counterparties and professional clients only (all distribution channels). No PRIIPs
+                                   key information document (KID) has been prepared as not available to retail in UK.
+  Underwriters:                    Joint Book-Running Managers:
+
+
+                                   Barclays Bank PLC
+
+
+                                   BNP Paribas
+
+
+                                   J.P. Morgan Securities plc
+
+
+                                   HSBC Bank plc
+
+
+                                   MUFG Securities EMEA plc
+
+
+                                   Standard Charted Bank
+
+
+                                   Co-Managers:
+
+
+                                   Academy Securities, Inc.
+
+
+                                   Samuel A. Ramirez & Company, Inc.
+  Stabilization:                   Stabilization/FCA
+
+*Note: Under Rule 15c6-1 under the Securities Exchange Act of
+1934, trades in the secondary market generally are required to settle in one business day, unless the parties to any such trade expressly
+agree otherwise. Accordingly, purchasers who wish to trade the notes prior to the business day before their date of delivery will be required
+to specify an alternative settlement cycle at the time of any such trade to prevent a failed settlement.
+
+**Note: A securities rating is not a recommendation to buy,
+sell or hold securities and may be subject to revision or withdrawal at any time.
+
+The issuer has filed a registration statement (including
+a prospectus) with the U.S. Securities and Exchange Commission (SEC) for the offering to which this communication relates. Before you
+invest, you should read the prospectus in that registration statement and other documents the issuer has filed with the SEC for more complete
+information about the issuer and the offering. You may get these documents for free by visiting EDGAR on the SEC Web site at www.sec.gov. Alternatively, the issuer, any underwriter
+or any dealer participating in the offering will arrange to send you the prospectus if you request it by calling Barclays Bank PLC toll-free
+at 1-888-603-5847, BNP Paribas toll-free at 1-800-854-5674, or J.P. Morgan Securities plc toll-free at +44-207-134-2468 (non-U.S. investors)
+or J.P. Morgan Securities LLC (collect) at (212) 834-4533 (U.S. investors).
+
+Any legends, disclaimers or other notices that may appear
+below are not applicable to this communication and should be disregarded. Such legends, disclaimers or other notices have been automatically
+generated as a result of this communication having been sent via Bloomberg or another system.

@@ -1,0 +1,244 @@
+Filed Pursuant to Rule 433
+
+Registration No. 333-285413
+
+Final Term Sheet
+
+March 24,
+2025
+
+€2,750,000,000
+
+AT&T Inc.
+
+€1,000,000,000 3.150% GLOBAL NOTES DUE 2030
+
+€1,000,000,000 3.600% GLOBAL NOTES DUE 2033
+
+€750,000,000 4.050% GLOBAL NOTES DUE 2037
+
+  ISSUER:                                  AT&T Inc.
+  TITLE OF SECURITIES:                     €1,000,000,000 aggregate principal amount of 3.150% Global Notes due 2030 (the “2030 Notes”).
+
+
+                                           €1,000,000,000 aggregate principal amount of 3.600% Global Notes due 2033 (the “2033 Notes”).
+
+
+                                           €750,000,000 aggregate principal amount of 4.050% Global Notes due 2037 (the “2037 Notes”).
+  TRADE DATE:                              March 24, 2025
+  SETTLEMENT DATE (T+5*):                  March 31, 2025
+  MATURITY DATE:                           June 1, 2030, at par, for the 2030 Notes.
+
+
+                                           June 1, 2033, at par, for the 2033 Notes.
+
+
+                                           June 1, 2037,
+                                           at par, for the 2037 Notes.
+  AGGREGATE PRINCIPAL AMOUNT OFFERED:      €1,000,000,000 for the 2030 Notes
+
+
+                                           €1,000,000,000 for the 2033 Notes
+
+
+                                           €750,000,000 for the
+                                           2037 Notes
+  REFERENCE EUR MIDSWAP RATE:              2030 Notes: 2.456%
+
+
+                                           2033 Notes: 2.605%
+
+
+                                           2037 Notes: 2.743%
+  REOFFER SPREAD TO EUR MIDSWAP:           2030 Notes: +72 bps
+
+
+                                           2033 Notes: +102 bps
+
+
+                                           2037 Notes: +132 bps
+  REFERENCE GOVERNMENT SECURITY:           2030 Notes: OBL 2.400% due April 18, 2030
+
+
+                                           2033 Notes: DBR 2.300% due February 15, 2033
+
+
+                                           2037 Notes: DBR
+                                           4.000% due January 4, 2037
+
+  REFERENCE GOVERNMENT PRICE:                          2030 Notes: 99.945%
+
+
+                                                       2033 Notes: 97.655%
+
+
+                                                       2037 Notes: 110.730%
+  REOFFER SPREAD TO GOVERNMENT SECURITY:               2030 Notes: +76.7 bps
+
+
+                                                       2033 Notes: +99.2 bps
+
+
+                                                       2037 Notes: +115.3 bps
+  PRICE TO PUBLIC (ISSUE PRICE):                       99.885% for the 2030 Notes
+
+
+                                                       99.835% for the 2033
+                                                       Notes
+
+
+                                                       99.888% for the 2037 Notes
+  REOFFER YIELD:                                       2030 Notes: 3.176%
+
+
+                                                       2033 Notes: 3.625%
+
+
+                                                       2037 Notes: 4.063%
+  FEES                                                 2030 Notes: 22.5 bps
+
+
+                                                       2033 Notes: 30 bps
+
+
+                                                       2037 Notes: 37.5 bps
+  PRICE TO AT&T:                                       99.660% for the 2030 Notes
+
+
+                                                       99.535% for the 2033
+                                                       Notes
+
+
+                                                       99.513% for the 2037 Notes
+ ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  NET PROCEEDS:                                        €996,600,000 for the 2030 Notes
+
+
+                                                       €995,350,000 for the 2033 Notes
+
+
+                                                       €746,347,500 for the
+                                                       2037 Notes
+  USE OF PROCEEDS:                                     AT&T intends to use the proceeds for general corporate purposes.
+  UNDERWRITERS’ REIMBURSEMENT OF AT&T’S EXPENSES:      Underwriters to reimburse $1,300,000 of AT&T’s expenses.
+  INTEREST RATE:                                       2030 Notes: 3.150% per annum.
+
+
+                                                       2033 Notes:
+                                                       3.600% per annum.
+
+
+                                                       2037 Notes: 4.050% per annum.
+  INTEREST PAYMENT DATE:                               Annually on June 1, commencing on June 1, 2025 for the 2030 Notes.
+
+
+                                                       Annually on June 1, commencing on June 1, 2025 for the 2033 Notes.
+
+
+                                                       Annually on June 1, commencing on June 1, 2025 for the 2037 Notes.
+  DENOMINATIONS:                                       Minimum of €100,000 and integral multiples of €1,000 in excess thereof.
+
+  INDENTURE AND RANKING             The Notes will be issued under an indenture, dated as of May 15, 2013, between AT&T and The Bank of New York Mellon Trust Company, N.A., as trustee. The Notes will be AT&T’s unsecured and unsubordinated obligations
+                                    and will rank pari passu with all other indebtedness issued under the indenture.
+  OPTIONAL REDEMPTION BY AT&T:      Each series of the Notes may be redeemed at any time prior to the applicable Par Call Date (as set forth in the table below), as a whole or in part, at AT&T’s option, at any time and from time to time on at least 5
+                                    days’, but not more than 40 days’, prior notice at a make-whole call equal to the greater of (i) 100% of the principal amount of the Notes of such series to be redeemed or (ii) the sum of the present values of the remaining scheduled
+                                    payments of principal and interest assuming the applicable series of Notes matured on the Par Call Date (not including any portion of payments of interest accrued as of the redemption date) discounted to the redemption date, on an annual basis
+                                    (ACTUAL/ACTUAL (ICMA)), at a rate equal to the sum of the Treasury Rate plus a number of basis points equal to the applicable Make-Whole Spread (as set forth in the table below), calculated by AT&T. Each series of the Notes may be redeemed at
+                                    any time on or after the applicable Par Call Date, as a whole or in part, at AT&T’s option, at any time and from time to time on at least 5 days’, but not more than 40 days’ prior notice at a redemption price equal to 100% of the
+                                    principal amount of such series of Notes to be redeemed. Accrued but unpaid interest will be payable to, but excluding, the redemption date.
+ ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+  Series          Par Call Date      Make-Whole
+
+
+                                     Spread
+  2030 Notes      May 1, 2030        15 bps
+  2033 Notes      March 1, 2033      15 bps
+  2037 Notes      March 1, 2037      20 bps
+ ─────────────────────────────────────────────────
+
+  TAX GROSS UP:      Comparable to prior AT&T transactions.
+  TAX CALL:          Comparable to prior AT&T transactions.
+  ISIN:              2030 Notes: XS3037678607
+
+
+                     2033 Notes:
+                     XS3037678789
+
+
+                     2037 Notes: XS3037678862
+  CUSIP:             2030 Notes: 00206R MU3
+
+
+                     2033 Notes: 00206R
+                     MV1
+
+
+                     2037 Notes: 00206R MW9
+
+  COMMON CODE:                2030 Notes: 303767860
+
+
+                              2033 Notes: 303767878
+
+
+                              2037 Notes: 303767886
+  LISTING:                    AT&T intends to apply to list the Notes on the New York Stock Exchange.
+ ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  FORM/CLEARING SYSTEMS:      The Notes will be issued only in registered, book-entry form. There will be a Global Note deposited with a common depositary for Euroclear Bank SA/NV and Clearstream Banking S.A. for each issue.
+  STABILIZATION:              FCA/ICMA
+  DAY COUNT FRACTION:         ACTUAL/ACTUAL (ICMA), following, unadjusted
+  ISSUER RATINGS:             Moody’s: Baa2 (Stable)
+
+
+                              S&P: BBB
+                              (Positive)
+
+
+                              Fitch: BBB+ (Stable)
+  JOINT BOOKRUNNERS:          Barclays Bank PLC
+
+
+                              Banco Bilbao Vizcaya
+                              Argentaria, S.A.
+
+
+                              Commerzbank Aktiengesellschaft
+
+
+                              Intesa
+                              Sanpaolo S.p.A.
+
+
+                              Société Générale
+  REFERENCE DOCUMENT:         Prospectus Supplement, dated March 24, 2025; and
+
+
+                              Prospectus, dated February 28, 2025
+
+* Under Rule 15c6-1 of the Securities Exchange Act of 1934, as
+amended, trades in the secondary market generally are required to settle in one business day, unless the parties to the trade expressly agree otherwise. Accordingly, purchasers who wish to trade the Notes on the date of pricing or on the next
+business day will be required, by virtue of the fact that the Notes initially will settle in T+5, to specify an alternate settlement cycle at the time of any such trade to prevent a failed settlement and should consult their own advisors.
+
+THE ISSUER HAS FILED A REGISTRATION STATEMENT (INCLUDING A PROSPECTUS) WITH THE SEC FOR THE OFFERING TO WHICH THIS COMMUNICATION RELATES.
+BEFORE YOU INVEST, YOU SHOULD READ THE PROSPECTUS IN THAT REGISTRATION STATEMENT AND OTHER DOCUMENTS THE ISSUER HAS FILED WITH THE SEC FOR MORE COMPLETE INFORMATION ABOUT THE ISSUER AND THIS OFFERING. YOU MAY GET THESE DOCUMENTS FOR FREE BY VISITING
+EDGAR ON THE SEC WEB SITE AT WWW. SEC. GOV. ALTERNATIVELY, THE ISSUER, ANY UNDERWRITER OR ANY DEALER PARTICIPATING IN THE OFFERING WILL ARRANGE TO SEND YOU THE PROSPECTUS IF YOU REQUEST IT BY CALLING BARCLAYS BANK PLC AT 1-888-603-5847, BANCO BILBAO
+VIZCAYA ARGENTARIA, S.A. AT 1-800-422-8692, COMMERZBANK AKTIENGESELLSCHAFT AT 1-800-233-9164, INTESA SANPAOLO S.P.A. AT 1-212-326-1105 OR SOCIÉTÉ GÉNÉRALE AT 1-855-881-2108.
+
+MiFID II and UK MiFIR - professionals/ECPs-only / No PRIIPs or UK PRIIPs KID - Manufacturer target market (MIFID II and UK MiFIR
+product governance) is eligible counterparties and professional clients only (all distribution channels). No PRIIPs or UK PRIIPs key information document (KID) has been prepared as not available to retail in EEA or UK.
+
+This term sheet, the prospectus, the prospectus supplement and any other document or materials relating to the issue of the Notes offered
+hereby is not being made, and such documents and/or materials have not been approved, by an authorized person for the purposes of section 21 of the United Kingdom’s Financial Services and Markets Act 2000, as amended (the “FSMA”).
+Accordingly, such documents and/or materials are not being distributed
+
+to, and must not be passed on to, the general public in the United Kingdom. This document and such other documents and/or materials are for distribution only to persons who (i) have
+professional experience in matters relating to investments and who fall within the definition of investment professionals (as defined in Article 19(5) of the Financial Services and Markets Act 2000 (Financial Promotion) Order 2005, as amended (the
+“Financial Promotion Order”)), (ii) fall within Article 49(2)(a) to (d) of the Financial Promotion Order or (iii) are outside the United Kingdom (all such persons together being referred to as “relevant persons”). This
+document is directed only at relevant persons and must not be acted on or relied on by persons who are not relevant persons. Any investment or investment activity to which this term sheet, the prospectus, the prospectus supplement and any other
+document or materials relates will be engaged in only with relevant persons. Any person in the United Kingdom that is not a relevant person should not act or rely on this term sheet, the prospectus or the prospectus supplement or any of their
+contents.
+
+ANY DISCLAIMERS OR OTHER NOTICES THAT MAY APPEAR BELOW ARE NOT APPLICABLE TO THIS COMMUNICATION AND SHOULD BE DISREGARDED. SUCH
+DISCLAIMERS OR OTHER NOTICES WERE AUTOMATICALLY GENERATED AS A RESULT OF THIS COMMUNICATION BEING SENT VIA BLOOMBERG OR ANOTHER EMAIL SYSTEM. A SECURITIES RATING IS NOT A RECOMMENDATION TO BUY, SELL OR HOLD SECURITIES AND MAY BE REVISED OR WITHDRAWN
+AT ANY TIME.

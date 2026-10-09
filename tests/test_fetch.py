@@ -56,3 +56,31 @@ def test_fetch_filings_by_accession(tmp_path):
         saved_file = tmp_path / f"{d['label']}_2026-01-01.txt"
         assert saved_file.exists()
         assert saved_file.read_text(encoding="utf-8") == "Mock filing content"
+
+
+def test_test_set_deals_are_pinned_non_dollar_deals():
+    deals = fetch.TEST_SET_DEALS
+    assert len(deals) == 11
+    assert all(d["form"] == "FWP" and d["accession"] for d in deals)
+    assert len({d["accession"] for d in deals}) == 11
+    benchmark = {d["accession"] for d in fetch.DEALS_TO_FETCH}
+    assert benchmark.isdisjoint(d["accession"] for d in deals)
+
+
+def test_fetch_filings_takes_a_deal_list(tmp_path):
+    mock_filing = MagicMock()
+    mock_filing.filing_date = "2026-01-01"
+    mock_filing.text.return_value = "Mock filing content"
+    called = []
+
+    def fake_get_by_accession(acc):
+        called.append(acc)
+        return mock_filing
+
+    with patch("fetch.get_by_accession_number", side_effect=fake_get_by_accession):
+        manifest = fetch.fetch_filings(deals=fetch.TEST_SET_DEALS, output_dir=tmp_path)
+
+    assert called == [d["accession"] for d in fetch.TEST_SET_DEALS]
+    assert len(manifest) == 11
+    for d in fetch.TEST_SET_DEALS:
+        assert (tmp_path / f"{d['label']}_2026-01-01.txt").exists()
