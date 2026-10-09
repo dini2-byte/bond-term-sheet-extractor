@@ -181,3 +181,33 @@ Where `Par Call Date` is `null`, the cited line is the redemption term that show
 - Currency detection must read the principal amounts. Both the dollar PG deal and the yen PG deal mention a concurrent euro offering near the top of the page.
 - `count_bonds` overcounts every deal in the set: Common Codes are 9 digits and pass as CUSIPs. IBM 2026-01-29 counts 9 for 4 bonds.
 - PG's euro deals name no government issuer, so a "Bund" label would be a guess. The page should show the benchmark as the filing writes it.
+
+## Baseline extraction, 2026-10-09
+
+The current extractor (`gemini-3.5-flash-lite`, prompt unchanged) on the 10 euro and sterling deals, saved in `extractions/` and scored with `python score_test_set.py`. Currency is 0 because the app has no currency column yet.
+
+| Deal | Bonds (key / extracted / search count) | Currency | Size | Coupon | Price | Yield | Benchmark | Spread | Maturity | CUSIP |
+|---|---|---|---|---|---|---|---|---|---|---|
+| IBM_FWP_TermSheet_EUR_2025-02-05 | 4 / 4 / 9 | 0/4 | 4/4 | 4/4 | 4/4 | 4/4 | 0/4 | 0/4 | 4/4 | 4/4 |
+| IBM_FWP_TermSheet_EUR_2026-01-29 | 4 / 4 / 9 | 0/4 | 4/4 | 3/3 | 4/4 | 3/3 | 3/3 | 0/3 | 4/4 | 4/4 |
+| IBM_FWP_TermSheet_GBP_2015-07-29 | 1 / 1 / 3 | 0/1 | 1/1 | 1/1 | 1/1 | 1/1 | 1/1 | 1/1 | 1/1 | 1/1 |
+| KO_FWP_TermSheet_EUR_2024-05-07 | 2 / 2 / 4 | 0/2 | 2/2 | 2/2 | 2/2 | 2/2 | 2/2 | 0/2 | 2/2 | 0/2 |
+| KO_FWP_TermSheet_EUR_2024-08-09 | 2 / 2 / 4 | 0/2 | 2/2 | 2/2 | 2/2 | 2/2 | 2/2 | 0/2 | 2/2 | 0/2 |
+| PG_FWP_TermSheet_EUR_2024-04-22 | 2 / 2 / 4 | 0/2 | 2/2 | 2/2 | 2/2 | 2/2 | 2/2 | 0/2 | 2/2 | 2/2 |
+| PG_FWP_TermSheet_EUR_2025-10-27 | 2 / 2 / 4 | 0/2 | 2/2 | 2/2 | 2/2 | 2/2 | 2/2 | 0/2 | 2/2 | 2/2 |
+| PG_FWP_TermSheet_GBP_2017-04-27 | 2 / 2 / 4 | 0/2 | 2/2 | 2/2 | 2/2 | 2/2 | 2/2 | 2/2 | 2/2 | 2/2 |
+| T_FWP_TermSheet_EUR_2025-03-24 | 3 / 3 / 6 | 0/3 | 3/3 | 3/3 | 3/3 | 3/3 | 3/3 | 0/3 | 3/3 | 3/3 |
+| T_FWP_TermSheet_EUR_GBP_2026-07-27 | 5 / 5 / 10 | 0/5 | 5/5 | 5/5 | 5/5 | 5/5 | 5/5 | 0/5 | 5/5 | 5/5 |
+| **All 10 deals** | | 0/27 | 27/27 | 26/26 | 27/27 | 26/26 | 22/26 | 3/26 | 27/27 | 23/27 |
+
+Extracted spread on fixed-rate bonds: {'missing': 4, 'other': 15, 'benchmark': 3, 'mid-swaps': 4}
+
+Why the spread is right on only 3 of 26 fixed-rate bonds:
+
+- **Parser bug, 15 bonds.** Gemini picked the right spread text ("+108.2 bps"), but `clean_spread` reads only whole numbers and returns the digit after the decimal point (2). Every spread with a decimal is wrong.
+- **Wrong spread, 4 bonds.** In both KO deals, Gemini took the mid-swap spread (+88 bps), which the filing lists first, while the benchmark column shows the Bund. The pair does not match.
+- **Nothing extracted, 4 bonds.** IBM 2025-02-05 puts all four bonds side by side in one table, and Gemini returned no spread or benchmark for any of them.
+
+The 4 CUSIP misses are both KO deals: `clean_cusip` takes the first 9-character code in "XS... / 287415494 / 191216 DW7", which is the Common Code.
+
+With the parser fixed, the spread and benchmark would pair correctly on 14 of the 22 fixed-rate euro bonds, below the plan's gate of 18.
