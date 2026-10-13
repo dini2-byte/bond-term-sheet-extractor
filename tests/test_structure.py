@@ -10,6 +10,7 @@ import pandas as pd
 from structure import (
     assess_grounding,
     clean_coupon,
+    clean_currency,
     clean_cusip,
     clean_principal,
     clean_issue_price,
@@ -364,4 +365,38 @@ class TestStructuring:
         for a in audit:
             settlement_meta = a["fields"]["settlement_date"]
             assert settlement_meta["grounded"] is False
+
+
+class TestCleanCurrency:
+    def test_clean_currency_symbols_and_codes(self):
+        assert clean_currency("$1,500,000,000") == "USD"
+        assert clean_currency("$500M") == "USD"
+        assert clean_currency("USD 500,000,000") == "USD"
+        assert clean_currency("€500,000,000") == "EUR"
+        assert clean_currency("500,000,000 EUR") == "EUR"
+        assert clean_currency("£300,000,000") == "GBP"
+        assert clean_currency("GBP 300,000,000") == "GBP"
+        assert clean_currency("¥50,000,000,000") == "JPY"
+        assert clean_currency("JPY 50,000,000,000") == "JPY"
+
+    def test_clean_currency_unknown_or_empty(self):
+        assert clean_currency(None) is None
+        assert clean_currency("") is None
+        assert clean_currency("1,000,000") is None
+        assert clean_currency("CHF 500,000,000") is None
+
+    def test_currency_column_position_and_fixtures(self):
+        for fixture_name in [
+            "AAPL_FWP_TermSheet_2025-05-06_extractions.jsonl",
+            "MSFT_FWP_TermSheet_2017-01-31_extractions.jsonl",
+            "ORCL_FWP_TermSheet_2025-09-24_extractions.jsonl",
+            "GOOGL_FWP_TermSheet_2026-08-07_extractions.jsonl",
+        ]:
+            path = Path("data/fixtures") / fixture_name
+            assert path.exists()
+            df, _ = structure_filing_extractions(path)
+            cols = list(df.columns)
+            assert "Currency" in cols
+            assert cols.index("Currency") == cols.index("Principal ($M)") + 1
+            assert (df["Currency"] == "USD").all()
 

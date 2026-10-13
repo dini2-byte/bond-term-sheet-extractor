@@ -87,3 +87,15 @@ def test_both_yields_kept_when_the_filing_states_two():
     assert [(b["Yield (%)"], b["Semi-annual yield (%)"]) for b in pg] == [(1.394, 1.389), (1.809, 1.801)]
     ibm = KEY["IBM_FWP_TermSheet_GBP_2015-07-29"]["bonds"][0]
     assert (ibm["Yield (%)"], ibm["Semi-annual yield (%)"]) == (None, 2.662)
+
+
+def test_extracted_currency_matches_key():
+    from score_test_set import pair_bonds
+    from structure import structure_filing_extractions
+    for path in sorted((TEST_SET_DIR / "extractions").glob("*_extractions.jsonl")):
+        stem = path.name.removesuffix("_extractions.jsonl")
+        df, _ = structure_filing_extractions(path)
+        pairs = pair_bonds(df, KEY[stem]["bonds"])
+        for k, r in pairs:
+            assert r is not None
+            assert r.get("Currency") == k["Currency"]

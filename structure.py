@@ -48,6 +48,21 @@ def clean_principal(val: str | None) -> float | None:
         return round(num / 1_000_000, 1)
     return round(num, 1)
 
+def clean_currency(val: str | None) -> str | None:
+    """Normalizes currency code from principal amount text. e.g. $1,500,000,000 -> USD"""
+    if not val:
+        return None
+    val_str = str(val).strip()
+    if "$" in val_str or re.search(r"\bUSD\b", val_str):
+        return "USD"
+    if "€" in val_str or re.search(r"\bEUR\b", val_str):
+        return "EUR"
+    if "£" in val_str or re.search(r"\bGBP\b", val_str):
+        return "GBP"
+    if "¥" in val_str or re.search(r"\bJPY\b", val_str):
+        return "JPY"
+    return None
+
 def clean_issue_price(val: str | None) -> float | None:
     """Normalizes issue price as % of par. e.g. 99.804% -> 99.804"""
     if not val:
@@ -388,6 +403,7 @@ def structure_filing_extractions(jsonl_path: str | Path) -> tuple[pd.DataFrame, 
             "Trade Date": normalize_date(raw_trade_date),
             "Settlement Date": normalize_date(raw_settle_date),
             "Principal ($M)": clean_principal(raw_principal),
+            "Currency": clean_currency(raw_principal),
             "Coupon (%)": clean_coupon(raw_coupon),
             "Issue Price": clean_issue_price(raw_price),
             "Yield (%)": clean_yield(raw_yield),
