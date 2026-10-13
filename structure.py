@@ -428,8 +428,22 @@ def structure_filing_extractions(jsonl_path: str | Path) -> tuple[pd.DataFrame, 
 def export_comps_to_excel(df: pd.DataFrame, output_path: str | Path):
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
+    export_df = df.copy()
+    has_non_usd = False
+    if "Currency" in export_df.columns:
+        curs = [c for c in export_df["Currency"].dropna().unique() if str(c).strip()]
+        if any(c != "USD" for c in curs):
+            has_non_usd = True
+
+    if has_non_usd:
+        if "Principal ($M)" in export_df.columns:
+            export_df = export_df.rename(columns={"Principal ($M)": "Principal (M)"})
+    else:
+        if "Currency" in export_df.columns:
+            export_df = export_df.drop(columns=["Currency"])
+
     with pd.ExcelWriter(output_path, engine="openpyxl") as writer:
-        df.to_excel(writer, sheet_name="DCM Comps Table", index=False)
+        export_df.to_excel(writer, sheet_name="DCM Comps Table", index=False)
     print(f"[✓] Exported comps table to Excel: {output_path}")
 
 if __name__ == "__main__":

@@ -400,3 +400,59 @@ class TestCleanCurrency:
             assert cols.index("Currency") == cols.index("Principal ($M)") + 1
             assert (df["Currency"] == "USD").all()
 
+
+class TestExportCompsToExcel:
+    def test_export_comps_to_excel_usd_unchanged(self, tmp_path):
+        from structure import export_comps_to_excel
+        df = pd.DataFrame({
+            "Tranche": ["2028 Notes"],
+            "Principal ($M)": [1500.0],
+            "Currency": ["USD"],
+            "Coupon (%)": [4.0],
+        })
+        out_file = tmp_path / "test_usd_comps.xlsx"
+        export_comps_to_excel(df, out_file)
+        assert out_file.exists()
+
+        read_df = pd.read_excel(out_file, sheet_name="DCM Comps Table")
+        assert "Principal ($M)" in read_df.columns
+        assert "Currency" not in read_df.columns
+        assert read_df["Principal ($M)"].iloc[0] == 1500.0
+
+    def test_export_comps_to_excel_non_usd_keeps_currency_and_renames_principal(self, tmp_path):
+        from structure import export_comps_to_excel
+        df = pd.DataFrame({
+            "Tranche": ["2028 Notes"],
+            "Principal ($M)": [500.0],
+            "Currency": ["EUR"],
+            "Coupon (%)": [3.5],
+        })
+        out_file = tmp_path / "test_eur_comps.xlsx"
+        export_comps_to_excel(df, out_file)
+        assert out_file.exists()
+
+        read_df = pd.read_excel(out_file, sheet_name="DCM Comps Table")
+        assert "Principal (M)" in read_df.columns
+        assert "Principal ($M)" not in read_df.columns
+        assert "Currency" in read_df.columns
+        assert read_df["Currency"].iloc[0] == "EUR"
+        assert read_df["Principal (M)"].iloc[0] == 500.0
+
+    def test_export_comps_to_excel_mixed_currency(self, tmp_path):
+        from structure import export_comps_to_excel
+        df = pd.DataFrame({
+            "Tranche": ["Tranche 1", "Tranche 2"],
+            "Principal ($M)": [1000.0, 550.0],
+            "Currency": ["EUR", "GBP"],
+            "Coupon (%)": [3.5, 4.25],
+        })
+        out_file = tmp_path / "test_mixed_comps.xlsx"
+        export_comps_to_excel(df, out_file)
+        assert out_file.exists()
+
+        read_df = pd.read_excel(out_file, sheet_name="DCM Comps Table")
+        assert "Principal (M)" in read_df.columns
+        assert "Principal ($M)" not in read_df.columns
+        assert "Currency" in read_df.columns
+        assert read_df["Currency"].tolist() == ["EUR", "GBP"]
+
