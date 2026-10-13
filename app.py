@@ -17,6 +17,7 @@ from dotenv import load_dotenv
 import pandas as pd
 import streamlit as st
 
+from cache import ExtractionCache, ObjectStore, make_store
 from demo import (
     build_visualization_html,
     check_password,
@@ -36,6 +37,7 @@ from lookup import (
     get_edgar_identity,
     normalize_ticker,
 )
+from runner import get_or_extract
 from structure import structure_filing_extractions
 from ui import (
     TABLE_COLUMNS,
@@ -54,9 +56,25 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 
 
+def _secrets() -> dict[str, Any] | None:
+    try:
+        return dict(st.secrets)
+    except Exception:
+        return None
+
+
+@st.cache_resource
+def get_store() -> ObjectStore:
+    return make_store(_secrets())
+
+
 @st.cache_resource
 def get_run_budget() -> RunBudget:
-    return lookup.RunBudget()
+    return lookup.RunBudget(store=get_store())
+
+
+def get_extraction_cache() -> ExtractionCache:
+    return ExtractionCache(get_store())
 
 
 
@@ -339,7 +357,10 @@ else:
                             cur_suffix = f" in {words[0]} and {words[1]}"
                         else:
                             cur_suffix = f" in {', '.join(words[:-1])} and {words[-1]}"
-                    return f"Filed {item['filing_date']} · {bword}{cur_suffix}"
+                    label = f"Filed {item['filing_date']} · {bword}{cur_suffix}"
+                    if get_extraction_cache().has(item["accession"]):
+                        label += " · saved"
+                    return label
 
                 selected_idx = st.selectbox(
                     "Recent bond term sheets",
@@ -363,40 +384,31 @@ else:
 
                 if extract_btn:
                     session_runs = st.session_state.get("session_runs", 0)
-                    can_run, reason = budget.can_run(session_runs)
-                    gemini_key = get_gemini_api_key(secrets_dict)
-                    if not can_run:
-                        st.error(reason)
-                    elif not gemini_key:
-                        st.error("Live extraction is not set up on this deployment.")
+                    temp_dir = Path(tempfile.mkdtemp())
+                    with st.spinner("Extracting with Gemini. This takes about 20 seconds."):
+                        outcome = get_or_extract(
+                            accession=selected_sheet["accession"],
+                            filing_text=selected_sheet["text"],
+                            stem=f"{norm_ticker}_{selected_sheet['accession']}",
+                            cache=get_extraction_cache(),
+                            budget=budget,
+                            session_runs=session_runs,
+                            api_key=get_gemini_api_key(secrets_dict),
+                            work_dir=temp_dir,
+                        )
+                    if outcome.error:
+                        st.error(outcome.error)
                     else:
-                        os.environ["GEMINI_API_KEY"] = gemini_key
-                        os.environ["GOOGLE_API_KEY"] = gemini_key
-                        temp_dir = Path(tempfile.mkdtemp())
-                        filing_path = temp_dir / f"{norm_ticker}_{selected_sheet['accession']}.txt"
-                        filing_path.write_text(selected_sheet["text"], encoding="utf-8")
-                        with st.spinner("Extracting with Gemini. This takes about 20 seconds."):
-                            try:
-                                extract_terms(
-                                    filing_path,
-                                    model_id="gemini-3.5-flash-lite",
-                                    log_attempt=False,
-                                    output_dir=temp_dir,
-                                )
-                            except Exception as e:
-                                logger.exception("Gemini extraction error: %s", e)
-                                st.error("The extraction did not finish. Your run was not counted.")
-                            else:
-                                budget.record_run()
-                                st.session_state["session_runs"] = session_runs + 1
-                                extracted_jsonl = temp_dir / f"{filing_path.stem}_extractions.jsonl"
-                                st.session_state["live_deal"] = {
-                                    "jsonl_path": str(extracted_jsonl),
-                                    "ticker": norm_ticker,
-                                    "filing_date": selected_sheet["filing_date"],
-                                    "accession": selected_sheet["accession"],
-                                }
-                                st.rerun()
+                        if outcome.charged:
+                            st.session_state["session_runs"] = session_runs + 1
+                        st.session_state["live_deal"] = {
+                            "jsonl_path": str(outcome.jsonl_path),
+                            "ticker": norm_ticker,
+                            "filing_date": selected_sheet["filing_date"],
+                            "accession": selected_sheet["accession"],
+                        }
+                        st.rerun()
+
 
     if st.session_state.get("live_deal"):
         live_deal = st.session_state["live_deal"]

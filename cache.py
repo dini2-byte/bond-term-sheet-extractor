@@ -151,7 +151,11 @@ class ExtractionCache:
         return f"extractions/{self.version}/{accession}.jsonl"
 
     def get(self, accession: str) -> str | None:
-        text = self.store.get_text(self.key(accession))
+        try:
+            k = self.key(accession)
+        except ValueError:
+            return None
+        text = self.store.get_text(k)
         if text is None:
             return None
         if not is_valid_extraction_jsonl(text):
@@ -165,4 +169,8 @@ class ExtractionCache:
         self.store.put_text(self.key(accession), jsonl)
 
     def has(self, accession: str) -> bool:
-        return self.store.exists(self.key(accession))
+        try:
+            return self.store.exists(self.key(accession))
+        except ValueError:
+            return False
+
