@@ -4,9 +4,12 @@ No Streamlit imports; all functions are independently testable.
 """
 
 from datetime import date
+import json
 import os
 import re
 from typing import Any, Callable
+
+from cache import ObjectStore
 
 try:
     import edgar
@@ -315,7 +318,8 @@ def get_edgar_identity(secrets: Any = None) -> str | None:
 class RunBudget:
     """
     Tracks runs per calendar day across the whole site.
-    The count resets when today() changes.
+    With a store, the day's count is kept in it so it survives restarts.
+    Without one, the count lives in memory and resets when today() changes.
     """
 
     def __init__(
@@ -323,12 +327,17 @@ class RunBudget:
         daily_limit: int = 20,
         session_limit: int = 3,
         today: Callable[[], date] = date.today,
+        store: ObjectStore | None = None,
     ):
         self.daily_limit = daily_limit
         self.session_limit = session_limit
         self.today = today
+        self.store = store
         self._current_date = self.today()
         self._daily_count = 0
+
+    def _key(self) -> str:
+        return f"budget/{self.today().isoformat()}.json"
 
     def _check_reset(self) -> None:
         current = self.today()
@@ -336,18 +345,32 @@ class RunBudget:
             self._current_date = current
             self._daily_count = 0
 
+    def _count(self) -> int:
+        if self.store is None:
+            self._check_reset()
+            return self._daily_count
+        text = self.store.get_text(self._key())
+        if not text:
+            return 0
+        try:
+            return int(json.loads(text)["count"])
+        except (ValueError, KeyError, TypeError):
+            return 0
+
     def remaining(self) -> int:
-        self._check_reset()
-        return max(0, self.daily_limit - self._daily_count)
+        return max(0, self.daily_limit - self._count())
 
     def can_run(self, session_runs: int = 0) -> tuple[bool, str | None]:
-        self._check_reset()
-        if self._daily_count >= self.daily_limit:
+        if self._count() >= self.daily_limit:
             return False, f"Today's {self.daily_limit} free runs are used up. Try again tomorrow."
         if session_runs >= self.session_limit:
             return False, f"You've used your {self.session_limit} runs for this visit."
         return True, None
 
     def record_run(self) -> None:
-        self._check_reset()
-        self._daily_count += 1
+        if self.store is None:
+            self._check_reset()
+            self._daily_count += 1
+            return
+        self.store.put_text(self._key(), json.dumps({"count": self._count() + 1}))
+
