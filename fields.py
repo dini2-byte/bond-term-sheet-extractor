@@ -36,7 +36,6 @@ Instructions:
 2. Documents often contain multiple tranches (e.g., 3-year, 5-year, 10-year notes). For EVERY extraction, you MUST populate the 'tranche' attribute specifying which tranche the term belongs to (e.g., '2028 Notes', '2030 Notes'). For deal-level terms that apply to all tranches (like Issuer or Trade Date), set attributes={'tranche': 'all'}.
 3. STRICT GROUNDING: Extract ONLY text that appears verbatim in the document. Do not calculate, extrapolate, guess, or rephrase numbers or dates.
 4. If a field is absent from the text, DO NOT extract it. A missing field must remain absent.
-   When tranches are laid out side by side in columns, take each value from its own tranche's column.
 5. Standard fields to extract:
    - tranche_name: Title of the specific bond tranche
    - issuer: Legal entity issuing the debt
@@ -47,8 +46,8 @@ Instructions:
    - coupon: Stated annual fixed interest rate (e.g. 5.125%)
    - issue_price: Price to public expressed as percentage of par (e.g. 99.612%)
    - yield_to_maturity: Reoffer yield / yield to maturity (e.g. 5.214%)
-   - spread_bps: Spread over the benchmark government bond named in benchmark_treasury, in basis points (e.g. 85 basis points or +85 bps). If the term sheet also gives a spread to mid-swaps, ignore it and use the spread to the government bond
-   - benchmark_treasury: Government bond the spread is measured against (e.g. a US Treasury, a German Bund or OBL, or a UK Gilt)
+   - spread_bps: Spread to the benchmark Treasury in basis points (e.g. 85 basis points or +85 bps)
+   - benchmark_treasury: Underlying benchmark Treasury note/bond used for pricing
    - maturity_date: Stated date when principal is repaid
    - interest_payment_dates: Schedule / dates when coupon payments occur
    - day_count: Day count convention (e.g. 30/360)
@@ -99,31 +98,6 @@ Par Call: On or after December 15, 2034
 CUSIP: 001234AB9
 """.strip()
 
-EURO_SAMPLE_TERM_SHEET = """
-ACME CORP.
-PRICING TERM SHEET
-€600,000,000 2.725% Notes due 2031
-€450,000,000 3.180% Notes due 2036
-
-Issuer: Acme Corp.
-Trade Date: June 3, 2025
-Settlement Date: June 10, 2025 (T+5)
-
-                           2031 Notes                          2036 Notes
-Size                       €600,000,000                        €450,000,000
-Maturity                   June 10, 2031                       June 10, 2036
-Coupon                     2.725% (payable annually)           3.180% (payable annually)
-Mid-Swap Yield             2.310%                              2.492%
-Spread to Mid-Swaps        +49 bps                             +77 bps
-Benchmark Bund             DBR 0.250% due November 15, 2031    DBR 1.000% due June 15, 2036
-Spread to Benchmark Bund   +70.1 bps                           +80.5 bps
-Yield to Maturity          2.800%                              3.262%
-Price to Public            99.643%                             99.297%
-Day Count                  Actual / Actual (ICMA)              Actual / Actual (ICMA)
-Par Call                   On or after March 10, 2031          On or after March 10, 2036
-CUSIP / ISIN / Common Code 001234AC7 / XS3101234567 / 310123456   001234AD5 / XS3101234641 / 310123464
-""".strip()
-
 FEW_SHOT_EXAMPLES = [
     lx.data.ExampleData(
         text=SAMPLE_TERM_SHEET,
@@ -166,39 +140,5 @@ FEW_SHOT_EXAMPLES = [
             lx.data.Extraction(extraction_class="par_call_date", extraction_text="On or after December 15, 2034", attributes={"tranche": "2035 Notes"}),
             lx.data.Extraction(extraction_class="cusip", extraction_text="001234AB9", attributes={"tranche": "2035 Notes"}),
         ]
-    ),
-    lx.data.ExampleData(
-        text=EURO_SAMPLE_TERM_SHEET,
-        extractions=[
-            lx.data.Extraction(extraction_class="issuer", extraction_text="Acme Corp.", attributes={"tranche": "all"}),
-            lx.data.Extraction(extraction_class="trade_date", extraction_text="June 3, 2025", attributes={"tranche": "all"}),
-            lx.data.Extraction(extraction_class="settlement_date", extraction_text="June 10, 2025 (T+5)", attributes={"tranche": "all"}),
-
-            # 2031 Notes (values from its own column)
-            lx.data.Extraction(extraction_class="tranche_name", extraction_text="2.725% Notes due 2031", attributes={"tranche": "2031 Notes"}),
-            lx.data.Extraction(extraction_class="principal_amount", extraction_text="€600,000,000", attributes={"tranche": "2031 Notes"}),
-            lx.data.Extraction(extraction_class="maturity_date", extraction_text="June 10, 2031", attributes={"tranche": "2031 Notes"}),
-            lx.data.Extraction(extraction_class="coupon", extraction_text="2.725%", attributes={"tranche": "2031 Notes"}),
-            lx.data.Extraction(extraction_class="issue_price", extraction_text="99.643%", attributes={"tranche": "2031 Notes"}),
-            lx.data.Extraction(extraction_class="yield_to_maturity", extraction_text="2.800%", attributes={"tranche": "2031 Notes"}),
-            lx.data.Extraction(extraction_class="benchmark_treasury", extraction_text="DBR 0.250% due November 15, 2031", attributes={"tranche": "2031 Notes"}),
-            lx.data.Extraction(extraction_class="spread_bps", extraction_text="+70.1 bps", attributes={"tranche": "2031 Notes"}),
-            lx.data.Extraction(extraction_class="day_count", extraction_text="Actual / Actual (ICMA)", attributes={"tranche": "2031 Notes"}),
-            lx.data.Extraction(extraction_class="par_call_date", extraction_text="On or after March 10, 2031", attributes={"tranche": "2031 Notes"}),
-            lx.data.Extraction(extraction_class="cusip", extraction_text="001234AC7", attributes={"tranche": "2031 Notes"}),
-
-            # 2036 Notes (values from its own column)
-            lx.data.Extraction(extraction_class="tranche_name", extraction_text="3.180% Notes due 2036", attributes={"tranche": "2036 Notes"}),
-            lx.data.Extraction(extraction_class="principal_amount", extraction_text="€450,000,000", attributes={"tranche": "2036 Notes"}),
-            lx.data.Extraction(extraction_class="maturity_date", extraction_text="June 10, 2036", attributes={"tranche": "2036 Notes"}),
-            lx.data.Extraction(extraction_class="coupon", extraction_text="3.180%", attributes={"tranche": "2036 Notes"}),
-            lx.data.Extraction(extraction_class="issue_price", extraction_text="99.297%", attributes={"tranche": "2036 Notes"}),
-            lx.data.Extraction(extraction_class="yield_to_maturity", extraction_text="3.262%", attributes={"tranche": "2036 Notes"}),
-            lx.data.Extraction(extraction_class="benchmark_treasury", extraction_text="DBR 1.000% due June 15, 2036", attributes={"tranche": "2036 Notes"}),
-            lx.data.Extraction(extraction_class="spread_bps", extraction_text="+80.5 bps", attributes={"tranche": "2036 Notes"}),
-            lx.data.Extraction(extraction_class="day_count", extraction_text="Actual / Actual (ICMA)", attributes={"tranche": "2036 Notes"}),
-            lx.data.Extraction(extraction_class="par_call_date", extraction_text="On or after March 10, 2036", attributes={"tranche": "2036 Notes"}),
-            lx.data.Extraction(extraction_class="cusip", extraction_text="001234AD5", attributes={"tranche": "2036 Notes"}),
-        ]
-    ),
+    )
 ]
