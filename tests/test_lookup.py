@@ -267,3 +267,34 @@ class TestRunBudget:
         current = date(2026, 10, 10)
         assert b.remaining() == 2
         assert b.can_run(0)[0] is True
+
+
+from cache import DiskStore
+
+
+class TestRunBudgetStore:
+    def test_count_survives_a_new_budget(self, tmp_path):
+        store = DiskStore(tmp_path)
+        day = lambda: date(2026, 10, 14)
+        RunBudget(daily_limit=5, store=store, today=day).record_run()
+        RunBudget(daily_limit=5, store=store, today=day).record_run()
+        assert RunBudget(daily_limit=5, store=store, today=day).remaining() == 3
+        assert store.get_text("budget/2026-10-14.json") == '{"count": 2}'
+
+    def test_new_day_starts_at_zero(self, tmp_path):
+        store = DiskStore(tmp_path)
+        RunBudget(daily_limit=5, store=store, today=lambda: date(2026, 10, 14)).record_run()
+        assert RunBudget(daily_limit=5, store=store, today=lambda: date(2026, 10, 15)).remaining() == 5
+
+    def test_daily_cap_uses_stored_count(self, tmp_path):
+        store = DiskStore(tmp_path)
+        store.put_text("budget/2026-10-14.json", '{"count": 20}')
+        ok, msg = RunBudget(store=store, today=lambda: date(2026, 10, 14)).can_run(session_runs=0)
+        assert ok is False
+        assert msg == "Today's 20 free runs are used up. Try again tomorrow."
+
+    def test_broken_count_reads_as_zero(self, tmp_path):
+        store = DiskStore(tmp_path)
+        store.put_text("budget/2026-10-14.json", "garbage")
+        assert RunBudget(daily_limit=5, store=store, today=lambda: date(2026, 10, 14)).remaining() == 5
+

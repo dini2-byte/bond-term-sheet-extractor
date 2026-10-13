@@ -11,3 +11,4 @@ __pycache__/
 output/*.jsonl
 output/*.xlsx
 output/uploaded_*
+.cache/
