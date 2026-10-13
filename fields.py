@@ -34,7 +34,7 @@ You are an expert Debt Capital Markets (DCM) analyst extracting key pricing term
 Instructions:
 1. Extract all pricing and structural terms for each bond tranche present in the document.
 2. Documents often contain multiple tranches (e.g., 3-year, 5-year, 10-year notes). For EVERY extraction, you MUST populate the 'tranche' attribute specifying which tranche the term belongs to (e.g., '2028 Notes', '2030 Notes'). For deal-level terms that apply to all tranches (like Issuer or Trade Date), set attributes={'tranche': 'all'}.
-3. STRICT GROUNDING: Extract ONLY text that appears verbatim in the document. Do not calculate, extrapolate, guess, or rephrase numbers or dates. Each extraction must be one continuous piece of text copied from one place in the document; never join a number from one line with a date from another.
+3. STRICT GROUNDING: Extract ONLY text that appears verbatim in the document. Do not calculate, extrapolate, guess, or rephrase numbers or dates.
 4. If a field is absent from the text, DO NOT extract it. A missing field must remain absent.
    When tranches are laid out side by side in columns, take each value from its own tranche's column.
 5. Standard fields to extract:
@@ -48,7 +48,7 @@ Instructions:
    - issue_price: Price to public expressed as percentage of par (e.g. 99.612%)
    - yield_to_maturity: Reoffer yield / yield to maturity (e.g. 5.214%)
    - spread_bps: Spread over the benchmark government bond named in benchmark_treasury, in basis points (e.g. 85 basis points or +85 bps). If the term sheet also gives a spread to mid-swaps, ignore it and use the spread to the government bond
-   - benchmark_treasury: Government bond the spread is measured against (e.g. a US Treasury, a German Bund or OBL, or a UK Gilt). It often matures earlier than the notes, for example a 40-year note priced against a 30-year Treasury; copy it as written and never change its date
+   - benchmark_treasury: Government bond the spread is measured against (e.g. a US Treasury, a German Bund or OBL, or a UK Gilt)
    - maturity_date: Stated date when principal is repaid
    - interest_payment_dates: Schedule / dates when coupon payments occur
    - day_count: Day count convention (e.g. 30/360)

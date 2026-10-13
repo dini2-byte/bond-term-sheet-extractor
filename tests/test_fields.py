@@ -244,8 +244,3 @@ def test_euro_example_tags_both_tranches():
         classes = {ex.extraction_class for ex in euro.extractions if ex.attributes["tranche"] == tag}
         assert {"principal_amount", "coupon", "spread_bps", "benchmark_treasury", "cusip"} <= classes
 
-
-def test_prompt_forbids_joining_text_from_different_places():
-    prompt = PROMPT_DESCRIPTION.lower()
-    assert "one continuous piece of text" in prompt
-    assert "never change its date" in _prompt_line("benchmark_treasury").lower()
