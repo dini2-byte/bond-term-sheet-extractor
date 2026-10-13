@@ -48,6 +48,21 @@ def clean_principal(val: str | None) -> float | None:
         return round(num / 1_000_000, 1)
     return round(num, 1)
 
+def clean_currency(val: str | None) -> str | None:
+    """Normalizes currency code from principal amount text. e.g. $1,500,000,000 -> USD"""
+    if not val:
+        return None
+    val_str = str(val).strip()
+    if "$" in val_str or re.search(r"\bUSD\b", val_str):
+        return "USD"
+    if "€" in val_str or re.search(r"\bEUR\b", val_str):
+        return "EUR"
+    if "£" in val_str or re.search(r"\bGBP\b", val_str):
+        return "GBP"
+    if "¥" in val_str or re.search(r"\bJPY\b", val_str):
+        return "JPY"
+    return None
+
 def clean_issue_price(val: str | None) -> float | None:
     """Normalizes issue price as % of par. e.g. 99.804% -> 99.804"""
     if not val:
@@ -62,20 +77,22 @@ def clean_yield(val: str | None) -> float | None:
     match = re.search(r"(\d+(?:\.\d+)?)", val)
     return float(match.group(1)) if match else None
 
-def clean_spread(val: str | None) -> int | None:
-    """Normalizes benchmark spread to integer basis points. e.g. '25 basis points' -> 25"""
+def clean_spread(val: str | None) -> float | int | None:
+    """Normalizes benchmark spread to basis points, keeping decimals. e.g. '+108.2 bps' -> 108.2, '25 basis points' -> 25"""
     if not val:
         return None
-    match = re.search(r"(\d+)\s*(?:basis points|bps)", val, re.IGNORECASE)
-    if match:
-        return int(match.group(1))
-    match_plus = re.search(r"\+?\s*(\d+)", val)
-    return int(match_plus.group(1)) if match_plus else None
+    match = re.search(r"(\d+(?:\.\d+)?)\s*(?:basis points|bps)", val, re.IGNORECASE)
+    if not match:
+        match = re.search(r"\+?\s*(\d+(?:\.\d+)?)", val)
+    if not match:
+        return None
+    number = float(match.group(1))
+    return int(number) if number.is_integer() else number
 
 def clean_cusip(val: str | None) -> str | None:
     """
     Extracts the first 9-character CUSIP in the extracted text:
-    6 alphanumerics, optional whitespace, 3 alphanumerics.
+    6 alphanumerics, optional whitespace, 3 alphanumerics, skipping Common Codes found inside XS ISINs.
     Returns uppercase with whitespace removed, or None if no CUSIP.
     """
     if not val:
@@ -83,10 +100,13 @@ def clean_cusip(val: str | None) -> str | None:
     val_str = str(val).strip()
     if not val_str:
         return None
-    match = re.search(r"(?<![A-Za-z0-9])([A-Za-z0-9]{6})\s*([A-Za-z0-9]{3})(?![A-Za-z0-9])", val_str)
-    if not match:
-        return None
-    return f"{match.group(1)}{match.group(2)}".upper()
+    # Euroclear ISINs (XS + 9-digit Common Code + check digit) sit next to the CUSIP; skip their Common Codes.
+    common_codes = {isin[2:11] for isin in re.findall(r"XS\d{10}", val_str.upper())}
+    for match in re.finditer(r"(?<![A-Za-z0-9])([A-Za-z0-9]{6})\s*([A-Za-z0-9]{3})(?![A-Za-z0-9])", val_str):
+        candidate = f"{match.group(1)}{match.group(2)}".upper()
+        if candidate not in common_codes:
+            return candidate
+    return None
 
 def normalize_ws(s: str) -> str:
     """Collapses whitespace runs to a single space and strips."""
@@ -383,6 +403,7 @@ def structure_filing_extractions(jsonl_path: str | Path) -> tuple[pd.DataFrame, 
             "Trade Date": normalize_date(raw_trade_date),
             "Settlement Date": normalize_date(raw_settle_date),
             "Principal ($M)": clean_principal(raw_principal),
+            "Currency": clean_currency(raw_principal),
             "Coupon (%)": clean_coupon(raw_coupon),
             "Issue Price": clean_issue_price(raw_price),
             "Yield (%)": clean_yield(raw_yield),
@@ -407,8 +428,22 @@ def structure_filing_extractions(jsonl_path: str | Path) -> tuple[pd.DataFrame, 
 def export_comps_to_excel(df: pd.DataFrame, output_path: str | Path):
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
+    export_df = df.copy()
+    has_non_usd = False
+    if "Currency" in export_df.columns:
+        curs = [c for c in export_df["Currency"].dropna().unique() if str(c).strip()]
+        if any(c != "USD" for c in curs):
+            has_non_usd = True
+
+    if has_non_usd:
+        if "Principal ($M)" in export_df.columns:
+            export_df = export_df.rename(columns={"Principal ($M)": "Principal (M)"})
+    else:
+        if "Currency" in export_df.columns:
+            export_df = export_df.drop(columns=["Currency"])
+
     with pd.ExcelWriter(output_path, engine="openpyxl") as writer:
-        df.to_excel(writer, sheet_name="DCM Comps Table", index=False)
+        export_df.to_excel(writer, sheet_name="DCM Comps Table", index=False)
     print(f"[✓] Exported comps table to Excel: {output_path}")
 
 if __name__ == "__main__":

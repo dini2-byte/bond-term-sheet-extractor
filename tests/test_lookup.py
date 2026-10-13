@@ -5,6 +5,8 @@ import pytest
 from lookup import (
     TICKER_PATTERN,
     RunBudget,
+    count_bonds,
+    deal_currencies,
     find_term_sheets,
     get_edgar_identity,
     is_bond_term_sheet,
@@ -92,36 +94,48 @@ class FakeCompany:
 
     def get_filings(self, form: str = "FWP"):
         return [
-            # Filing 1: valid 2-bond term sheet
+            # Filing 1: valid 2-bond USD term sheet
             FakeFiling(
                 accession="0001-26-000001",
                 filing_date="2026-08-10",
                 text=(
                     "Pricing Term Sheet\n"
                     "Issuer: Fake Corp\n"
-                    "4.000% Notes due 2030\n"
-                    "CUSIP: 123456AA1\n"
-                    "5.000% Notes due 2035\n"
-                    "CUSIP: 123456AB9"
+                    "$500,000,000 4.000% Notes due 2030\n"
+                    "CUSIP: 037833EY2\n"
+                    "$500,000,000 5.000% Notes due 2035\n"
+                    "CUSIP: 037833EZ9"
                 ),
             ),
-            # Filing 2: structured note (filtered out)
+            # Filing 2: structured note (filtered out by is_bond_term_sheet)
             FakeFiling(
                 accession="0001-26-000002",
                 filing_date="2026-08-05",
-                text="Pricing Supplement\nNotes due 2028\nCUSIP: 123456AC7",
+                text="Pricing Supplement\nNotes due 2028\nCUSIP: 037833EY2",
             ),
             # Filing 3: too long (> max_chars, filtered out)
             FakeFiling(
                 accession="0001-26-000003",
                 filing_date="2026-08-01",
-                text="Pricing Term Sheet\nNotes due 2032\nCUSIP: 123456AD5\n" + ("a" * 70_000),
+                text="Pricing Term Sheet\nNotes due 2032\nCUSIP: 037833EY2\n" + ("a" * 70_000),
             ),
-            # Filing 4: valid 1-bond term sheet, older date
+            # Filing 4: valid 1-bond USD term sheet, older date
             FakeFiling(
                 accession="0001-26-000004",
                 filing_date="2026-07-15",
-                text="Final Term Sheet\n3.500% Notes due 2029\nCUSIP: 123456AE3",
+                text="Final Term Sheet\n$300,000,000 3.500% Notes due 2029\nCUSIP: 037833EY2",
+            ),
+            # Filing 5: JPY term sheet (filtered out because outside USD/EUR/GBP)
+            FakeFiling(
+                accession="0001-26-000005",
+                filing_date="2026-07-10",
+                text="Pricing Term Sheet\n¥50,000,000,000 Notes due 2030\nCUSIP: 037833EY2",
+            ),
+            # Filing 6: term sheet with no principal currency (filtered out)
+            FakeFiling(
+                accession="0001-26-000006",
+                filing_date="2026-07-05",
+                text="Pricing Term Sheet\n5.000% Notes due 2030\nCUSIP: 037833EY2",
             ),
         ]
 
@@ -135,15 +149,58 @@ class TestFindTermSheets:
         assert results[0]["accession"] == "0001-26-000001"
         assert results[0]["filing_date"] == "2026-08-10"
         assert results[0]["bond_count"] == 2
+        assert results[0]["currencies"] == ["USD"]
         assert results[0]["chars"] == len(results[0]["text"])
 
         assert results[1]["accession"] == "0001-26-000004"
         assert results[1]["filing_date"] == "2026-07-15"
         assert results[1]["bond_count"] == 1
+        assert results[1]["currencies"] == ["USD"]
 
     def test_unknown_ticker_raises_lookup_error(self):
         with pytest.raises(LookupError, match=r"No SEC filer found for UNKNOWN\."):
             find_term_sheets("UNKNOWN", company_cls=FakeCompany)
+
+
+class TestCountBonds:
+    def test_valid_cusip_counted_and_invalid_rejected(self):
+        # 037833EY2 is valid; 037833EY1 has wrong check digit
+        text = "Notes 1: 037833EY2\nNotes 2: 037833EY1"
+        assert count_bonds(text) == 1
+
+    def test_skips_common_code_inside_xs_isin(self):
+        # XS2874154946 has middle 9 chars 287415494
+        text = "ISIN: XS2874154946 / Common Code: 287415494 / CUSIP: 191216DW7"
+        assert count_bonds(text) == 1
+
+    def test_handles_space_inside_cusip(self):
+        text = "CUSIP: 037833 EY2"
+        assert count_bonds(text) == 1
+
+
+class TestDealCurrencies:
+    def test_detects_all_supported_currencies(self):
+        assert deal_currencies("$1,500,000,000 Notes") == ["USD"]
+        assert deal_currencies("€500,000,000 Notes") == ["EUR"]
+        assert deal_currencies("£300,000,000 Notes") == ["GBP"]
+        assert deal_currencies("¥50,000,000,000 Notes") == ["JPY"]
+
+    def test_detects_multiple_currencies_sorted(self):
+        text = "€1,000,000,000 3.600% Notes\n£550,000,000 7.050% Notes"
+        assert deal_currencies(text) == ["EUR", "GBP"]
+
+    def test_ignores_excluded_lines(self):
+        text = (
+            "$1,000,000,000 4.000% Notes due 2030\n"
+            "Concurrent Offering: €500,000,000 of Notes due 2030\n"
+            "Use of Proceeds: £100,000,000 for debt retirement\n"
+            "Expenses: $5,000,000\n"
+            "Credit Agreement: €200,000,000 revolving facility\n"
+        )
+        assert deal_currencies(text) == ["USD"]
+
+    def test_ignores_small_amounts(self):
+        assert deal_currencies("$500,000 Notes") == []
 
 
 class TestGetEdgarIdentity:

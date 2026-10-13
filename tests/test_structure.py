@@ -10,6 +10,7 @@ import pandas as pd
 from structure import (
     assess_grounding,
     clean_coupon,
+    clean_currency,
     clean_cusip,
     clean_principal,
     clean_issue_price,
@@ -28,6 +29,14 @@ class TestCleanCusip:
         assert clean_cusip("68389XDH5 / US68389XDH52") == "68389XDH5"
         assert clean_cusip("02079K CL9 / US02079KCL98") == "02079KCL9"
         assert clean_cusip("037833EY2") == "037833EY2"
+
+    def test_clean_cusip_skips_common_code_inside_xs_isin(self):
+        assert clean_cusip("XS2874154946 / 287415494 /\n191216 DW7") == "191216DW7"
+        assert clean_cusip("XS2818290509\n / 281829050 / 191216 DU1") == "191216DU1"
+        assert clean_cusip("459200 LL3 / XS2999658136 / 299965813") == "459200LL3"
+
+    def test_clean_cusip_common_code_alone_is_not_a_cusip(self):
+        assert clean_cusip("XS2874154946 / 287415494") is None
 
     def test_clean_cusip_lowercase(self):
         assert clean_cusip("68389xdh5 / us68389xdh52") == "68389XDH5"
@@ -144,6 +153,13 @@ class TestCleaners:
         assert clean_spread("50 bps") == 50
         assert clean_spread(None) is None
         assert clean_spread("") is None
+
+    def test_clean_spread_keeps_decimals(self):
+        assert clean_spread("+108.2 bps") == 108.2
+        assert clean_spread("+60.7 basis points") == 60.7
+        assert clean_spread("+118.3\n                        bps") == 118.3
+        assert clean_spread("+140.0 bps") == 140
+        assert clean_spread("12.5") == 12.5
 
 
 class TestAssessGrounding:
@@ -349,4 +365,94 @@ class TestStructuring:
         for a in audit:
             settlement_meta = a["fields"]["settlement_date"]
             assert settlement_meta["grounded"] is False
+
+
+class TestCleanCurrency:
+    def test_clean_currency_symbols_and_codes(self):
+        assert clean_currency("$1,500,000,000") == "USD"
+        assert clean_currency("$500M") == "USD"
+        assert clean_currency("USD 500,000,000") == "USD"
+        assert clean_currency("€500,000,000") == "EUR"
+        assert clean_currency("500,000,000 EUR") == "EUR"
+        assert clean_currency("£300,000,000") == "GBP"
+        assert clean_currency("GBP 300,000,000") == "GBP"
+        assert clean_currency("¥50,000,000,000") == "JPY"
+        assert clean_currency("JPY 50,000,000,000") == "JPY"
+
+    def test_clean_currency_unknown_or_empty(self):
+        assert clean_currency(None) is None
+        assert clean_currency("") is None
+        assert clean_currency("1,000,000") is None
+        assert clean_currency("CHF 500,000,000") is None
+
+    def test_currency_column_position_and_fixtures(self):
+        for fixture_name in [
+            "AAPL_FWP_TermSheet_2025-05-06_extractions.jsonl",
+            "MSFT_FWP_TermSheet_2017-01-31_extractions.jsonl",
+            "ORCL_FWP_TermSheet_2025-09-24_extractions.jsonl",
+            "GOOGL_FWP_TermSheet_2026-08-07_extractions.jsonl",
+        ]:
+            path = Path("data/fixtures") / fixture_name
+            assert path.exists()
+            df, _ = structure_filing_extractions(path)
+            cols = list(df.columns)
+            assert "Currency" in cols
+            assert cols.index("Currency") == cols.index("Principal ($M)") + 1
+            assert (df["Currency"] == "USD").all()
+
+
+class TestExportCompsToExcel:
+    def test_export_comps_to_excel_usd_unchanged(self, tmp_path):
+        from structure import export_comps_to_excel
+        df = pd.DataFrame({
+            "Tranche": ["2028 Notes"],
+            "Principal ($M)": [1500.0],
+            "Currency": ["USD"],
+            "Coupon (%)": [4.0],
+        })
+        out_file = tmp_path / "test_usd_comps.xlsx"
+        export_comps_to_excel(df, out_file)
+        assert out_file.exists()
+
+        read_df = pd.read_excel(out_file, sheet_name="DCM Comps Table")
+        assert "Principal ($M)" in read_df.columns
+        assert "Currency" not in read_df.columns
+        assert read_df["Principal ($M)"].iloc[0] == 1500.0
+
+    def test_export_comps_to_excel_non_usd_keeps_currency_and_renames_principal(self, tmp_path):
+        from structure import export_comps_to_excel
+        df = pd.DataFrame({
+            "Tranche": ["2028 Notes"],
+            "Principal ($M)": [500.0],
+            "Currency": ["EUR"],
+            "Coupon (%)": [3.5],
+        })
+        out_file = tmp_path / "test_eur_comps.xlsx"
+        export_comps_to_excel(df, out_file)
+        assert out_file.exists()
+
+        read_df = pd.read_excel(out_file, sheet_name="DCM Comps Table")
+        assert "Principal (M)" in read_df.columns
+        assert "Principal ($M)" not in read_df.columns
+        assert "Currency" in read_df.columns
+        assert read_df["Currency"].iloc[0] == "EUR"
+        assert read_df["Principal (M)"].iloc[0] == 500.0
+
+    def test_export_comps_to_excel_mixed_currency(self, tmp_path):
+        from structure import export_comps_to_excel
+        df = pd.DataFrame({
+            "Tranche": ["Tranche 1", "Tranche 2"],
+            "Principal ($M)": [1000.0, 550.0],
+            "Currency": ["EUR", "GBP"],
+            "Coupon (%)": [3.5, 4.25],
+        })
+        out_file = tmp_path / "test_mixed_comps.xlsx"
+        export_comps_to_excel(df, out_file)
+        assert out_file.exists()
+
+        read_df = pd.read_excel(out_file, sheet_name="DCM Comps Table")
+        assert "Principal (M)" in read_df.columns
+        assert "Principal ($M)" not in read_df.columns
+        assert "Currency" in read_df.columns
+        assert read_df["Currency"].tolist() == ["EUR", "GBP"]
 

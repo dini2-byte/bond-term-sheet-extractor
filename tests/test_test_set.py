@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from lookup import count_bonds
+from lookup import count_bonds, deal_currencies
 
 TEST_SET_DIR = Path(__file__).resolve().parent.parent / "data" / "test_set"
 KEY = json.loads((TEST_SET_DIR / "answer_key.json").read_text(encoding="utf-8"))
@@ -76,10 +76,45 @@ def test_sizes_appear_in_the_filing(stem):
         assert amount in text, f"{bond['Tranche']}: {amount}"
 
 
-@pytest.mark.xfail(strict=True, reason="milestone 2: Common Codes are counted as CUSIPs")
 @pytest.mark.parametrize("stem", sorted(KEY))
 def test_count_bonds_matches_key(stem):
     assert count_bonds(raw_text(stem)) == KEY[stem]["bond_count"]
+
+
+def test_count_bonds_benchmark_filings():
+    raw_dir = Path(__file__).resolve().parent.parent / "data" / "raw_filings"
+    assert count_bonds((raw_dir / "AAPL_FWP_TermSheet_2025-05-06.txt").read_text(encoding="utf-8")) == 4
+    assert count_bonds((raw_dir / "MSFT_FWP_TermSheet_2017-01-31.txt").read_text(encoding="utf-8")) == 7
+    assert count_bonds((raw_dir / "ORCL_FWP_TermSheet_2025-09-24.txt").read_text(encoding="utf-8")) == 6
+    # GOOGL has 8 keyed fixed-rate notes and 2 floating-rate notes (10 total)
+    assert count_bonds((raw_dir / "GOOGL_FWP_TermSheet_2026-08-07.txt").read_text(encoding="utf-8")) == 10
+
+
+@pytest.mark.parametrize("stem", sorted(KEY))
+def test_deal_currencies_matches_key(stem):
+    assert deal_currencies(raw_text(stem)) == KEY[stem]["currencies"]
+
+
+def test_deal_currencies_benchmark_filings():
+    raw_dir = Path(__file__).resolve().parent.parent / "data" / "raw_filings"
+    for deal in [
+        "AAPL_FWP_TermSheet_2025-05-06",
+        "MSFT_FWP_TermSheet_2017-01-31",
+        "ORCL_FWP_TermSheet_2025-09-24",
+        "GOOGL_FWP_TermSheet_2026-08-07",
+    ]:
+        assert deal_currencies((raw_dir / f"{deal}.txt").read_text(encoding="utf-8")) == ["USD"]
+
+
+def test_deal_currencies_ignores_concurrent_offering_pattern():
+    text = (
+        "Pricing Term Sheet\n"
+        "Issuer: The Procter & Gamble Company\n"
+        "Title: $500,000,000 4.500% Notes due 2030\n"
+        "Concurrent Offering: €500,000,000 of 3.250% Notes due 2030\n"
+        "CUSIP: 742718EU3\n"
+    )
+    assert deal_currencies(text) == ["USD"]
 
 
 def test_both_yields_kept_when_the_filing_states_two():
@@ -87,3 +122,15 @@ def test_both_yields_kept_when_the_filing_states_two():
     assert [(b["Yield (%)"], b["Semi-annual yield (%)"]) for b in pg] == [(1.394, 1.389), (1.809, 1.801)]
     ibm = KEY["IBM_FWP_TermSheet_GBP_2015-07-29"]["bonds"][0]
     assert (ibm["Yield (%)"], ibm["Semi-annual yield (%)"]) == (None, 2.662)
+
+
+def test_extracted_currency_matches_key():
+    from score_test_set import pair_bonds
+    from structure import structure_filing_extractions
+    for path in sorted((TEST_SET_DIR / "extractions").glob("*_extractions.jsonl")):
+        stem = path.name.removesuffix("_extractions.jsonl")
+        df, _ = structure_filing_extractions(path)
+        pairs = pair_bonds(df, KEY[stem]["bonds"])
+        for k, r in pairs:
+            assert r is not None
+            assert r.get("Currency") == k["Currency"]
