@@ -62,17 +62,122 @@ def is_bond_term_sheet(text: str) -> bool:
     return True
 
 
+def is_valid_cusip(s: str) -> bool:
+    """Validates 9-character CUSIP check digit using standard Mod 10 Luhn-like algorithm."""
+    if len(s) != 9:
+        return False
+    chars = s.upper()
+    total = 0
+    for i, c in enumerate(chars[:8]):
+        if "0" <= c <= "9":
+            val = ord(c) - ord("0")
+        elif "A" <= c <= "Z":
+            val = ord(c) - ord("A") + 10
+        elif c == "*":
+            val = 36
+        elif c == "@":
+            val = 37
+        elif c == "#":
+            val = 38
+        else:
+            return False
+        weight = 2 if (i % 2 == 1) else 1
+        prod = val * weight
+        total += (prod // 10) + (prod % 10)
+    check = (10 - (total % 10)) % 10
+    return chars[8] == str(check)
+
+
 def count_bonds(text: str) -> int:
     """
-    Counts number of distinct 9-character CUSIPs in the text.
+    Counts number of distinct 9-character tokens that pass the CUSIP check digit
+    and are not the 9 middle characters of an XS ISIN in the same text.
     Handles standard CUSIP format: 6 alphanumeric + optional space + 3 alphanumeric.
-    Must contain at least one digit to avoid matching English words.
     """
     if not text:
         return 0
+    xs_isins = re.findall(r"XS[0-9A-Za-z]{10}", text.upper())
+    xs_middle_9 = {isin[2:11] for isin in xs_isins}
+
     matches = re.findall(r"(?<![A-Za-z0-9])([A-Za-z0-9]{6})\s*([A-Za-z0-9]{3})(?![A-Za-z0-9])", text)
-    cusips = {f"{a}{b}".upper() for a, b in matches if any(c.isdigit() for c in a + b)}
+    cusips = set()
+    for a, b in matches:
+        token = f"{a}{b}".upper()
+        if token in xs_middle_9:
+            continue
+        if is_valid_cusip(token):
+            cusips.add(token)
     return len(cusips)
+
+
+IGNORE_PATTERNS = [
+    re.compile(r"concurrent\s+offering", re.IGNORECASE),
+    re.compile(r"use\s+of\s+proceeds", re.IGNORECASE),
+    re.compile(r"expenses", re.IGNORECASE),
+    re.compile(r"credit\s+agreement", re.IGNORECASE),
+]
+
+CURRENCY_SYMBOLS = {
+    "$": "USD",
+    "USD": "USD",
+    "€": "EUR",
+    "EUR": "EUR",
+    "£": "GBP",
+    "GBP": "GBP",
+    "¥": "JPY",
+    "JPY": "JPY",
+}
+
+
+def _parse_principal_amount(num_str: str, unit_str: str | None) -> float:
+    cleaned = num_str.replace(",", "")
+    try:
+        val = float(cleaned)
+    except ValueError:
+        return 0.0
+    if unit_str:
+        u = unit_str.lower()
+        if "b" in u:
+            val *= 1_000_000_000
+        elif "m" in u:
+            val *= 1_000_000
+    return val
+
+
+def deal_currencies(text: str) -> list[str]:
+    """
+    Returns sorted list of currencies of principal amounts of 1,000,000 or more,
+    ignoring lines that mention a concurrent offering, use of proceeds, expenses,
+    or a credit agreement.
+    """
+    if not text:
+        return []
+    found_currencies = set()
+    for line in text.splitlines():
+        if any(p.search(line) for p in IGNORE_PATTERNS):
+            continue
+
+        for m in re.finditer(
+            r"([$€£¥]|(?:USD|EUR|GBP|JPY))\s*(\d+(?:,\d{3})*(?:\.\d+)?)\s*(billion|bn|b|million|mn|mm)?\b",
+            line,
+            re.IGNORECASE,
+        ):
+            cur = CURRENCY_SYMBOLS.get(m.group(1).upper() if len(m.group(1)) > 1 else m.group(1))
+            amt = _parse_principal_amount(m.group(2), m.group(3))
+            if amt >= 1_000_000 and cur:
+                found_currencies.add(cur)
+
+        for m in re.finditer(
+            r"\b(\d+(?:,\d{3})*(?:\.\d+)?)\s*(billion|bn|b|million|mn|mm)?\s*(USD|EUR|GBP|JPY)\b",
+            line,
+            re.IGNORECASE,
+        ):
+            amt = _parse_principal_amount(m.group(1), m.group(2))
+            cur = CURRENCY_SYMBOLS.get(m.group(3).upper())
+            if amt >= 1_000_000 and cur:
+                found_currencies.add(cur)
+
+    return sorted(found_currencies)
 
 
 def find_term_sheets(
@@ -84,7 +189,8 @@ def find_term_sheets(
     """
     Looks at the latest `scan` FWP filings for the ticker and keeps those
     where is_bond_term_sheet is True and the text is at most max_chars long.
-    Each result has accession, filing_date (ISO string), chars, bond_count, and text.
+    Each result has accession, filing_date (ISO string), chars, bond_count, currencies, and text.
+    Silently drops results with a currency outside USD, EUR and GBP or with no currency found.
     Newest first.
     An unknown ticker raises LookupError("No SEC filer found for <TICKER>.").
     """
@@ -145,6 +251,10 @@ def find_term_sheets(
         if chars > max_chars:
             continue
 
+        curs = deal_currencies(text_val)
+        if not curs or not set(curs).issubset({"USD", "EUR", "GBP"}):
+            continue
+
         raw_date = getattr(f, "filing_date", None) or getattr(f, "date", None)
         if hasattr(raw_date, "isoformat"):
             date_str = raw_date.isoformat()
@@ -165,6 +275,7 @@ def find_term_sheets(
             "filing_date": date_str,
             "chars": chars,
             "bond_count": count_bonds(text_val),
+            "currencies": curs,
             "text": text_val,
         })
 
