@@ -9,6 +9,7 @@ import dataclasses
 import hashlib
 import json
 import logging
+import re
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Any, Protocol
@@ -121,3 +122,47 @@ def make_store(secrets: Mapping[str, Any] | None, disk_root: Path = Path(".cache
         region_name="auto",
     )
     return R2Store(client, values["R2_BUCKET"])
+
+
+ACCESSION_PATTERN = re.compile(r"^\d{10}-\d{2}-\d{6}$")
+
+
+def is_valid_extraction_jsonl(text: str | None) -> bool:
+    """True when the first line is a JSON object with an extractions list and a text string."""
+    if not text or not text.strip():
+        return False
+    try:
+        doc = json.loads(text.strip().splitlines()[0])
+    except (json.JSONDecodeError, IndexError):
+        return False
+    return isinstance(doc, dict) and isinstance(doc.get("extractions"), list) and isinstance(doc.get("text"), str)
+
+
+class ExtractionCache:
+    """Extractor output saved per SEC accession number, separated by prompt version."""
+
+    def __init__(self, store: ObjectStore, version: str | None = None):
+        self.store = store
+        self.version = version or prompt_version()
+
+    def key(self, accession: str) -> str:
+        if not ACCESSION_PATTERN.match(accession or ""):
+            raise ValueError(f"Not an SEC accession number: {accession!r}")
+        return f"extractions/{self.version}/{accession}.jsonl"
+
+    def get(self, accession: str) -> str | None:
+        text = self.store.get_text(self.key(accession))
+        if text is None:
+            return None
+        if not is_valid_extraction_jsonl(text):
+            logger.warning("Ignoring a broken saved extraction for %s", accession)
+            return None
+        return text
+
+    def put(self, accession: str, jsonl: str) -> None:
+        if not is_valid_extraction_jsonl(jsonl):
+            raise ValueError("Refusing to save output that is not extractor JSONL.")
+        self.store.put_text(self.key(accession), jsonl)
+
+    def has(self, accession: str) -> bool:
+        return self.store.exists(self.key(accession))

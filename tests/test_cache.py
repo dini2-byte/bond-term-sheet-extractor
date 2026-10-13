@@ -113,3 +113,62 @@ class TestMakeStore:
         assert captured["service"] == "s3"
         assert captured["endpoint_url"] == "https://acct123.r2.cloudflarestorage.com"
         assert captured["region_name"] == "auto"
+
+
+from cache import ExtractionCache, is_valid_extraction_jsonl
+
+GOOD_JSONL = '{"extractions": [], "text": "Term sheet", "document_id": "d"}\n'
+
+
+class TestExtractionCache:
+    def test_key_uses_version_and_accession(self, tmp_path: Path):
+        c = ExtractionCache(DiskStore(tmp_path), version="abc123abc123")
+        assert c.key("0001140361-25-017410") == "extractions/abc123abc123/0001140361-25-017410.jsonl"
+
+    def test_default_version_is_current_prompt(self, tmp_path: Path):
+        assert ExtractionCache(DiskStore(tmp_path)).version == prompt_version()
+
+    def test_round_trip(self, tmp_path: Path):
+        c = ExtractionCache(DiskStore(tmp_path), version="v1v1v1v1v1v1")
+        acc = "0001193125-17-024075"
+        assert c.get(acc) is None
+        assert c.has(acc) is False
+        c.put(acc, GOOD_JSONL)
+        assert c.get(acc) == GOOD_JSONL
+        assert c.has(acc) is True
+
+    def test_other_version_misses(self, tmp_path: Path):
+        store = DiskStore(tmp_path)
+        ExtractionCache(store, version="aaaaaaaaaaaa").put("0001193125-17-024075", GOOD_JSONL)
+        assert ExtractionCache(store, version="bbbbbbbbbbbb").get("0001193125-17-024075") is None
+
+    def test_broken_object_is_a_miss(self, tmp_path: Path):
+        store = DiskStore(tmp_path)
+        c = ExtractionCache(store, version="v1v1v1v1v1v1")
+        store.put_text(c.key("0001193125-17-024075"), "not json")
+        assert c.get("0001193125-17-024075") is None
+
+    @pytest.mark.parametrize("bad", ["", "../x", "0001140361-25-01741", "AAPL", "0001140361/25/017410"])
+    def test_rejects_bad_accession(self, tmp_path: Path, bad: str):
+        c = ExtractionCache(DiskStore(tmp_path), version="v1v1v1v1v1v1")
+        with pytest.raises(ValueError):
+            c.key(bad)
+
+    def test_put_refuses_invalid_jsonl(self, tmp_path: Path):
+        c = ExtractionCache(DiskStore(tmp_path), version="v1v1v1v1v1v1")
+        with pytest.raises(ValueError):
+            c.put("0001193125-17-024075", "not json")
+
+
+class TestIsValidExtractionJsonl:
+    def test_cases(self):
+        assert is_valid_extraction_jsonl(GOOD_JSONL) is True
+        assert is_valid_extraction_jsonl(None) is False
+        assert is_valid_extraction_jsonl("") is False
+        assert is_valid_extraction_jsonl("{}") is False
+        assert is_valid_extraction_jsonl('{"extractions": "x", "text": "t"}') is False
+
+    def test_benchmark_fixture_is_valid(self):
+        text = Path("data/fixtures/AAPL_FWP_TermSheet_2025-05-06_extractions.jsonl").read_text(encoding="utf-8")
+        assert is_valid_extraction_jsonl(text) is True
+
