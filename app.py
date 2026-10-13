@@ -139,19 +139,61 @@ def build_deal_line(df: pd.DataFrame) -> str:
             raw_iss = str(issuers.iloc[0]).strip()
             issuer = raw_iss.title() if raw_iss.isupper() else raw_iss
 
-    total_m = 0.0
+    principal_col = None
     for col in ["Principal ($M)", "Size ($M)"]:
         if col in df.columns:
-            nums = df[col].dropna()
-            if not nums.empty:
-                total_m = float(nums.sum())
+            principal_col = col
+            break
+    if not principal_col:
+        for col in df.columns:
+            if col.startswith("Principal (") or col.startswith("Size ("):
+                principal_col = col
                 break
 
-    if total_m >= 1000:
-        val = total_m / 1000.0
-        size_str = f"${int(val)}bn" if val.is_integer() else f"${val:.1f}bn"
+    totals_by_curr: dict[str, float] = {}
+    curr_order: list[str] = []
+    if principal_col:
+        for _, row in df.iterrows():
+            val = row[principal_col]
+            if pd.isna(val):
+                continue
+            amt = 0.0
+            if isinstance(val, (int, float)):
+                amt = float(val)
+            else:
+                s = str(val).strip().replace(",", "")
+                m = re.search(r"([0-9]+(?:\.[0-9]+)?)", s)
+                if m:
+                    amt = float(m.group(1))
+            c = "USD"
+            if "Currency" in df.columns and pd.notna(row["Currency"]):
+                raw_c = str(row["Currency"]).strip()
+                if raw_c:
+                    c = raw_c
+            if c not in totals_by_curr:
+                totals_by_curr[c] = 0.0
+                curr_order.append(c)
+            totals_by_curr[c] += amt
+
+    size_parts: list[str] = []
+    syms = {"USD": "$", "EUR": "€", "GBP": "£", "JPY": "¥"}
+    for c in curr_order:
+        total_m = totals_by_curr[c]
+        sym = syms.get(c, "$")
+        if total_m >= 1000:
+            val = total_m / 1000.0
+            size_parts.append(f"{sym}{int(val)}bn" if val.is_integer() else f"{sym}{val:.1f}bn")
+        else:
+            size_parts.append(f"{sym}{int(total_m):,d}m" if total_m.is_integer() else f"{sym}{total_m:,.1f}m")
+
+    if not size_parts:
+        size_str = "$0m"
+    elif len(size_parts) == 1:
+        size_str = size_parts[0]
+    elif len(size_parts) == 2:
+        size_str = f"{size_parts[0]} and {size_parts[1]}"
     else:
-        size_str = f"${total_m:,.1f}m"
+        size_str = f"{', '.join(size_parts[:-1])} and {size_parts[-1]}"
 
     n_bonds = len(df)
     bond_str = f"{n_bonds} bond" if n_bonds == 1 else f"{n_bonds} bonds"
@@ -282,7 +324,22 @@ else:
                     item = term_sheets[idx]
                     bc = item.get("bond_count", 0)
                     bword = "1 bond" if bc == 1 else f"{bc} bonds"
-                    return f"Filed {item['filing_date']} · {bword}"
+                    currencies = item.get("currencies", [])
+                    cur_suffix = ""
+                    unique_curs: list[str] = []
+                    for c in currencies:
+                        if c and c not in unique_curs:
+                            unique_curs.append(c)
+                    if unique_curs and unique_curs != ["USD"]:
+                        names = {"USD": "dollars", "EUR": "euros", "GBP": "pounds", "JPY": "yen"}
+                        words = [names.get(c, c.lower()) for c in unique_curs]
+                        if len(words) == 1:
+                            cur_suffix = f" in {words[0]}"
+                        elif len(words) == 2:
+                            cur_suffix = f" in {words[0]} and {words[1]}"
+                        else:
+                            cur_suffix = f" in {', '.join(words[:-1])} and {words[-1]}"
+                    return f"Filed {item['filing_date']} · {bword}{cur_suffix}"
 
                 selected_idx = st.selectbox(
                     "Recent bond term sheets",

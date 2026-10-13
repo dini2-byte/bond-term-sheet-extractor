@@ -21,6 +21,10 @@ NEVER_SHOW = [
     "ai-native",
     "trustworthiness",
     "gate",
+    "not supported",
+    "coming soon",
+    "not implemented",
+    "unavailable",
 ]
 
 
@@ -270,3 +274,108 @@ def test_headings_have_no_link_anchor():
     headings = list(at.title) + list(at.subheader)
     assert headings
     assert all(h.proto.hide_anchor for h in headings)
+
+
+class TestBuildDealLine:
+    def test_build_deal_line_usd(self):
+        import pandas as pd
+        from app import build_deal_line
+        df = pd.DataFrame({
+            "Issuer": ["Apple Inc.", "Apple Inc."],
+            "Currency": ["USD", "USD"],
+            "Principal ($M)": [1500.0, 3000.0],
+            "Trade Date": ["May 5, 2025", "May 5, 2025"],
+        })
+        line = build_deal_line(df)
+        assert line == "Apple Inc. · $4.5bn senior notes · 2 bonds · priced May 5, 2025"
+
+    def test_build_deal_line_eur_1bn(self):
+        import pandas as pd
+        from app import build_deal_line
+        df = pd.DataFrame({
+            "Issuer": ["Coca-Cola Co", "Coca-Cola Co"],
+            "Currency": ["EUR", "EUR"],
+            "Principal ($M)": [500.0, 500.0],
+            "Trade Date": ["August 9, 2024", "August 9, 2024"],
+        })
+        line = build_deal_line(df)
+        assert line == "Coca-Cola Co · €1bn senior notes · 2 bonds · priced August 9, 2024"
+
+    def test_build_deal_line_gbp_750m(self):
+        import pandas as pd
+        from app import build_deal_line
+        df = pd.DataFrame({
+            "Issuer": ["Test Issuer"],
+            "Currency": ["GBP"],
+            "Principal ($M)": [750.0],
+        })
+        line = build_deal_line(df)
+        assert line == "Test Issuer · £750m senior notes · 1 bond"
+
+    def test_build_deal_line_mixed_eur_and_gbp(self):
+        import pandas as pd
+        from app import build_deal_line
+        df = pd.DataFrame({
+            "Issuer": ["AT&T Inc."] * 5,
+            "Currency": ["EUR", "EUR", "EUR", "EUR", "GBP"],
+            "Principal ($M)": [1000.0, 1250.0, 1000.0, 850.0, 550.0],
+            "Trade Date": ["July 27, 2026"] * 5,
+        })
+        line = build_deal_line(df)
+        assert line == "AT&T Inc. · €4.1bn and £550m senior notes · 5 bonds · priced July 27, 2026"
+
+
+class TestSearchPickerCurrencyLabel:
+    def test_search_picker_labels_include_currency(self, monkeypatch):
+        monkeypatch.setenv("EDGAR_IDENTITY", "Test User test@example.com")
+        fake_sheets = [
+            {
+                "accession": "0001-24-000001",
+                "filing_date": "2024-08-09",
+                "chars": 1500,
+                "bond_count": 2,
+                "currencies": ["EUR"],
+                "text": "sample text",
+            },
+            {
+                "accession": "0001-26-000002",
+                "filing_date": "2026-07-27",
+                "chars": 1500,
+                "bond_count": 1,
+                "currencies": ["GBP"],
+                "text": "sample text",
+            },
+            {
+                "accession": "0001-26-000003",
+                "filing_date": "2026-07-27",
+                "chars": 1500,
+                "bond_count": 5,
+                "currencies": ["EUR", "GBP"],
+                "text": "sample text",
+            },
+            {
+                "accession": "0001-25-000004",
+                "filing_date": "2025-05-06",
+                "chars": 1500,
+                "bond_count": 4,
+                "currencies": ["USD"],
+                "text": "sample text",
+            },
+        ]
+        import lookup
+        import streamlit as st
+        st.cache_data.clear()
+        monkeypatch.setattr(lookup, "find_term_sheets", lambda ticker, **kw: fake_sheets)
+
+        at = AppTest.from_file(APP_PATH, default_timeout=30).run()
+        at.segmented_control[0].select("Search company").run()
+        at.text_input[0].input("KO")
+        [b for b in at.button if b.label == "Find term sheets"][0].click().run()
+
+        assert not at.exception
+        sb = at.selectbox[0]
+        assert sb.options[0] == "Filed 2024-08-09 · 2 bonds in euros"
+        assert sb.options[1] == "Filed 2026-07-27 · 1 bond in pounds"
+        assert sb.options[2] == "Filed 2026-07-27 · 5 bonds in euros and pounds"
+        assert sb.options[3] == "Filed 2025-05-06 · 4 bonds"
+
