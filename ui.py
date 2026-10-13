@@ -38,13 +38,40 @@ TABLE_COLUMNS: list[tuple[str, str | None, str | None, str]] = [
     ("Coupon", "Coupon (%)", "coupon", "Yearly interest rate the issuer pays."),
     ("Price", "Issue Price", "issue_price", "Price paid per 100 of face value."),
     ("Yield", "Yield (%)", "yield_to_maturity", "Return to an investor who buys at the issue price and holds to maturity."),
-    ("Spread (bps)", "Spread (bps)", "spread_bps", "Extra yield over the matching US Treasury, in basis points (1 bp = 0.01%)."),
-    ("Treasury", "Benchmark Treasury", "benchmark_treasury", "The US Treasury the spread is measured against."),
+    ("Spread (bps)", "Spread (bps)", "spread_bps", "Extra yield over the benchmark bond, in basis points (1 bp = 0.01%)."),
+    ("Benchmark", "Benchmark Treasury", "benchmark_treasury", "The government bond the spread is measured against, such as a US Treasury, German Bund or UK Gilt."),
     ("Maturity", "Maturity Date", "maturity_date", "Date the bond is repaid."),
     ("Par call", "Par Call Date", "par_call_date", "Date after which the issuer can repay early at 100."),
     ("CUSIP", "CUSIP", "cusip", "The bond's 9-character ID."),
     ("Check", None, None, "OK, or the first thing worth checking in this row."),
 ]
+
+
+def size_label(currencies: list[str] | set[str] | None) -> str:
+    """Returns 'Size ($M)', 'Size (€M)', 'Size (£M)', or 'Size (M)' for multiple currencies."""
+    if not currencies:
+        return "Size ($M)"
+    unique = sorted(set(currencies))
+    if len(unique) > 1:
+        return "Size (M)"
+    cur = unique[0]
+    symbol = {"USD": "$", "EUR": "€", "GBP": "£", "JPY": "¥"}.get(cur, "$")
+    return f"Size ({symbol}M)"
+
+
+def size_help(currencies: list[str] | set[str] | None) -> str:
+    """Help text naming the currency of the deal."""
+    if not currencies:
+        return "Amount of this bond sold, in millions of dollars."
+    unique = sorted(set(currencies))
+    if len(unique) > 1:
+        return "Amount of this bond sold, in millions."
+    cur = unique[0]
+    names = {"USD": "dollars", "EUR": "euros", "GBP": "pounds", "JPY": "yen"}
+    name = names.get(cur)
+    if name:
+        return f"Amount of this bond sold, in millions of {name}."
+    return "Amount of this bond sold, in millions."
 
 
 def plain_status(meta: dict[str, Any] | None) -> str:
@@ -139,7 +166,7 @@ def plain_check(status: str | None, issues: Any) -> str:
 
 NA_TEXT = "n/a"
 DATE_COLUMNS = ("Maturity", "Par call")
-TEXT_COLUMNS = ("Tranche", "Treasury", "CUSIP")
+TEXT_COLUMNS = ("Tranche", "Benchmark", "CUSIP")
 
 
 def _is_missing(value: Any) -> bool:
@@ -164,10 +191,17 @@ def table_frame(validated_df: pd.DataFrame) -> pd.DataFrame:
     """
     Returns the table with TABLE_COLUMNS labels in order,
     the Check column from plain_check, and a fresh 0..n-1 index.
+    Size column label and values reflect the deal's currency.
+    Spread column formats whole numbers without decimals and keeps decimals when present.
     """
     n_rows = len(validated_df)
     data: dict[str, Any] = {}
+    curs = [c for c in validated_df["Currency"].dropna().unique() if c] if "Currency" in validated_df.columns else []
+    s_label = size_label(curs)
+    is_mixed = (s_label == "Size (M)")
+
     for label, source_column, _, _ in TABLE_COLUMNS:
+        col_name = s_label if label == "Size ($M)" else label
         if label == "Check":
             checks = []
             for i in range(n_rows):
@@ -175,7 +209,37 @@ def table_frame(validated_df: pd.DataFrame) -> pd.DataFrame:
                 status = row.get("Validation Status") if "Validation Status" in row else (row.get("Status") if "Status" in row else "PASSED")
                 issues = row.get("Validation Issues") if "Validation Issues" in row else (row.get("Issues") if "Issues" in row else "")
                 checks.append(plain_check(status, issues))
-            data[label] = checks
+            data[col_name] = checks
+        elif label == "Size ($M)":
+            if source_column and source_column in validated_df.columns:
+                values = validated_df[source_column].tolist()
+                if is_mixed:
+                    row_curs = validated_df["Currency"].tolist() if "Currency" in validated_df.columns else ["USD"] * n_rows
+                    syms = {"USD": "$", "EUR": "€", "GBP": "£", "JPY": "¥"}
+                    data[col_name] = [
+                        NA_TEXT if _is_missing(v) else f"{syms.get(c, '$')}{float(v):,.1f}M"
+                        for v, c in zip(values, row_curs)
+                    ]
+                else:
+                    data[col_name] = values
+            else:
+                data[col_name] = [None] * n_rows
+        elif label == "Spread (bps)":
+            if source_column and source_column in validated_df.columns:
+                values = validated_df[source_column].tolist()
+                formatted_spreads = []
+                for v in values:
+                    if _is_missing(v):
+                        formatted_spreads.append(NA_TEXT)
+                    else:
+                        v_flt = float(v)
+                        sign = "+" if v_flt >= 0 else ""
+                        formatted_spreads.append(
+                            f"{sign}{int(v_flt)} bps" if v_flt.is_integer() else f"{sign}{v_flt} bps"
+                        )
+                data[col_name] = formatted_spreads
+            else:
+                data[col_name] = [None] * n_rows
         else:
             if source_column and source_column in validated_df.columns:
                 values = validated_df[source_column].tolist()
@@ -183,11 +247,11 @@ def table_frame(validated_df: pd.DataFrame) -> pd.DataFrame:
                     values = [short_date(v) for v in values]
                 elif label in TEXT_COLUMNS:
                     values = [NA_TEXT if _is_missing(v) else v for v in values]
-                data[label] = values
+                data[col_name] = values
             elif label in validated_df.columns:
-                data[label] = validated_df[label].tolist()
+                data[col_name] = validated_df[label].tolist()
             else:
-                data[label] = [None] * n_rows
+                data[col_name] = [None] * n_rows
 
     res_df = pd.DataFrame(data, index=pd.RangeIndex(n_rows))
     return res_df
@@ -202,8 +266,11 @@ def not_exact_mask(
     but is not grounded.
     """
     n_rows = len(validated_df)
-    col_labels = [label for label, _, _, _ in TABLE_COLUMNS]
-    field_class_by_label = {label: fc for label, _, fc, _ in TABLE_COLUMNS}
+    curs = [c for c in validated_df["Currency"].dropna().unique() if c] if "Currency" in validated_df.columns else []
+    s_label = size_label(curs)
+
+    col_labels = [s_label if label == "Size ($M)" else label for label, _, _, _ in TABLE_COLUMNS]
+    field_class_by_label = {s_label if label == "Size ($M)" else label: fc for label, _, fc, _ in TABLE_COLUMNS}
 
     mask_dict: dict[str, list[bool]] = {label: [False] * n_rows for label in col_labels}
 
@@ -227,14 +294,15 @@ def not_exact_mask(
     return pd.DataFrame(mask_dict, index=pd.RangeIndex(n_rows))
 
 
-def _format_cell_display_value(val: Any, label: str) -> str:
+def _format_cell_display_value(val: Any, label: str, currency: str = "USD") -> str:
     if val is None or (isinstance(val, float) and pd.isna(val)):
         return "Not in the filing"
     if isinstance(val, str) and val.strip().lower() in ("", "none", "nan", "not found", "n/a"):
         return "Not in the filing"
     if isinstance(val, (int, float)):
-        if label in ("Size ($M)", "Principal ($M)"):
-            return f"${float(val):,.1f}M"
+        if label.startswith("Size") or label in ("Principal ($M)", "Principal (M)"):
+            symbol = {"USD": "$", "EUR": "€", "GBP": "£", "JPY": "¥"}.get(currency, "$")
+            return f"{symbol}{float(val):,.1f}M"
         elif label in ("Coupon", "Coupon (%)"):
             return f"{float(val):.3f}%"
         elif label in ("Price", "Issue Price"):
@@ -243,7 +311,8 @@ def _format_cell_display_value(val: Any, label: str) -> str:
             return f"{float(val):.3f}%"
         elif label in ("Spread (bps)", "Spread"):
             v_flt = float(val)
-            return f"+{int(v_flt)} bps" if v_flt.is_integer() else f"+{v_flt} bps"
+            sign = "+" if v_flt >= 0 else ""
+            return f"{sign}{int(v_flt)} bps" if v_flt.is_integer() else f"{sign}{v_flt} bps"
     return str(val)
 
 
@@ -265,7 +334,10 @@ def cell_source(
     if row < 0 or row >= len(validated_df):
         return None
 
-    matched_col = next((col for col in TABLE_COLUMNS if col[0] == label), None)
+    matched_col = next(
+        (col for col in TABLE_COLUMNS if col[0] == label or (col[0].startswith("Size") and label.startswith("Size"))),
+        None,
+    )
     if not matched_col:
         return None
 
@@ -286,10 +358,14 @@ def cell_source(
     elif isinstance(meta, dict):
         raw_val = meta.get("raw")
 
+    row_currency = validated_df.iloc[row].get("Currency") if "Currency" in validated_df.columns else "USD"
+    if not row_currency or pd.isna(row_currency):
+        row_currency = "USD"
+
     if status == "Not in the filing":
         displayed_val = "Not in the filing"
     else:
-        displayed_val = _format_cell_display_value(raw_val, label)
+        displayed_val = _format_cell_display_value(raw_val, label, currency=str(row_currency))
 
     quote_html = ""
     if isinstance(meta, dict) and doc_text:

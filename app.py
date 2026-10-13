@@ -43,6 +43,8 @@ from ui import (
     load_document_text,
     not_exact_mask,
     plain_status,
+    size_help,
+    size_label,
     table_frame,
 )
 from validate import validate_comps_table
@@ -389,34 +391,62 @@ if validated_df is not None and selected_jsonl is not None:
     styled = tf.style.apply(highlight_not_exact, axis=None)
 
     column_config: dict[str, Any] = {}
+    curs = [c for c in validated_df["Currency"].dropna().unique() if c] if "Currency" in validated_df.columns else []
+    current_size_label = size_label(curs)
+
     for col_label, _, _, col_help in TABLE_COLUMNS:
+        target_label = current_size_label if col_label == "Size ($M)" else col_label
         if col_label == "Size ($M)":
-            column_config[col_label] = st.column_config.NumberColumn(
-                col_label,
-                help=col_help,
-                format="$%,.1fM",
-            )
+            help_text = size_help(curs)
+            if current_size_label == "Size (M)":
+                column_config[target_label] = st.column_config.Column(
+                    target_label,
+                    help=help_text,
+                )
+            elif current_size_label == "Size (€M)":
+                column_config[target_label] = st.column_config.NumberColumn(
+                    target_label,
+                    help=help_text,
+                    format="€%,.1fM",
+                )
+            elif current_size_label == "Size (£M)":
+                column_config[target_label] = st.column_config.NumberColumn(
+                    target_label,
+                    help=help_text,
+                    format="£%,.1fM",
+                )
+            elif current_size_label == "Size (¥M)":
+                column_config[target_label] = st.column_config.NumberColumn(
+                    target_label,
+                    help=help_text,
+                    format="¥%,.1fM",
+                )
+            else:
+                column_config[target_label] = st.column_config.NumberColumn(
+                    target_label,
+                    help=help_text,
+                    format="$%,.1fM",
+                )
         elif col_label in ("Coupon", "Yield"):
-            column_config[col_label] = st.column_config.NumberColumn(
-                col_label,
+            column_config[target_label] = st.column_config.NumberColumn(
+                target_label,
                 help=col_help,
                 format="%.3f%%",
             )
         elif col_label == "Price":
-            column_config[col_label] = st.column_config.NumberColumn(
-                col_label,
+            column_config[target_label] = st.column_config.NumberColumn(
+                target_label,
                 help=col_help,
                 format="%.3f",
             )
         elif col_label == "Spread (bps)":
-            column_config[col_label] = st.column_config.NumberColumn(
-                col_label,
+            column_config[target_label] = st.column_config.Column(
+                target_label,
                 help=col_help,
-                format="+%d bps",
             )
         else:
-            column_config[col_label] = st.column_config.Column(
-                col_label,
+            column_config[target_label] = st.column_config.Column(
+                target_label,
                 help=col_help,
                 width="large" if col_label == "Check" else None,
             )

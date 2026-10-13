@@ -9,11 +9,14 @@ from ui import (
     scored_grounding,
     source_quote,
     TABLE_COLUMNS,
+    TEXT_COLUMNS,
     plain_status,
     plain_check,
+    size_label,
     table_frame,
     not_exact_mask,
     cell_source,
+    _format_cell_display_value,
 )
 
 
@@ -171,7 +174,7 @@ class TestSlice6UiHelpers:
             "Price",
             "Yield",
             "Spread (bps)",
-            "Treasury",
+            "Benchmark",
             "Maturity",
             "Par call",
             "CUSIP",
@@ -185,8 +188,8 @@ class TestSlice6UiHelpers:
         assert TABLE_COLUMNS[2] == ("Coupon", "Coupon (%)", "coupon", "Yearly interest rate the issuer pays.")
         assert TABLE_COLUMNS[3] == ("Price", "Issue Price", "issue_price", "Price paid per 100 of face value.")
         assert TABLE_COLUMNS[4] == ("Yield", "Yield (%)", "yield_to_maturity", "Return to an investor who buys at the issue price and holds to maturity.")
-        assert TABLE_COLUMNS[5] == ("Spread (bps)", "Spread (bps)", "spread_bps", "Extra yield over the matching US Treasury, in basis points (1 bp = 0.01%).")
-        assert TABLE_COLUMNS[6] == ("Treasury", "Benchmark Treasury", "benchmark_treasury", "The US Treasury the spread is measured against.")
+        assert TABLE_COLUMNS[5] == ("Spread (bps)", "Spread (bps)", "spread_bps", "Extra yield over the benchmark bond, in basis points (1 bp = 0.01%).")
+        assert TABLE_COLUMNS[6] == ("Benchmark", "Benchmark Treasury", "benchmark_treasury", "The government bond the spread is measured against, such as a US Treasury, German Bund or UK Gilt.")
         assert TABLE_COLUMNS[7] == ("Maturity", "Maturity Date", "maturity_date", "Date the bond is repaid.")
         assert TABLE_COLUMNS[8] == ("Par call", "Par Call Date", "par_call_date", "Date after which the issuer can repay early at 100.")
         assert TABLE_COLUMNS[9] == ("CUSIP", "CUSIP", "cusip", "The bond's 9-character ID.")
@@ -296,3 +299,75 @@ class TestTableFrameReadability:
     def test_missing_text_values_show_na(self):
         tf = self._frame("MSFT_FWP_TermSheet_2017-01-31")
         assert tf["Par call"].iloc[0] == "n/a"
+
+
+class TestTask4TableLabelsAndFormats:
+    def test_size_label(self):
+        assert size_label(["USD"]) == "Size ($M)"
+        assert size_label(["EUR"]) == "Size (€M)"
+        assert size_label(["GBP"]) == "Size (£M)"
+        assert size_label(["EUR", "GBP"]) == "Size (M)"
+        assert size_label([]) == "Size ($M)"
+        assert size_label(None) == "Size ($M)"
+
+    def test_text_columns_contains_benchmark_not_treasury(self):
+        assert TEXT_COLUMNS == ("Tranche", "Benchmark", "CUSIP")
+
+    def test_format_cell_display_value_currency_and_spread(self):
+        assert _format_cell_display_value(500.0, "Size (€M)", currency="EUR") == "€500.0M"
+        assert _format_cell_display_value(300.0, "Size (£M)", currency="GBP") == "£300.0M"
+        assert _format_cell_display_value(1500.0, "Size ($M)", currency="USD") == "$1,500.0M"
+        assert _format_cell_display_value(108.2, "Spread (bps)") == "+108.2 bps"
+        assert _format_cell_display_value(25, "Spread (bps)") == "+25 bps"
+
+    def test_table_frame_usd_deal_keeps_numeric_size_and_whole_spread(self):
+        from structure import structure_filing_extractions
+        from validate import validate_comps_table
+        fixture_path = Path("data/fixtures/AAPL_FWP_TermSheet_2025-05-06_extractions.jsonl")
+        df, audit = structure_filing_extractions(fixture_path)
+        tf = table_frame(validate_comps_table(df, audit))
+        assert "Size ($M)" in tf.columns
+        assert tf["Size ($M)"].iloc[0] == 1500.0
+        assert tf["Spread (bps)"].iloc[0] == "+25 bps"
+        assert "Benchmark" in tf.columns
+
+    def test_table_frame_euro_deal_shows_euro_size_label_and_decimal_spread(self):
+        from structure import structure_filing_extractions
+        from validate import validate_comps_table
+        path = Path("data/test_set/extractions/PG_FWP_TermSheet_EUR_2024-04-22_extractions.jsonl")
+        df, audit = structure_filing_extractions(path)
+        tf = table_frame(validate_comps_table(df, audit))
+        assert "Size (€M)" in tf.columns
+        assert tf["Size (€M)"].iloc[0] == 650.0
+        assert tf["Spread (bps)"].iloc[0] == "+60.7 bps"
+
+    def test_table_frame_mixed_currency_deal_shows_symbol_in_size_cells(self):
+        from structure import structure_filing_extractions
+        from validate import validate_comps_table
+        path = Path("data/test_set/extractions/T_FWP_TermSheet_EUR_GBP_2026-07-27_extractions.jsonl")
+        df, audit = structure_filing_extractions(path)
+        tf = table_frame(validate_comps_table(df, audit))
+        assert "Size (M)" in tf.columns
+        assert tf["Size (M)"].iloc[0] == "€1,000.0M"
+        assert tf["Size (M)"].iloc[4] == "£550.0M"
+
+    def test_cell_source_on_benchmark_and_mixed_size(self):
+        from structure import structure_filing_extractions
+        from validate import validate_comps_table
+        aapl_path = Path("data/fixtures/AAPL_FWP_TermSheet_2025-05-06_extractions.jsonl")
+        df, audit = structure_filing_extractions(aapl_path)
+        vdf = validate_comps_table(df, audit)
+        doc_text = load_document_text(aapl_path)
+        cs_bmk = cell_source(audit, 0, "Benchmark", vdf, doc_text)
+        assert cs_bmk is not None
+        assert cs_bmk["field"] == "Benchmark"
+        assert cs_bmk["value"] == "3.750% due April 15, 2028"
+
+        t_path = Path("data/test_set/extractions/T_FWP_TermSheet_EUR_GBP_2026-07-27_extractions.jsonl")
+        tdf, taudit = structure_filing_extractions(t_path)
+        tvdf = validate_comps_table(tdf, taudit)
+        tdoc_text = load_document_text(t_path)
+        cs_size = cell_source(taudit, 0, "Size (M)", tvdf, tdoc_text)
+        assert cs_size is not None
+        assert cs_size["value"] == "€1,000.0M"
+
