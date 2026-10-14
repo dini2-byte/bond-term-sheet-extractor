@@ -172,3 +172,20 @@ class TestIsValidExtractionJsonl:
         text = Path("data/fixtures/AAPL_FWP_TermSheet_2025-05-06_extractions.jsonl").read_text(encoding="utf-8")
         assert is_valid_extraction_jsonl(text) is True
 
+from cache import CACHE_DIR_ENV, default_disk_root
+
+
+def test_default_disk_root_reads_the_env(monkeypatch, tmp_path):
+    monkeypatch.setenv(CACHE_DIR_ENV, str(tmp_path / "x"))
+    assert default_disk_root() == tmp_path / "x"
+
+
+def test_default_disk_root_falls_back_to_dot_cache(monkeypatch):
+    monkeypatch.delenv(CACHE_DIR_ENV, raising=False)
+    assert default_disk_root() == Path(".cache")
+
+
+def test_tests_never_use_the_repo_cache(isolated_store):
+    store = make_store({})
+    assert isinstance(store, DiskStore)
+    assert store.root == isolated_store.resolve()

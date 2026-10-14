@@ -9,6 +9,7 @@ import dataclasses
 import hashlib
 import json
 import logging
+import os
 import re
 from collections.abc import Mapping
 from pathlib import Path
@@ -109,11 +110,19 @@ class R2Store:
             return False
 
 
-def make_store(secrets: Mapping[str, Any] | None, disk_root: Path = Path(".cache")) -> ObjectStore:
+CACHE_DIR_ENV = "TERM_SHEET_CACHE_DIR"
+
+
+def default_disk_root() -> Path:
+    """Local store folder: TERM_SHEET_CACHE_DIR when set (tests set it), else .cache."""
+    return Path(os.environ.get(CACHE_DIR_ENV) or ".cache")
+
+
+def make_store(secrets: Mapping[str, Any] | None, disk_root: Path | None = None) -> ObjectStore:
     """R2Store when all four R2 secrets are set and non-blank, otherwise DiskStore."""
     values = {name: str((secrets or {}).get(name) or "").strip() for name in R2_SECRET_NAMES}
     if not all(values.values()):
-        return DiskStore(disk_root)
+        return DiskStore(disk_root if disk_root is not None else default_disk_root())
     client = boto3.client(
         "s3",
         endpoint_url=f"https://{values['R2_ACCOUNT_ID']}.r2.cloudflarestorage.com",
