@@ -545,4 +545,18 @@ class TestSlice11ExactMatch:
             )
 
 
+class TestSlice12BlankChecks:
+    def test_googl_floating_rate_spread_blank_not_unusual(self):
+        from structure import structure_filing_extractions
+        from validate import validate_comps_table
+
+        fixture_path = Path("data/fixtures/GOOGL_FWP_TermSheet_2026-08-07_extractions.jsonl")
+        df, audit_records = structure_filing_extractions(fixture_path)
+        vdf = validate_comps_table(df, audit_records)
+        tf = table_frame(vdf, audit_records)
+        assert "Spread looks unusual" not in tf["Check"].tolist()
+        assert tf["Check"].iloc[0] == "OK"
+        assert tf["Check"].iloc[1] == "OK"
+
+
 

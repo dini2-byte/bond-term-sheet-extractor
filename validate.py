@@ -6,6 +6,7 @@ Enforces non-negotiable trustworthiness rules:
 3. Chronological consistency: Maturity > Trade Date; Settlement >= Trade Date.
 """
 
+import math
 from typing import Any
 import pandas as pd
 from dateutil import parser as date_parser
@@ -19,6 +20,10 @@ def parse_flexible_date(date_str: str | None):
         return date_parser.parse(cleaned, fuzzy=True)
     except Exception:
         return None
+
+def _is_blank(value: Any) -> bool:
+    """None, or a float NaN from a blank DataFrame cell."""
+    return value is None or (isinstance(value, float) and math.isnan(value))
 
 def validate_tranche(row: dict[str, Any], audit_fields: dict[str, Any]) -> list[str]:
     flags = []
@@ -37,7 +42,7 @@ def validate_tranche(row: dict[str, Any], audit_fields: dict[str, Any]) -> list[
 
     # 2. Coupon Sanity Check (0.0% to 15.0%)
     coupon = row.get("Coupon (%)")
-    if coupon is not None:
+    if not _is_blank(coupon):
         if not (0.0 <= coupon <= 15.0):
             flags.append(f"SUSPICIOUS_COUPON: {coupon}% outside plausible range (0-15%)")
     else:
@@ -45,13 +50,13 @@ def validate_tranche(row: dict[str, Any], audit_fields: dict[str, Any]) -> list[
 
     # 3. Issue Price Par Check (90.00 to 110.00)
     price = row.get("Issue Price")
-    if price is not None:
+    if not _is_blank(price):
         if not (90.0 <= price <= 110.0):
             flags.append(f"PRICE_DEVIATION: {price} deviates significantly from par (90-110)")
 
     # 4. Spread Sanity Check (0 to 1,000 bps)
     spread = row.get("Spread (bps)")
-    if spread is not None:
+    if not _is_blank(spread):
         if not (0 <= spread <= 1000):
             flags.append(f"SPREAD_ANOMALY: {spread} bps outside standard bounds (0-1000 bps)")
 
