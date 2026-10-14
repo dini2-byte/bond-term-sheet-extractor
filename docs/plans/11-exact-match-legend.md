@@ -100,3 +100,43 @@ Write `docs/plans/11-exact-match-legend-report.md` with:
 - the amber cell count per fixture before and after (before: AAPL 0, GOOGL 68, MSFT 47, ORCL 0)
 
 Commit: `docs: add slice 11 report`. Then stop.
+
+## Task 4 (follow-up after review): whitespace-only differences are word for word
+
+Review found 29 amber cells still left (GOOGL 23, MSFT 6). All 29 have `grounding_quality == "span_mismatch"`, and in every one the only difference between `span_text` and `raw` is whitespace: line breaks and runs of spaces from the filing layout. Example: span `'4.625%\n                    per annum'` vs raw `'4.625% per annum'`. These match word for word and must not be amber. The report called them genuine mismatches. That is wrong; correct it.
+
+**Files:** `ui.py`, `views/results.py`, `tests/test_ui.py`, `tests/test_app_ui.py` if needed, `docs/plans/11-exact-match-legend-report.md`
+
+1. In `ui.py`, import `normalize_ws` from `structure` (it already exists there; do not change `structure.py`). Extend `is_word_for_word` to also return True when `meta.get("span_text")` is not None and `normalize_ws(meta["span_text"]) == normalize_ws(meta.get("raw") or "")`, and that normalized value is non-empty. Update its docstring.
+2. The Check column must agree with the cells. `plain_check` only sees issue strings, which are truncated to 40 characters, so it cannot tell whitespace-only mismatches apart. Give it an optional third parameter `audit_fields: dict[str, Any] | None = None`. When provided, drop every `UNGROUNDED` or `WEAK_GROUNDING` issue whose field name (the first token after the colon) has `is_word_for_word(audit_fields[field])` True. Keep the `FUZZY_ISSUE` filter for when `audit_fields` is None.
+3. Give `table_frame` an optional `audit_records: list[dict[str, Any]] | None = None` parameter and pass `audit_records[i]["fields"]` to `plain_check` for row `i` when available. In `views/results.py`, pass `audit_records` to `table_frame` in `_render_table`. Leave every other caller unchanged.
+4. Tests, written first:
+   - `is_word_for_word({"grounded": False, "grounding_quality": "span_mismatch", "span_text": "4.625%\n     per annum", "raw": "4.625% per annum"})` is True. With `"raw": "4.000% per annum"` it is False. With `"span_text": None` it is False.
+   - `plain_check("FLAGGED", ["WEAK_GROUNDING: coupon (span_mismatch, span 'x' vs 'y')"], {"coupon": {"span_text": "4.625%\n per annum", "raw": "4.625% per annum", "grounding_quality": "span_mismatch"}}) == "OK"`.
+   - Change `test_not_exact_mask_fixture_amber_counts` so every fixture expects 0, as the Task 1 plan required.
+   - For each of the 4 fixtures, `table_frame(vdf, audit_records)["Check"]` contains no value ending in `"not exact"` or `"not exact (+N more)"` for any N.
+   - The `test_legend_shows_when_a_cell_is_not_exact` AppTest must still pass. If it relied on whitespace, change the edited extraction so its `extraction_text` really differs from the filing, e.g. set `extraction_text` to `"9.999%"`.
+5. Update the report: after counts must be 0 for all 4 fixtures. Remove the "genuine span_mismatch" sentence. Add a Task 4 section listing the changed tests and why.
+
+Commit: `fix: ignore whitespace-only span differences`, then amend nothing. Make a separate commit `docs: update slice 11 report` for the report. Then stop.
+
+## Task 5 (follow-up after review): split issue strings only between issues
+
+The MSFT fixture's Check column shows "See validation details (+1 more)". The page no longer has a validation details section. The cause: `validate.py` joins issues with `"; "`, and `plain_check` splits the string on every `";"`. The MSFT ratings issue quotes `"Moody’s, Aaa (negative outlook); S&P, AA"`, so the split produces a broken fragment `"S&P, AA' vs ..."` with no known code.
+
+**Files:** `ui.py`, `tests/test_ui.py`, `docs/plans/11-exact-match-legend-report.md`
+
+1. Add a module constant in `ui.py`:
+   `ISSUE_CODES = ("UNGROUNDED", "WEAK_GROUNDING", "SUSPICIOUS_COUPON", "MISSING_COUPON", "PRICE_DEVIATION", "SPREAD_ANOMALY", "DATE_SEQUENCE_ERROR")`
+   and `ISSUE_SPLIT = re.compile(r";\s*(?=(?:" + "|".join(ISSUE_CODES) + r")\b)")`.
+2. In `plain_check`, when `issues` is a string, split with `ISSUE_SPLIT.split(issues)` in place of `issues.split(";")`. Keep the rest of that line (strip, drop empty, drop "none" entries) as it is.
+3. Tests, written first:
+   - Build one string in the test as `"; ".join([...])` from these three real MSFT issues:
+     - `"WEAK_GROUNDING: issuer (fuzzy, span 'MICROSOFT CORPORATION' vs 'MICROSOFT CORPORATION')"`
+     - `"WEAK_GROUNDING: ratings (fuzzy, span 'Moody’s, Aaa (negative outlook); S&P, AA' vs 'Moody’s, Aaa (negative outlook); S&P, AA')"`
+     - `"WEAK_GROUNDING: issue_price (fuzzy, span '99.933%' vs '99.933%')"`
+   - With those three only, the result is `"OK"`. Before the fix it is `"See validation details"`.
+   - For each of the 4 fixtures, `table_frame(vdf, audit_records)["Check"]` contains no value starting with `"See validation details"`.
+4. Add a Task 5 section to the report.
+
+Commit: `fix: split check issues only at issue codes`, then `docs: update slice 11 report`. Then stop.

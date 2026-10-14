@@ -132,6 +132,7 @@ def test_search_not_set_up_without_identity(monkeypatch):
 
 
 def test_saved_filing_opens_free(monkeypatch, isolated_store):
+    from views.results import LEGEND_TEXT
     at, calls = search(monkeypatch, [SAVED_SHEET])
     assert at.radio[0].options[0].endswith("`SAVED`")
     at.radio[0].set_value(0).run()
@@ -141,10 +142,47 @@ def test_saved_filing_opens_free(monkeypatch, isolated_store):
     assert "Apple Inc. · $4.5bn senior notes · 4 bonds" in text
     assert "4.000%" in text and "WORD FOR WORD" in text
     assert "20 of 20 runs left today" in text
+    assert LEGEND_TEXT not in text
     assert len(at.dataframe) == 1
     from streamlit.proto.Dataframe_pb2 import Dataframe
     assert Dataframe.SelectionMode.SINGLE_CELL in at.dataframe[0].proto.selection_mode
     assert any(b.label == "Download Excel" for b in at.download_button)
+
+
+def test_legend_shows_when_a_cell_is_not_exact(monkeypatch, isolated_store):
+    from views.results import LEGEND_TEXT
+    import json
+
+    fixture_data = json.loads(AAPL_JSONL.strip().split("\n")[0])
+    for item in fixture_data.get("extractions", []):
+        if item.get("extraction_class") == "coupon":
+            item["extraction_text"] = "9.999%"
+            item["alignment_status"] = "match_lesser"
+            break
+    edited_jsonl = json.dumps(fixture_data) + "\n"
+
+    calls: list = []
+
+    def fake_extract(path, **kw):
+        calls.append(path)
+        out = Path(kw["output_dir"]) / f"{Path(path).stem}_extractions.jsonl"
+        out.write_text(edited_jsonl, encoding="utf-8")
+        return out
+
+    monkeypatch.setenv("EDGAR_IDENTITY", "Test User test@example.com")
+    monkeypatch.setattr(lookup, "find_term_sheets", lambda ticker, **kw: [NEW_SHEET])
+    monkeypatch.setattr(demo, "get_gemini_api_key", lambda secrets=None: "fake-key")
+    monkeypatch.setattr(extract, "extract_terms", fake_extract)
+
+    at = open_app()
+    at.text_input[0].input("AAPL")
+    [b for b in at.button if b.label == "Find term sheets"][0].click().run()
+    assert not at.exception
+    at.radio[0].set_value(0).run()
+    [b for b in at.button if b.label == "Extract · uses 1 run"][0].click().run()
+    assert not at.exception
+    assert len(calls) == 1
+    assert LEGEND_TEXT in all_text(at)
 
 
 def test_unsaved_filing_extracts_charges_and_saves(monkeypatch, isolated_store):

@@ -12,6 +12,8 @@ from typing import Any
 
 import pandas as pd
 
+from structure import normalize_ws
+
 # Scored fields: 14 pairs from comps table column name to extraction field class.
 # Preserves order matching evaluate.py field_class_map.
 SCORED_FIELDS: dict[str, str] = OrderedDict([
@@ -74,6 +76,25 @@ def size_help(currencies: list[str] | set[str] | None) -> str:
     return "Amount of this bond sold, in millions."
 
 
+def is_word_for_word(meta: dict[str, Any] | None) -> bool:
+    """
+    True when the cited span in the filing equals the extracted value.
+    'fuzzy' grounding means langextract located the span loosely, but
+    structure.assess_grounding has already checked the span text matches.
+    Whitespace-only differences between span_text and raw are also word for word.
+    """
+    if not meta or not isinstance(meta, dict):
+        return False
+    if meta.get("grounded") is True or meta.get("grounding_quality") == "fuzzy":
+        return True
+    span_text = meta.get("span_text")
+    if span_text is not None:
+        norm_span = normalize_ws(span_text)
+        if norm_span and norm_span == normalize_ws(meta.get("raw") or ""):
+            return True
+    return False
+
+
 def plain_status(meta: dict[str, Any] | None) -> str:
     """
     Returns plain words status for an extracted field's audit metadata:
@@ -86,7 +107,7 @@ def plain_status(meta: dict[str, Any] | None) -> str:
     raw = meta.get("raw")
     if raw is None or (isinstance(raw, str) and raw.strip().lower() in ("", "none", "nan", "not found", "n/a")):
         return "Not in the filing"
-    if meta.get("grounded") is True:
+    if is_word_for_word(meta):
         return "Found word for word"
     return "Found, but the match is not exact"
 
@@ -107,7 +128,28 @@ def _field_label_map() -> dict[str, str]:
     return mapping
 
 
-def plain_check(status: str | None, issues: Any) -> str:
+FUZZY_ISSUE = re.compile(r"^WEAK_GROUNDING:\s*\S+\s*\(fuzzy\b")
+
+ISSUE_CODES = (
+    "UNGROUNDED",
+    "WEAK_GROUNDING",
+    "SUSPICIOUS_COUPON",
+    "MISSING_COUPON",
+    "PRICE_DEVIATION",
+    "SPREAD_ANOMALY",
+    "DATE_SEQUENCE_ERROR",
+)
+ISSUE_SPLIT = re.compile(r";\s*(?=(?:" + "|".join(ISSUE_CODES) + r")\b)")
+
+
+TABLE_FIELD_CLASSES: set[str] = {fc for _, _, fc, _ in TABLE_COLUMNS if fc}
+
+
+def plain_check(
+    status: str | None,
+    issues: Any,
+    audit_fields: dict[str, Any] | None = None,
+) -> str:
     """
     Returns plain-words validation check result for a tranche row.
     'OK' for PASSED.
@@ -118,7 +160,7 @@ def plain_check(status: str | None, issues: Any) -> str:
         return "OK"
 
     if isinstance(issues, str):
-        issue_list = [i.strip() for i in issues.split(";") if i.strip() and not i.strip().lower().startswith("none")]
+        issue_list = [i.strip() for i in ISSUE_SPLIT.split(issues) if i.strip() and not i.strip().lower().startswith("none")]
     elif isinstance(issues, (list, tuple)):
         issue_list = [str(i).strip() for i in issues if str(i).strip() and not str(i).strip().lower().startswith("none")]
     else:
@@ -126,6 +168,23 @@ def plain_check(status: str | None, issues: Any) -> str:
 
     if not issue_list:
         return "See validation details"
+
+    if audit_fields is not None:
+        filtered = []
+        for i in issue_list:
+            parts = i.split(":", 1)
+            code = parts[0].strip()
+            if code in ("UNGROUNDED", "WEAK_GROUNDING") and len(parts) > 1:
+                field = parts[1].strip().split()[0] if parts[1].strip() else ""
+                if field and (field not in TABLE_FIELD_CLASSES or is_word_for_word(audit_fields.get(field))):
+                    continue
+            filtered.append(i)
+        issue_list = filtered
+    else:
+        issue_list = [i for i in issue_list if not FUZZY_ISSUE.match(i)]
+
+    if not issue_list:
+        return "OK"
 
     first_issue = issue_list[0]
     parts = first_issue.split(":", 1)
@@ -187,7 +246,10 @@ def short_date(value: Any) -> str:
     return f"{parsed.day} {parsed:%b %Y}"
 
 
-def table_frame(validated_df: pd.DataFrame) -> pd.DataFrame:
+def table_frame(
+    validated_df: pd.DataFrame,
+    audit_records: list[dict[str, Any]] | None = None,
+) -> pd.DataFrame:
     """
     Returns the table with TABLE_COLUMNS labels in order,
     the Check column from plain_check, and a fresh 0..n-1 index.
@@ -208,7 +270,12 @@ def table_frame(validated_df: pd.DataFrame) -> pd.DataFrame:
                 row = validated_df.iloc[i]
                 status = row.get("Validation Status") if "Validation Status" in row else (row.get("Status") if "Status" in row else "PASSED")
                 issues = row.get("Validation Issues") if "Validation Issues" in row else (row.get("Issues") if "Issues" in row else "")
-                checks.append(plain_check(status, issues))
+                audit_fields = None
+                if audit_records is not None and i < len(audit_records):
+                    rec = audit_records[i]
+                    if isinstance(rec, dict) and "fields" in rec:
+                        audit_fields = rec["fields"]
+                checks.append(plain_check(status, issues, audit_fields))
             data[col_name] = checks
         elif label == "Size ($M)":
             if source_column and source_column in validated_df.columns:
@@ -263,7 +330,7 @@ def not_exact_mask(
 ) -> pd.DataFrame:
     """
     Same shape and labels as table_frame, True where a value was extracted
-    but is not grounded.
+    but is not word for word.
     """
     n_rows = len(validated_df)
     curs = [c for c in validated_df["Currency"].dropna().unique() if c] if "Currency" in validated_df.columns else []
@@ -288,7 +355,7 @@ def not_exact_mask(
             raw = meta.get("raw")
             if raw is None or (isinstance(raw, str) and raw.strip().lower() in ("", "none", "nan", "not found", "n/a")):
                 continue
-            if meta.get("grounded") is not True:
+            if not is_word_for_word(meta):
                 mask_dict[label][row_idx] = True
 
     return pd.DataFrame(mask_dict, index=pd.RangeIndex(n_rows))
