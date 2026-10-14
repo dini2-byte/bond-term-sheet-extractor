@@ -98,6 +98,27 @@ class TestTrancheValidation:
         flags = validate_tranche(valid_tranche_row, valid_audit_fields)
         assert any("SPREAD_ANOMALY" in f for f in flags)
 
+    def test_nan_spread_skips_anomaly(self, valid_tranche_row, valid_audit_fields):
+        valid_tranche_row["Spread (bps)"] = float("nan")
+        flags = validate_tranche(valid_tranche_row, valid_audit_fields)
+        assert not any(f.startswith("SPREAD_ANOMALY") for f in flags)
+
+    def test_nan_issue_price_skips_deviation(self, valid_tranche_row, valid_audit_fields):
+        valid_tranche_row["Issue Price"] = float("nan")
+        flags = validate_tranche(valid_tranche_row, valid_audit_fields)
+        assert not any(f.startswith("PRICE_DEVIATION") for f in flags)
+
+    def test_nan_coupon_is_missing_not_suspicious(self, valid_tranche_row, valid_audit_fields):
+        valid_tranche_row["Coupon (%)"] = float("nan")
+        flags = validate_tranche(valid_tranche_row, valid_audit_fields)
+        assert "MISSING_COUPON" in flags
+        assert not any(f.startswith("SUSPICIOUS_COUPON") for f in flags)
+
+    def test_out_of_range_spread_gives_anomaly(self, valid_tranche_row, valid_audit_fields):
+        valid_tranche_row["Spread (bps)"] = 1500
+        flags = validate_tranche(valid_tranche_row, valid_audit_fields)
+        assert any(f.startswith("SPREAD_ANOMALY") for f in flags)
+
     def test_chronology_checks(self, valid_tranche_row, valid_audit_fields):
         # Maturity before trade date
         valid_tranche_row["Maturity Date"] = "May 1, 2025"
