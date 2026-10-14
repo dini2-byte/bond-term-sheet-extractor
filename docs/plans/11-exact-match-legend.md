@@ -119,3 +119,24 @@ Review found 29 amber cells still left (GOOGL 23, MSFT 6). All 29 have `groundin
 5. Update the report: after counts must be 0 for all 4 fixtures. Remove the "genuine span_mismatch" sentence. Add a Task 4 section listing the changed tests and why.
 
 Commit: `fix: ignore whitespace-only span differences`, then amend nothing. Make a separate commit `docs: update slice 11 report` for the report. Then stop.
+
+## Task 5 (follow-up after review): split issue strings only between issues
+
+The MSFT fixture's Check column shows "See validation details (+1 more)". The page no longer has a validation details section. The cause: `validate.py` joins issues with `"; "`, and `plain_check` splits the string on every `";"`. The MSFT ratings issue quotes `"Moody’s, Aaa (negative outlook); S&P, AA"`, so the split produces a broken fragment `"S&P, AA' vs ..."` with no known code.
+
+**Files:** `ui.py`, `tests/test_ui.py`, `docs/plans/11-exact-match-legend-report.md`
+
+1. Add a module constant in `ui.py`:
+   `ISSUE_CODES = ("UNGROUNDED", "WEAK_GROUNDING", "SUSPICIOUS_COUPON", "MISSING_COUPON", "PRICE_DEVIATION", "SPREAD_ANOMALY", "DATE_SEQUENCE_ERROR")`
+   and `ISSUE_SPLIT = re.compile(r";\s*(?=(?:" + "|".join(ISSUE_CODES) + r")\b)")`.
+2. In `plain_check`, when `issues` is a string, split with `ISSUE_SPLIT.split(issues)` in place of `issues.split(";")`. Keep the rest of that line (strip, drop empty, drop "none" entries) as it is.
+3. Tests, written first:
+   - The exact MSFT string below must give `"OK"` with `audit_fields=None`. All issues in it are fuzzy except bookrunners, and bookrunners is `span_mismatch`, so with `audit_fields=None` it must give `"Bookrunners not exact"` or whatever label the field map gives. Assert the real output and explain it in the report. Build the string in the test as `"; ".join([...])` from these issues:
+     - `"WEAK_GROUNDING: issuer (fuzzy, span 'MICROSOFT CORPORATION' vs 'MICROSOFT CORPORATION')"`
+     - `"WEAK_GROUNDING: ratings (fuzzy, span 'Moody’s, Aaa (negative outlook); S&P, AA' vs 'Moody’s, Aaa (negative outlook); S&P, AA')"`
+     - `"WEAK_GROUNDING: issue_price (fuzzy, span '99.933%' vs '99.933%')"`
+   - With those three only, the result is `"OK"`. Before the fix it is `"See validation details"`.
+   - For each of the 4 fixtures, `table_frame(vdf, audit_records)["Check"]` contains no value starting with `"See validation details"`.
+4. Add a Task 5 section to the report.
+
+Commit: `fix: split check issues only at issue codes`, then `docs: update slice 11 report`. Then stop.
