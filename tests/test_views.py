@@ -84,3 +84,26 @@ def test_column_config_uses_the_deal_currency():
 def test_excel_bytes_is_an_xlsx_file():
     data = excel_bytes(pd.DataFrame({"Tranche": ["2028"]}))
     assert data[:2] == b"PK"
+
+
+from views.search import SAVED_TAG, runs_hint, sheet_label
+
+
+def _sheet(bond_count, currencies):
+    return {"accession": "0001-24-000001", "filing_date": "2024-08-09", "chars": 1, "bond_count": bond_count,
+            "currencies": currencies, "text": ""}
+
+
+def test_sheet_labels_name_the_currency():
+    assert sheet_label(_sheet(2, ["EUR"]), saved=False) == "Filed 2024-08-09 · 2 bonds in euros"
+    assert sheet_label(_sheet(1, ["GBP"]), saved=False) == "Filed 2024-08-09 · 1 bond in pounds"
+    assert sheet_label(_sheet(5, ["EUR", "GBP"]), saved=False) == "Filed 2024-08-09 · 5 bonds in euros and pounds"
+    assert sheet_label(_sheet(4, ["USD"]), saved=False) == "Filed 2024-08-09 · 4 bonds"
+
+
+def test_saved_sheets_carry_the_tag():
+    assert sheet_label(_sheet(4, ["USD"]), saved=True) == f"Filed 2024-08-09 · 4 bonds  {SAVED_TAG}"
+
+
+def test_runs_hint():
+    assert runs_hint(18, 20) == "18 of 20 runs left today · saved results are free"
