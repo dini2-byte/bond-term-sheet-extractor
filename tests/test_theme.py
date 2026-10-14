@@ -12,7 +12,6 @@ CONFIG = tomllib.loads((Path(__file__).resolve().parent.parent / ".streamlit" / 
 @pytest.mark.parametrize("mode", ["light", "dark"])
 def test_config_section_matches_tokens(mode):
     section = CONFIG["theme"][mode]
-    assert section["base"] == mode
     assert section["primaryColor"] == ACCENT
     for option, token in CONFIG_KEYS.items():
         assert section[option] == TOKENS[mode][token], option

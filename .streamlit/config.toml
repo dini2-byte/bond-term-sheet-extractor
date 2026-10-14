@@ -4,7 +4,6 @@ codeFont = "'JetBrains Mono':https://fonts.googleapis.com/css2?family=JetBrains+
 baseRadius = "8px"
 
 [theme.light]
-base = "light"
 primaryColor = "#E4F222"
 backgroundColor = "#FAFAF7"
 secondaryBackgroundColor = "#FFFFFF"
@@ -17,7 +16,6 @@ codeTextColor = "#7A7972"
 linkColor = "#111111"
 
 [theme.dark]
-base = "dark"
 primaryColor = "#E4F222"
 backgroundColor = "#0C0C0B"
 secondaryBackgroundColor = "#141413"
