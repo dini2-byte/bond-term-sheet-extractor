@@ -72,3 +72,37 @@ def test_budget_blocks_a_miss_but_not_a_hit(tmp_path):
     cache.put(ACC, GOOD_JSONL)
     out = get_or_extract(ACC, "filing", "AAPL_x", cache, budget, 3, "key", work, extract_fn=failing_extractor)
     assert out.from_cache is True and out.error is None
+
+
+from runner import run_upload
+
+
+def test_upload_charges_one_run_and_never_touches_the_cache(tmp_path):
+    _, budget, work = setup(tmp_path)
+    calls: list = []
+    out = run_upload("filing text", "uploaded_term_sheet", budget, 0, "key", work, extract_fn=fake_extractor(calls))
+    assert out.charged is True and out.from_cache is False and out.error is None
+    assert out.jsonl_path.read_text(encoding="utf-8") == GOOD_JSONL
+    assert budget.remaining() == 4
+    assert not (tmp_path / "store" / "extractions").exists()
+    assert (work / "uploaded_term_sheet.txt").read_text(encoding="utf-8") == "filing text"
+
+
+def test_failed_upload_charges_nothing(tmp_path):
+    _, budget, work = setup(tmp_path)
+    out = run_upload("filing text", "uploaded_term_sheet", budget, 0, "key", work, extract_fn=failing_extractor)
+    assert out.error == FAILED_MESSAGE and out.charged is False
+    assert budget.remaining() == 5
+
+
+def test_upload_without_key_or_budget_is_blocked(tmp_path):
+    _, budget, work = setup(tmp_path)
+    assert run_upload("t", "u", budget, 0, None, work, extract_fn=failing_extractor).error == NO_KEY_MESSAGE
+    assert "runs for this visit" in run_upload("t", "u", budget, 3, "key", work, extract_fn=failing_extractor).error
+
+
+def test_extractor_that_writes_nothing_is_a_failure(tmp_path):
+    cache, budget, work = setup(tmp_path)
+    out = get_or_extract(ACC, "filing", "AAPL_x", cache, budget, 0, "key", work, extract_fn=lambda *a, **k: None)
+    assert out.error == FAILED_MESSAGE and out.charged is False
+    assert budget.remaining() == 5
