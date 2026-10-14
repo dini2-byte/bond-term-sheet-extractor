@@ -186,7 +186,7 @@ def _render_table(
     validated_df: pd.DataFrame, audit_records: list[dict[str, Any]], key: str
 ) -> tuple[tuple[int, str] | None, bool]:
     """Draws the comps table and returns the selected (row, column label), if any, and whether legend is needed."""
-    tf = table_frame(validated_df)
+    tf = table_frame(validated_df, audit_records)
     mask = not_exact_mask(validated_df, audit_records)
 
     def tint(data: pd.DataFrame) -> pd.DataFrame:

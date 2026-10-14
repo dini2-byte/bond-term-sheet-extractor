@@ -156,6 +156,7 @@ def test_legend_shows_when_a_cell_is_not_exact(monkeypatch, isolated_store):
     fixture_data = json.loads(AAPL_JSONL.strip().split("\n")[0])
     for item in fixture_data.get("extractions", []):
         if item.get("extraction_class") == "coupon":
+            item["extraction_text"] = "9.999%"
             item["alignment_status"] = "match_lesser"
             break
     edited_jsonl = json.dumps(fixture_data) + "\n"

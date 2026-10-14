@@ -1,5 +1,6 @@
 from collections import OrderedDict
 from pathlib import Path
+import re
 import pytest
 
 from structure import structure_filing_extractions
@@ -378,6 +379,39 @@ class TestSlice11ExactMatch:
         assert is_word_for_word({"grounded": True}) is True
         assert is_word_for_word({"grounded": False, "grounding_quality": "fuzzy"}) is True
         assert is_word_for_word({"grounding_quality": "fuzzy"}) is True
+        assert (
+            is_word_for_word(
+                {
+                    "grounded": False,
+                    "grounding_quality": "span_mismatch",
+                    "span_text": "4.625%\n     per annum",
+                    "raw": "4.625% per annum",
+                }
+            )
+            is True
+        )
+        assert (
+            is_word_for_word(
+                {
+                    "grounded": False,
+                    "grounding_quality": "span_mismatch",
+                    "span_text": "4.625%\n     per annum",
+                    "raw": "4.000% per annum",
+                }
+            )
+            is False
+        )
+        assert (
+            is_word_for_word(
+                {
+                    "grounded": False,
+                    "grounding_quality": "span_mismatch",
+                    "span_text": None,
+                    "raw": "4.625% per annum",
+                }
+            )
+            is False
+        )
         assert is_word_for_word({"grounded": False, "grounding_quality": "span_mismatch"}) is False
         assert is_word_for_word({"grounded": False, "grounding_quality": "partial"}) is False
         assert is_word_for_word({"grounded": False, "grounding_quality": "none"}) is False
@@ -404,12 +438,28 @@ class TestSlice11ExactMatch:
             == "Maturity not exact"
         )
 
+    def test_plain_check_whitespace_mismatch_with_audit_fields(self):
+        assert (
+            plain_check(
+                "FLAGGED",
+                ["WEAK_GROUNDING: coupon (span_mismatch, span 'x' vs 'y')"],
+                {
+                    "coupon": {
+                        "span_text": "4.625%\n per annum",
+                        "raw": "4.625% per annum",
+                        "grounding_quality": "span_mismatch",
+                    }
+                },
+            )
+            == "OK"
+        )
+
     @pytest.mark.parametrize(
         "fixture_name, expected_amber_count",
         [
             ("AAPL_FWP_TermSheet_2025-05-06_extractions.jsonl", 0),
-            ("GOOGL_FWP_TermSheet_2026-08-07_extractions.jsonl", 23),
-            ("MSFT_FWP_TermSheet_2017-01-31_extractions.jsonl", 6),
+            ("GOOGL_FWP_TermSheet_2026-08-07_extractions.jsonl", 0),
+            ("MSFT_FWP_TermSheet_2017-01-31_extractions.jsonl", 0),
             ("ORCL_FWP_TermSheet_2025-09-24_extractions.jsonl", 0),
         ],
     )
@@ -422,6 +472,27 @@ class TestSlice11ExactMatch:
         vdf = validate_comps_table(df, audit_records)
         mask = not_exact_mask(vdf, audit_records)
         assert mask.values.sum() == expected_amber_count
+
+    @pytest.mark.parametrize(
+        "fixture_name",
+        [
+            "AAPL_FWP_TermSheet_2025-05-06_extractions.jsonl",
+            "GOOGL_FWP_TermSheet_2026-08-07_extractions.jsonl",
+            "MSFT_FWP_TermSheet_2017-01-31_extractions.jsonl",
+            "ORCL_FWP_TermSheet_2025-09-24_extractions.jsonl",
+        ],
+    )
+    def test_table_frame_check_column_has_no_not_exact(self, fixture_name):
+        from structure import structure_filing_extractions
+        from validate import validate_comps_table
+
+        fixture_path = Path("data/fixtures") / fixture_name
+        df, audit_records = structure_filing_extractions(fixture_path)
+        vdf = validate_comps_table(df, audit_records)
+        tf = table_frame(vdf, audit_records)
+        not_exact_re = re.compile(r"not exact(?:\s*\(\+\d+\s+more\))?$")
+        for val in tf["Check"]:
+            assert not not_exact_re.search(str(val)), f"Found not exact check value: {val!r} in {fixture_name}"
 
     def test_not_exact_mask_clears_all_fuzzy_cells(self):
         from structure import structure_filing_extractions
@@ -441,5 +512,6 @@ class TestSlice11ExactMatch:
                         fc = field_class_by_label.get(col)
                         if fc and fc in fields:
                             assert fields[fc].get("grounding_quality") != "fuzzy"
+
 
 
