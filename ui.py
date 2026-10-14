@@ -130,6 +130,17 @@ def _field_label_map() -> dict[str, str]:
 
 FUZZY_ISSUE = re.compile(r"^WEAK_GROUNDING:\s*\S+\s*\(fuzzy\b")
 
+ISSUE_CODES = (
+    "UNGROUNDED",
+    "WEAK_GROUNDING",
+    "SUSPICIOUS_COUPON",
+    "MISSING_COUPON",
+    "PRICE_DEVIATION",
+    "SPREAD_ANOMALY",
+    "DATE_SEQUENCE_ERROR",
+)
+ISSUE_SPLIT = re.compile(r";\s*(?=(?:" + "|".join(ISSUE_CODES) + r")\b)")
+
 
 TABLE_FIELD_CLASSES: set[str] = {fc for _, _, fc, _ in TABLE_COLUMNS if fc}
 
@@ -149,7 +160,7 @@ def plain_check(
         return "OK"
 
     if isinstance(issues, str):
-        issue_list = [i.strip() for i in issues.split(";") if i.strip() and not i.strip().lower().startswith("none")]
+        issue_list = [i.strip() for i in ISSUE_SPLIT.split(issues) if i.strip() and not i.strip().lower().startswith("none")]
     elif isinstance(issues, (list, tuple)):
         issue_list = [str(i).strip() for i in issues if str(i).strip() and not str(i).strip().lower().startswith("none")]
     else:

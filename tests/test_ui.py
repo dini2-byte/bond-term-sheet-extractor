@@ -513,5 +513,36 @@ class TestSlice11ExactMatch:
                         if fc and fc in fields:
                             assert fields[fc].get("grounding_quality") != "fuzzy"
 
+    def test_plain_check_split_issues_with_semicolon_in_quotes(self):
+        issues = [
+            "WEAK_GROUNDING: issuer (fuzzy, span 'MICROSOFT CORPORATION' vs 'MICROSOFT CORPORATION')",
+            "WEAK_GROUNDING: ratings (fuzzy, span 'Moody’s, Aaa (negative outlook); S&P, AA' vs 'Moody’s, Aaa (negative outlook); S&P, AA')",
+            "WEAK_GROUNDING: issue_price (fuzzy, span '99.933%' vs '99.933%')",
+        ]
+        issue_str = "; ".join(issues)
+        assert plain_check("FLAGGED", issue_str) == "OK"
+
+    @pytest.mark.parametrize(
+        "fixture_name",
+        [
+            "AAPL_FWP_TermSheet_2025-05-06_extractions.jsonl",
+            "GOOGL_FWP_TermSheet_2026-08-07_extractions.jsonl",
+            "MSFT_FWP_TermSheet_2017-01-31_extractions.jsonl",
+            "ORCL_FWP_TermSheet_2025-09-24_extractions.jsonl",
+        ],
+    )
+    def test_table_frame_check_column_has_no_see_validation_details(self, fixture_name):
+        from structure import structure_filing_extractions
+        from validate import validate_comps_table
+
+        fixture_path = Path("data/fixtures") / fixture_name
+        df, audit_records = structure_filing_extractions(fixture_path)
+        vdf = validate_comps_table(df, audit_records)
+        tf = table_frame(vdf, audit_records)
+        for val in tf["Check"]:
+            assert not str(val).startswith("See validation details"), (
+                f"Found 'See validation details' check value: {val!r} in {fixture_name}"
+            )
+
 
 
