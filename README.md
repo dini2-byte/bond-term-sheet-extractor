@@ -2,7 +2,7 @@
 
 Pulls pricing terms for investment-grade corporate bond deals out of SEC term sheets and builds a comps table where every value points back to the exact text it came from. It groups values into tranches, normalizes pricing terms and flags any value that does not match the source text exactly.
 
-Live demo: https://bond-term-sheet-extractor-diwsf7fvsovutxsajuanis.streamlit.app/ (benchmark deals are open; live upload needs a password).
+Live app: https://bond-term-sheet-extractor-diwsf7fvsovutxsajuanis.streamlit.app/. Search a company's recent bond term sheets on SEC EDGAR or upload your own. The four benchmark deals are saved and open without a Gemini call; any other filing uses one of 20 shared runs a day, and its result is saved for the next visitor.
 
 ## Results
 
@@ -33,8 +33,14 @@ The benchmark contains four deals: AAPL 2025-05-06, MSFT 2017-01-31, ORCL 2025-0
 - `structure.py`: Groups extractions into tranche rows, spreads deal-level fields, normalizes financial values and records source spans.
 - `validate.py`: Checks financial bounds, date ordering and source grounding status for each tranche.
 - `evaluate.py`: Scores extracted comps tables against the answer key across benchmark deals and generates the accuracy report.
-- `app.py`: Streamlit web interface displaying the comps table, audit drill-downs and isolated source visualization.
-- `demo.py`: Helpers for deal discovery, password protection, upload validation, data URL source rendering and report parsing.
+- `app.py`: Streamlit page: top bar and the Search filings and Upload term sheet tabs.
+- `views/`: the two tabs, the shared results view (deal line, comps table, source panel and Excel download) and the How it works text.
+- `theme.py`: colors and styling for the light and dark themes.
+- `lookup.py`: finds a company's recent bond term sheets on SEC EDGAR and keeps the daily run limit.
+- `cache.py`: saves each extraction by prompt version and SEC accession number, on Cloudflare R2 or local disk.
+- `runner.py`: loads a saved extraction or runs a new one, and counts a run only for a real Gemini call.
+- `seed_cache.py`: saves the four benchmark extractions into the cache.
+- `demo.py`: upload size check and Gemini key lookup.
 
 ## Run it locally
 
@@ -47,7 +53,7 @@ pip install -r requirements.txt
 cp .env.example .env
 ```
 
-`streamlit run app.py` opens the four benchmark deals with no API key. An API key is only needed for `extract.py` or live upload.
+`streamlit run app.py` opens the tool. Search needs `EDGAR_IDENTITY` (your name and email, as SEC asks) in `.env`. The four benchmark deals load from `data/fixtures/` without an API key; any other filing or an upload needs `GEMINI_API_KEY`.
 
 Reproduce the report from the committed fixtures:
 
@@ -63,7 +69,7 @@ python3 -m pytest -q
 
 ## Limits
 
-Fixed-rate senior notes only; floating-rate notes are extracted but not scored. Term sheets (FWP) only; prospectus supplements are out of scope. Four deals is a small benchmark. Each deal was run once, so run-to-run variation is not measured. Live upload on the hosted app needs a password so visitors cannot spend the owner's API quota.
+Fixed-rate senior notes only; floating-rate notes are extracted but not scored. Term sheets (FWP) only; prospectus supplements are out of scope. Four deals is a small benchmark. Each deal was run once, so run-to-run variation is not measured. The hosted app allows 20 Gemini runs a day across all visitors and 3 per visit; saved results do not count.
 
 ## Built on
 

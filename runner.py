@@ -33,6 +33,41 @@ class RunOutcome:
     error: str | None
 
 
+def _run_live(
+    filing_text: str,
+    stem: str,
+    budget: RunBudget,
+    session_runs: int,
+    api_key: str | None,
+    work_dir: Path,
+    extract_fn: Callable[..., Any],
+) -> RunOutcome:
+    """One real Gemini run. Charges the budget only when the extractor wrote its JSONL."""
+    can_run, reason = budget.can_run(session_runs)
+    if not can_run:
+        return RunOutcome(None, from_cache=False, charged=False, error=reason)
+    if not api_key:
+        return RunOutcome(None, from_cache=False, charged=False, error=NO_KEY_MESSAGE)
+
+    os.environ["GEMINI_API_KEY"] = api_key
+    os.environ["GOOGLE_API_KEY"] = api_key
+    work = Path(work_dir)
+    filing_path = work / f"{stem}.txt"
+    filing_path.write_text(filing_text, encoding="utf-8")
+    jsonl_path = work / f"{stem}_extractions.jsonl"
+    try:
+        extract_fn(filing_path, model_id=MODEL_ID, log_attempt=False, output_dir=work)
+    except Exception as e:
+        logger.warning("Extraction failed for %s (%s)", stem, type(e).__name__)
+        return RunOutcome(None, from_cache=False, charged=False, error=FAILED_MESSAGE)
+    if not jsonl_path.is_file():
+        logger.warning("Extraction for %s wrote no output", stem)
+        return RunOutcome(None, from_cache=False, charged=False, error=FAILED_MESSAGE)
+
+    budget.record_run()
+    return RunOutcome(jsonl_path, from_cache=False, charged=True, error=None)
+
+
 def get_or_extract(
     accession: str,
     filing_text: str,
@@ -44,33 +79,30 @@ def get_or_extract(
     work_dir: Path,
     extract_fn: Callable[..., Any] = extract_terms,
 ) -> RunOutcome:
-    jsonl_path = Path(work_dir) / f"{stem}_extractions.jsonl"
-
+    """A saved extraction when there is one (free), else a live run that is then saved."""
     saved = cache.get(accession)
     if saved is not None:
+        jsonl_path = Path(work_dir) / f"{stem}_extractions.jsonl"
         jsonl_path.write_text(saved, encoding="utf-8")
         return RunOutcome(jsonl_path, from_cache=True, charged=False, error=None)
 
-    can_run, reason = budget.can_run(session_runs)
-    if not can_run:
-        return RunOutcome(None, from_cache=False, charged=False, error=reason)
-    if not api_key:
-        return RunOutcome(None, from_cache=False, charged=False, error=NO_KEY_MESSAGE)
+    outcome = _run_live(filing_text, stem, budget, session_runs, api_key, work_dir, extract_fn)
+    if outcome.charged and outcome.jsonl_path is not None:
+        try:
+            cache.put(accession, outcome.jsonl_path.read_text(encoding="utf-8"))
+        except ValueError:
+            logger.warning("Extractor output for %s was not saved: not valid JSONL", accession)
+    return outcome
 
-    os.environ["GEMINI_API_KEY"] = api_key
-    os.environ["GOOGLE_API_KEY"] = api_key
-    filing_path = Path(work_dir) / f"{stem}.txt"
-    filing_path.write_text(filing_text, encoding="utf-8")
-    try:
-        extract_fn(filing_path, model_id=MODEL_ID, log_attempt=False, output_dir=Path(work_dir))
-    except Exception as e:
-        logger.warning("Extraction failed for %s (%s)", accession, type(e).__name__)
-        return RunOutcome(None, from_cache=False, charged=False, error=FAILED_MESSAGE)
 
-    budget.record_run()
-    jsonl = jsonl_path.read_text(encoding="utf-8")
-    try:
-        cache.put(accession, jsonl)
-    except ValueError:
-        logger.warning("Extractor output for %s was not saved: not valid JSONL", accession)
-    return RunOutcome(jsonl_path, from_cache=False, charged=True, error=None)
+def run_upload(
+    filing_text: str,
+    stem: str,
+    budget: RunBudget,
+    session_runs: int,
+    api_key: str | None,
+    work_dir: Path,
+    extract_fn: Callable[..., Any] = extract_terms,
+) -> RunOutcome:
+    """A live run on an uploaded term sheet. Never read from or written to the cache."""
+    return _run_live(filing_text, stem, budget, session_runs, api_key, work_dir, extract_fn)
