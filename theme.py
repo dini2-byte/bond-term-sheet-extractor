@@ -59,7 +59,15 @@ mark {{ background: {ACCENT}; color: {ACCENT_TEXT}; padding: 0 2px; border-radiu
 .tse-legend {{ font-size: 0.72rem; opacity: 0.75; margin: 0.25rem 0 0.5rem 0; }}
 .tse-legend i {{ display: inline-block; width: 14px; height: 10px; background: {NOT_EXACT_TINT}; border-bottom: 2px solid {WARNING}; vertical-align: middle; margin-right: 6px; }}
 [data-testid="stBaseButton-primary"], [data-testid="stBaseButton-primary"] p {{ color: {ACCENT_TEXT} !important; font-weight: 600; }}
-[data-baseweb="tab-highlight"] {{ background-color: currentColor !important; }}
-[data-testid="stRadio"] [role="radiogroup"] > label {{ width: 100%; padding: 0.5rem 0.75rem; border: 1px solid {LINE}; border-radius: 8px; margin-bottom: 0.25rem; }}
+[data-testid="stTab"][aria-selected="true"], [data-testid="stTab"][aria-selected="true"] p {{ color: inherit !important; font-weight: 600; }}
+.react-aria-SelectionIndicator {{ background-color: currentColor !important; }}
+[data-testid="stHeader"] {{ background: transparent; pointer-events: none; }}
+[data-testid="stHeader"] * {{ pointer-events: none !important; }}
+[data-testid="stHeader"] [data-testid="stMainMenu"], [data-testid="stHeader"] [data-testid="stMainMenu"] *, [data-testid="stHeader"] [data-testid="stStatusWidget"], [data-testid="stHeader"] [data-testid="stStatusWidget"] * {{ pointer-events: auto !important; }}
+[data-testid="stRadio"], [data-testid="stRadio"] [role="radiogroup"] {{ width: 100%; }}
+[data-testid="stRadio"] [role="radiogroup"] {{ max-height: 15.5rem; overflow-y: auto; flex-wrap: nowrap; }}
+[data-testid="stRadio"] [role="radiogroup"] > div {{ width: 100%; }}
+[data-testid="stRadioOption"] {{ width: 100%; box-sizing: border-box; padding: 0.5rem 0.75rem; border: 1px solid {LINE}; border-radius: 8px; margin-bottom: 0.25rem; }}
+[data-testid="stRadioOption"][data-selected] {{ border-color: currentColor; }}
 [class*="st-key-source_panel"] {{ backdrop-filter: blur(8px); }}
 """
