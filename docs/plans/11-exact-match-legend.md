@@ -131,7 +131,7 @@ The MSFT fixture's Check column shows "See validation details (+1 more)". The pa
    and `ISSUE_SPLIT = re.compile(r";\s*(?=(?:" + "|".join(ISSUE_CODES) + r")\b)")`.
 2. In `plain_check`, when `issues` is a string, split with `ISSUE_SPLIT.split(issues)` in place of `issues.split(";")`. Keep the rest of that line (strip, drop empty, drop "none" entries) as it is.
 3. Tests, written first:
-   - The exact MSFT string below must give `"OK"` with `audit_fields=None`. All issues in it are fuzzy except bookrunners, and bookrunners is `span_mismatch`, so with `audit_fields=None` it must give `"Bookrunners not exact"` or whatever label the field map gives. Assert the real output and explain it in the report. Build the string in the test as `"; ".join([...])` from these issues:
+   - Build one string in the test as `"; ".join([...])` from these three real MSFT issues:
      - `"WEAK_GROUNDING: issuer (fuzzy, span 'MICROSOFT CORPORATION' vs 'MICROSOFT CORPORATION')"`
      - `"WEAK_GROUNDING: ratings (fuzzy, span 'Moody’s, Aaa (negative outlook); S&P, AA' vs 'Moody’s, Aaa (negative outlook); S&P, AA')"`
      - `"WEAK_GROUNDING: issue_price (fuzzy, span '99.933%' vs '99.933%')"`
