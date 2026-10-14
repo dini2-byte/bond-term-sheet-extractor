@@ -5,10 +5,11 @@
 - `0260f4c` `fix: count fuzzy spans as word for word`
 - `f6dfbfc` `fix: show amber legend only when needed`
 - `c0965f9` `fix: ignore whitespace-only span differences`
+- `b760bb5` `fix: split check issues only at issue codes`
 
 ## Test suite summary
 
-`330 passed in 14.12s`
+`335 passed in 13.42s`
 
 ## Existing tests changed
 
@@ -37,6 +38,16 @@ Reason: with whitespace-only differences between filing line breaks and raw valu
 2. `tests/test_app_ui.py::test_legend_shows_when_a_cell_is_not_exact`
 Set `item["extraction_text"] = "9.999%"` for the edited coupon extraction.
 Reason: the test previously changed only `alignment_status` while leaving span text identical to raw text. Because identical text is word for word regardless of alignment quality, an explicit extraction text mismatch is needed to verify amber cell rendering.
+
+## Task 5 changes
+
+1. `ui.py`
+Defined `ISSUE_CODES` and `ISSUE_SPLIT` regex with positive lookahead. In `plain_check`, string issues are now split with `ISSUE_SPLIT.split(issues)` rather than `issues.split(";")`.
+Reason: filings such as MSFT contain quoted ratings text with semicolons (e.g. `'Moody’s, Aaa (negative outlook); S&P, AA'`). Splitting on every semicolon fragmented these into invalid issue tokens that caused the Check column to fall back to "See validation details".
+
+2. `tests/test_ui.py`
+Added `test_plain_check_split_issues_with_semicolon_in_quotes` and `test_table_frame_check_column_has_no_see_validation_details`.
+Reason: verify that semicolons embedded in quoted issue spans do not cause spurious issue fragmentation, and verify that none of the 4 fixtures show "See validation details" in the Check column.
 
 ## Amber cell count per fixture
 
