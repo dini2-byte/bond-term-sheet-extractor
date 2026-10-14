@@ -74,6 +74,17 @@ def size_help(currencies: list[str] | set[str] | None) -> str:
     return "Amount of this bond sold, in millions."
 
 
+def is_word_for_word(meta: dict[str, Any] | None) -> bool:
+    """
+    True when the cited span in the filing equals the extracted value.
+    'fuzzy' grounding means langextract located the span loosely, but
+    structure.assess_grounding has already checked the span text matches.
+    """
+    if not meta or not isinstance(meta, dict):
+        return False
+    return meta.get("grounded") is True or meta.get("grounding_quality") == "fuzzy"
+
+
 def plain_status(meta: dict[str, Any] | None) -> str:
     """
     Returns plain words status for an extracted field's audit metadata:
@@ -86,7 +97,7 @@ def plain_status(meta: dict[str, Any] | None) -> str:
     raw = meta.get("raw")
     if raw is None or (isinstance(raw, str) and raw.strip().lower() in ("", "none", "nan", "not found", "n/a")):
         return "Not in the filing"
-    if meta.get("grounded") is True:
+    if is_word_for_word(meta):
         return "Found word for word"
     return "Found, but the match is not exact"
 
@@ -105,6 +116,9 @@ def _field_label_map() -> dict[str, str]:
         if col_name not in mapping:
             mapping[col_name] = col_name.lower()
     return mapping
+
+
+FUZZY_ISSUE = re.compile(r"^WEAK_GROUNDING:\s*\S+\s*\(fuzzy\b")
 
 
 def plain_check(status: str | None, issues: Any) -> str:
@@ -126,6 +140,10 @@ def plain_check(status: str | None, issues: Any) -> str:
 
     if not issue_list:
         return "See validation details"
+
+    issue_list = [i for i in issue_list if not FUZZY_ISSUE.match(i)]
+    if not issue_list:
+        return "OK"
 
     first_issue = issue_list[0]
     parts = first_issue.split(":", 1)
@@ -263,7 +281,7 @@ def not_exact_mask(
 ) -> pd.DataFrame:
     """
     Same shape and labels as table_frame, True where a value was extracted
-    but is not grounded.
+    but is not word for word.
     """
     n_rows = len(validated_df)
     curs = [c for c in validated_df["Currency"].dropna().unique() if c] if "Currency" in validated_df.columns else []
@@ -288,7 +306,7 @@ def not_exact_mask(
             raw = meta.get("raw")
             if raw is None or (isinstance(raw, str) and raw.strip().lower() in ("", "none", "nan", "not found", "n/a")):
                 continue
-            if meta.get("grounded") is not True:
+            if not is_word_for_word(meta):
                 mask_dict[label][row_idx] = True
 
     return pd.DataFrame(mask_dict, index=pd.RangeIndex(n_rows))

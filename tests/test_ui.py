@@ -10,6 +10,7 @@ from ui import (
     source_quote,
     TABLE_COLUMNS,
     TEXT_COLUMNS,
+    is_word_for_word,
     plain_status,
     plain_check,
     size_label,
@@ -197,7 +198,7 @@ class TestSlice6UiHelpers:
 
     def test_plain_status(self):
         assert plain_status({"grounded": True, "raw": "4.000%"}) == "Found word for word"
-        assert plain_status({"grounded": False, "raw": "4.000%"}) == "Found, but the match is not exact"
+        assert plain_status({"grounded": False, "grounding_quality": "span_mismatch", "raw": "4.000%"}) == "Found, but the match is not exact"
         assert plain_status({"grounded": False, "raw": "Not found"}) == "Not in the filing"
         assert plain_status({"grounded": False, "raw": None}) == "Not in the filing"
         assert plain_status({"grounded": False, "raw": ""}) == "Not in the filing"
@@ -210,14 +211,14 @@ class TestSlice6UiHelpers:
 
     def test_plain_check_flagged_with_multiple_issues(self):
         issues = [
-            "WEAK_GROUNDING: coupon (fuzzy, span '4%' vs '4.000%')",
-            "WEAK_GROUNDING: maturity_date (fuzzy, span '2028' vs 'May 12, 2028')",
+            "WEAK_GROUNDING: coupon (span_mismatch, span '4%' vs '4.000%')",
+            "WEAK_GROUNDING: maturity_date (span_mismatch, span '2028' vs 'May 12, 2028')",
         ]
         res = plain_check("FLAGGED", issues)
         assert res == "Coupon not exact (+1 more)"
 
         # Also supports semicolon-separated string
-        str_issues = "WEAK_GROUNDING: coupon (fuzzy); WEAK_GROUNDING: maturity_date (fuzzy)"
+        str_issues = "WEAK_GROUNDING: coupon (span_mismatch); WEAK_GROUNDING: maturity_date (span_mismatch)"
         assert plain_check("FLAGGED", str_issues) == "Coupon not exact (+1 more)"
 
     def test_plain_check_code_mappings(self):
@@ -241,7 +242,7 @@ class TestSlice6UiHelpers:
         assert len(tf) == len(vdf)
         assert list(tf.index) == list(range(len(vdf)))
         assert tf["Coupon"].iloc[0] == 4.0
-        assert tf["Check"].iloc[0] != "OK"
+        assert tf["Check"].iloc[0] == "OK"
 
     def test_not_exact_mask_shape_and_values(self):
         from validate import validate_comps_table
@@ -370,4 +371,75 @@ class TestTask4TableLabelsAndFormats:
         cs_size = cell_source(taudit, 0, "Size (M)", tvdf, tdoc_text)
         assert cs_size is not None
         assert cs_size["value"] == "€1,000.0M"
+
+
+class TestSlice11ExactMatch:
+    def test_is_word_for_word(self):
+        assert is_word_for_word({"grounded": True}) is True
+        assert is_word_for_word({"grounded": False, "grounding_quality": "fuzzy"}) is True
+        assert is_word_for_word({"grounding_quality": "fuzzy"}) is True
+        assert is_word_for_word({"grounded": False, "grounding_quality": "span_mismatch"}) is False
+        assert is_word_for_word({"grounded": False, "grounding_quality": "partial"}) is False
+        assert is_word_for_word({"grounded": False, "grounding_quality": "none"}) is False
+        assert is_word_for_word("span_mismatch") is False
+        assert is_word_for_word("partial") is False
+        assert is_word_for_word("none") is False
+        assert is_word_for_word({}) is False
+        assert is_word_for_word(None) is False
+
+    def test_plain_status_fuzzy_and_mismatch(self):
+        assert plain_status({"grounded": False, "grounding_quality": "fuzzy", "raw": "4.000%"}) == "Found word for word"
+        assert plain_status({"grounded": False, "grounding_quality": "span_mismatch", "raw": "4.000%"}) == "Found, but the match is not exact"
+
+    def test_plain_check_fuzzy_filter(self):
+        assert plain_check("FLAGGED", ["WEAK_GROUNDING: coupon (fuzzy, span '4.000%' vs '4.000%')"]) == "OK"
+        assert (
+            plain_check(
+                "FLAGGED",
+                [
+                    "WEAK_GROUNDING: coupon (fuzzy, span 'a' vs 'a')",
+                    "WEAK_GROUNDING: maturity_date (span_mismatch, span '2028' vs 'May 12, 2028')",
+                ],
+            )
+            == "Maturity not exact"
+        )
+
+    @pytest.mark.parametrize(
+        "fixture_name, expected_amber_count",
+        [
+            ("AAPL_FWP_TermSheet_2025-05-06_extractions.jsonl", 0),
+            ("GOOGL_FWP_TermSheet_2026-08-07_extractions.jsonl", 23),
+            ("MSFT_FWP_TermSheet_2017-01-31_extractions.jsonl", 6),
+            ("ORCL_FWP_TermSheet_2025-09-24_extractions.jsonl", 0),
+        ],
+    )
+    def test_not_exact_mask_fixture_amber_counts(self, fixture_name, expected_amber_count):
+        from structure import structure_filing_extractions
+        from validate import validate_comps_table
+
+        fixture_path = Path("data/fixtures") / fixture_name
+        df, audit_records = structure_filing_extractions(fixture_path)
+        vdf = validate_comps_table(df, audit_records)
+        mask = not_exact_mask(vdf, audit_records)
+        assert mask.values.sum() == expected_amber_count
+
+    def test_not_exact_mask_clears_all_fuzzy_cells(self):
+        from structure import structure_filing_extractions
+        from validate import validate_comps_table
+
+        for fixture_path in Path("data/fixtures").glob("*_extractions.jsonl"):
+            df, audit_records = structure_filing_extractions(fixture_path)
+            vdf = validate_comps_table(df, audit_records)
+            mask = not_exact_mask(vdf, audit_records)
+            curs = [c for c in vdf["Currency"].dropna().unique() if c] if "Currency" in vdf.columns else []
+            s_label = size_label(curs)
+            field_class_by_label = {s_label if label == "Size ($M)" else label: fc for label, _, fc, _ in TABLE_COLUMNS}
+            for r in range(len(vdf)):
+                fields = audit_records[r].get("fields", {})
+                for col in mask.columns:
+                    if mask[col].iloc[r]:
+                        fc = field_class_by_label.get(col)
+                        if fc and fc in fields:
+                            assert fields[fc].get("grounding_quality") != "fuzzy"
+
 
