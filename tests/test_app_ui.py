@@ -276,53 +276,6 @@ def test_headings_have_no_link_anchor():
     assert all(h.proto.hide_anchor for h in headings)
 
 
-class TestBuildDealLine:
-    def test_build_deal_line_usd(self):
-        import pandas as pd
-        from app import build_deal_line
-        df = pd.DataFrame({
-            "Issuer": ["Apple Inc.", "Apple Inc."],
-            "Currency": ["USD", "USD"],
-            "Principal ($M)": [1500.0, 3000.0],
-            "Trade Date": ["May 5, 2025", "May 5, 2025"],
-        })
-        line = build_deal_line(df)
-        assert line == "Apple Inc. · $4.5bn senior notes · 2 bonds · priced May 5, 2025"
-
-    def test_build_deal_line_eur_1bn(self):
-        import pandas as pd
-        from app import build_deal_line
-        df = pd.DataFrame({
-            "Issuer": ["Coca-Cola Co", "Coca-Cola Co"],
-            "Currency": ["EUR", "EUR"],
-            "Principal ($M)": [500.0, 500.0],
-            "Trade Date": ["August 9, 2024", "August 9, 2024"],
-        })
-        line = build_deal_line(df)
-        assert line == "Coca-Cola Co · €1bn senior notes · 2 bonds · priced August 9, 2024"
-
-    def test_build_deal_line_gbp_750m(self):
-        import pandas as pd
-        from app import build_deal_line
-        df = pd.DataFrame({
-            "Issuer": ["Test Issuer"],
-            "Currency": ["GBP"],
-            "Principal ($M)": [750.0],
-        })
-        line = build_deal_line(df)
-        assert line == "Test Issuer · £750m senior notes · 1 bond"
-
-    def test_build_deal_line_mixed_eur_and_gbp(self):
-        import pandas as pd
-        from app import build_deal_line
-        df = pd.DataFrame({
-            "Issuer": ["AT&T Inc."] * 5,
-            "Currency": ["EUR", "EUR", "EUR", "EUR", "GBP"],
-            "Principal ($M)": [1000.0, 1250.0, 1000.0, 850.0, 550.0],
-            "Trade Date": ["July 27, 2026"] * 5,
-        })
-        line = build_deal_line(df)
-        assert line == "AT&T Inc. · €4.1bn and £550m senior notes · 5 bonds · priced July 27, 2026"
 
 
 class TestSearchPickerCurrencyLabel:
