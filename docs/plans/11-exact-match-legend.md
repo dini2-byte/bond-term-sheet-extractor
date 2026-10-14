@@ -87,7 +87,7 @@ In `views/about.py`, replace the fourth `HOW_IT_WORKS` sentence with:
 Tests:
 - `needs_legend` is False for an all-False frame and True when one cell is True.
 - In `tests/test_app_ui.py::test_saved_filing_opens_free`, add `assert LEGEND_TEXT not in text`. Import `LEGEND_TEXT` from `views.results`. AAPL has no amber cells.
-- Add `test_legend_shows_when_a_cell_is_not_exact` to `tests/test_app_ui.py`. Copy the AAPL fixture JSONL into a temp file and change one extraction so its text no longer matches the filing. Use the `search` helper with a fake `extract_terms` that writes this edited JSONL, and pick the unsaved `NEW_SHEET`. Click "Extract · uses 1 run" and assert `LEGEND_TEXT` is in `all_text(at)`. The simplest edit: in the first line whose `extraction_class` is `coupon`, change `alignment_status` to `"match_lesser"`. `assess_grounding` then returns `"partial"`. Before writing the test, read `structure.py` and confirm this field drives grounding.
+- Add `test_legend_shows_when_a_cell_is_not_exact` to `tests/test_app_ui.py`. Copy the AAPL fixture JSONL into a temp file and change one extraction so its text no longer matches the filing. Use the `search` helper with a fake `extract_terms` that writes this edited JSONL, and pick the unsaved `NEW_SHEET`. Click "Extract · uses 1 run" and assert `LEGEND_TEXT` is in `all_text(at)`. The simplest edit: in the `extractions` list, find the first entry whose `extraction_class` is `coupon` and, change `alignment_status` to `"match_lesser"`. `assess_grounding` then returns `"partial"`. Before writing the test, read `structure.py` and confirm this field drives grounding.
 
 Commit: `fix: show amber legend only when needed`
 
