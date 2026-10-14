@@ -33,7 +33,7 @@ STATUS_TAGS = {
     "Not in the filing": "NOT IN THE FILING",
 }
 EMPTY_PANEL_TEXT = "Click a number in the table to see where it came from."
-LEGEND_TEXT = "Match not exact. Click to check."
+LEGEND_TEXT = "Amber cells do not match the filing text word for word. Click one to compare."
 DOWNLOAD_LABEL = "Download Excel"
 XLSX_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 SIZE_FORMATS = {
@@ -178,8 +178,14 @@ def excel_bytes(validated_df: pd.DataFrame) -> bytes:
     return buffer.getvalue()
 
 
-def _render_table(validated_df: pd.DataFrame, audit_records: list[dict[str, Any]], key: str) -> tuple[int, str] | None:
-    """Draws the comps table and returns the selected (row, column label), if any."""
+def needs_legend(mask: pd.DataFrame) -> bool:
+    return bool(mask.values.any())
+
+
+def _render_table(
+    validated_df: pd.DataFrame, audit_records: list[dict[str, Any]], key: str
+) -> tuple[tuple[int, str] | None, bool]:
+    """Draws the comps table and returns the selected (row, column label), if any, and whether legend is needed."""
     tf = table_frame(validated_df)
     mask = not_exact_mask(validated_df, audit_records)
 
@@ -200,12 +206,13 @@ def _render_table(validated_df: pd.DataFrame, audit_records: list[dict[str, Any]
         column_config=column_config_for(validated_df),
         selection_default={"selection": {"cells": [(0, "Coupon")] if len(tf) > 0 else []}},
     )
+    show_legend = needs_legend(mask)
     state = st.session_state.get(table_key)
     cells = state.get("selection", {}).get("cells", []) if isinstance(state, dict) else []
     if not cells:
-        return None
+        return None, show_legend
     row, col = cells[0]
-    return int(row), str(col)
+    return (int(row), str(col)), show_legend
 
 
 def render_results(jsonl_path: Path, key: str, file_stem: str) -> None:
@@ -215,8 +222,9 @@ def render_results(jsonl_path: Path, key: str, file_stem: str) -> None:
 
     left, right = st.columns([2, 1], gap="medium")
     with left:
-        selected = _render_table(validated_df, audit_records, key)
-        st.html(f'<div class="tse-legend"><i></i>{html.escape(LEGEND_TEXT)}</div>')
+        selected, show_legend = _render_table(validated_df, audit_records, key)
+        if show_legend:
+            st.html(f'<div class="tse-legend"><i></i>{html.escape(LEGEND_TEXT)}</div>')
         st.download_button(
             DOWNLOAD_LABEL,
             data=excel_bytes(validated_df),
